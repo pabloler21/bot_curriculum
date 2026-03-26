@@ -1,14 +1,17 @@
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Request, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
-
-from backend.evaluator import evaluate_cv
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from backend.extractor import extract_text
+from backend.evaluator import evaluate_cv
 
+limiter = Limiter(key_func=get_remote_address)
 router = APIRouter()
 
-
+# máximo 10 requests por minuto por IP
 @router.post("/evaluate")
-async def evaluate_resume(file: UploadFile = File(...)):
+@limiter.limit("10/minute")
+async def evaluate_resume(request: Request, file: UploadFile = File(...)):
     try:
         file_bytes = await file.read()
 
@@ -19,12 +22,12 @@ async def evaluate_resume(file: UploadFile = File(...)):
 
         if not cv_text or cv_text.strip() == "":
             raise HTTPException(
-    status_code=422,
-    detail=(
-        "Could not extract text. "
-        "Scanned PDFs may not be readable."
-    ),
-)
+                status_code=422,
+                detail=(
+                    "Could not extract text. "
+                    "Scanned PDFs may not be readable."
+                ),
+            )
 
         result = evaluate_cv(cv_text)
 
@@ -34,4 +37,6 @@ async def evaluate_resume(file: UploadFile = File(...)):
         raise
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )
