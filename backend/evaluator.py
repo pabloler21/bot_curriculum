@@ -1,92 +1,60 @@
-import anthropic
+from langchain_anthropic import ChatAnthropic
+from langchain_core.prompts import ChatPromptTemplate
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+from typing import List
 
 load_dotenv()
 
-client = anthropic.Anthropic()
-MODEL = "claude-sonnet-4-6"
+# definimos la estructura que queremos que devuelva Claude
+class ResumeEvaluation(BaseModel):
+    # cada campo tiene una descripcion para que Claude entienda que poner
+    candidate_name: str = Field(description="Full name of the candidate")
+    overall_score: int = Field(description="ATS compatibility score from 0 to 100")
+    approved: bool = Field(description="True if score is 80 or above")
+    formatting_issues: List[str] = Field(description="List of formatting problems found")
+    keywords_found: List[str] = Field(description="List of relevant keywords found")
+    keywords_missing: List[str] = Field(description="List of important keywords missing")
+    recommendations: List[str] = Field(description="List of recommendations to improve the resume")
+    summary: str = Field(description="Brief summary of the overall analysis")
 
+# creamos el modelo de Claude con LangChain
+model = ChatAnthropic(model="claude-sonnet-4-6")
 
+# le decimos a LangChain que fuerce a Claude a responder con la estructura de ResumeEvaluation
+structured_model = model.with_structured_output(ResumeEvaluation)
+
+# leemos el skill como prompt
 with open("backend/prompts/ats_skill.md", "r", encoding="utf-8") as f:
-    SYSTEM_PROMPT = f.read()
+    ats_skill = f.read()
 
+# armamos el template del prompt
+# {ats_skill} y {cv_text} son variables que se reemplazan en cada llamada
+prompt_template = ChatPromptTemplate.from_messages([
+    ("system", """
+ROLE
+You are an expert ATS resume evaluator. Your job is to analyze resumes
+and evaluate their compatibility with Applicant Tracking Systems.
 
-TOOLS = [
-    {
-        "name": "evaluate_resume",
-        "description": "Evaluates a resume for ATS compatibility and returns a structured analysis",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "overall_score": {
-                    "type": "integer",
-                    "description": "Overall ATS compatibility score from 0 to 100"
-                },
-                "approved": {
-                    "type": "boolean",
-                    "description": "True if score is 80 or above, False otherwise"
-                },
-                "candidate_name": {
-                    "type": "string",
-                    "description": "Full name of the candidate extracted from the resume"
-                },
-                "formatting_issues": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "List of formatting problems found in the resume"
-                },
-                "keywords_found": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "List of relevant keywords found in the resume"
-                },
-                "keywords_missing": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "List of important keywords missing from the resume"
-                },
-                "recommendations": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "List of specific recommendations to improve the resume"
-                },
-                "summary": {
-                    "type": "string",
-                    "description": "Brief summary of the overall resume analysis"
-                }
-            },
-            "required": [
-                "overall_score",
-                "approved",
-                "candidate_name",
-                "formatting_issues",
-                "keywords_found",
-                "keywords_missing",
-                "recommendations",
-                "summary"
-            ]
-        }
-    }
-]
+EVALUATION CRITERIA
+{ats_skill}
+
+RESPONSE FORMAT
+Return a structured evaluation with: candidate name, overall score (0-100),
+approved (true if score >= 80), formatting issues, keywords found,
+keywords missing, recommendations, and a brief summary.
+"""),
+    ("human", "Please analyze this resume:\n\n{cv_text}")
+])
+
+# conectamos el template con el modelo estructurado
+chain = prompt_template | structured_model
 
 def evaluate_cv(cv_text: str) -> dict:
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=1000,
-        system=SYSTEM_PROMPT,
-        tools=TOOLS,
-        messages=[
-            {
-                "role": "user",
-                "content": f"Please analyze this resume:\n\n{cv_text}"
-            }
-        ]
-    )
-
-    
-    for block in response.content:
-        if block.type == "tool_use" and block.name == "evaluate_resume":
-            return block.input
-
-   
-    return {"error": "Claude did not use the tool correctly"}
+    # ejecutamos la cadena con las variables del template
+    result = chain.invoke({
+        "ats_skill": ats_skill,
+        "cv_text": cv_text
+    })
+    # convertimos el objeto Pydantic a dict para devolverlo como JSON
+    return result.model_dump()
