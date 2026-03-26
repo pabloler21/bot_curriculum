@@ -1,9 +1,11 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
-from backend.extractor import extract_text
+
 from backend.evaluator import evaluate_cv
+from backend.extractor import extract_text
 
 router = APIRouter()
+
 
 @router.post("/evaluate")
 async def evaluate_resume(file: UploadFile = File(...)):
@@ -17,9 +19,12 @@ async def evaluate_resume(file: UploadFile = File(...)):
 
         if not cv_text or cv_text.strip() == "":
             raise HTTPException(
-                status_code=422,
-                detail="Could not extract text from file. If it's a scanned PDF, it may not be readable."
-            )
+    status_code=422,
+    detail=(
+        "Could not extract text. "
+        "Scanned PDFs may not be readable."
+    ),
+)
 
         result = evaluate_cv(cv_text)
 

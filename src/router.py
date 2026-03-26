@@ -1,9 +1,8 @@
+from dotenv import load_dotenv
 from fastapi import APIRouter
-from fastapi.middleware.cors import CORSMiddleware
+
 from src.routes.evaluate import router as evaluate_router
 from src.routes.health import router as health_router
-from dotenv import load_dotenv
-import os
 
 load_dotenv()
 
