@@ -6,11 +6,11 @@ load_dotenv()
 client = anthropic.Anthropic()
 MODEL = "claude-sonnet-4-6"
 
-# leemos el skill como system prompt
+
 with open("backend/prompts/ats_skill.md", "r", encoding="utf-8") as f:
     SYSTEM_PROMPT = f.read()
 
-# le decimos a Claude qué datos estructurados tiene que devolvernos
+
 TOOLS = [
     {
         "name": "evaluate_resume",
@@ -83,10 +83,10 @@ def evaluate_cv(cv_text: str) -> dict:
         ]
     )
 
-    # buscamos el bloque tool_use en la respuesta de Claude
+    
     for block in response.content:
         if block.type == "tool_use" and block.name == "evaluate_resume":
             return block.input
 
-    # si Claude no uso la tool devolvemos un error
+   
     return {"error": "Claude did not use the tool correctly"}
