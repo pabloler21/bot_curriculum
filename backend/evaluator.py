@@ -1,3 +1,5 @@
+import logging
+import pathlib
 from typing import List
 
 from dotenv import load_dotenv
@@ -6,6 +8,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
 # definimos la estructura que queremos que devuelva Claude
@@ -33,8 +37,10 @@ model = ChatAnthropic(model="claude-sonnet-4-6")
 # forzamos estructura de ResumeEvaluation
 structured_model = model.with_structured_output(ResumeEvaluation)
 
-# leemos el skill como prompt
-with open("backend/prompts/ats_skill.md", "r", encoding="utf-8") as f:
+# leemos el skill como prompt (path absoluto para evitar problemas con el cwd en producción)
+_prompt_path = pathlib.Path(__file__).parent / "prompts" / "ats_skill.md"
+logger.info("[evaluator] Loading prompt from: %s", _prompt_path)
+with open(_prompt_path, "r", encoding="utf-8") as f:
     ats_skill = f.read()
 
 # armamos el template del prompt
@@ -66,7 +72,11 @@ chain = prompt_template | structured_model
 
 
 def evaluate_cv(cv_text: str) -> dict:
-    # ejecutamos la cadena con las variables del template
-    result = chain.invoke({"ats_skill": ats_skill, "cv_text": cv_text})
-    # convertimos el objeto Pydantic a dict para devolverlo como JSON
-    return result.model_dump()
+    try:
+        logger.info("[evaluator] Invoking Claude with %d chars of CV text", len(cv_text))
+        result = chain.invoke({"ats_skill": ats_skill, "cv_text": cv_text})
+        logger.info("[evaluator] Claude response received")
+        return result.model_dump()
+    except Exception as e:
+        logger.exception("[evaluator] Error calling Anthropic API: %s", e)
+        raise

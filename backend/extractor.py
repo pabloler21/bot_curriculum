@@ -2,6 +2,7 @@ import os
 import tempfile
 
 from liteparse import LiteParse
+from liteparse.types import ParseError
 
 parser = LiteParse()
 
@@ -17,5 +18,10 @@ def extract_text(file_bytes: bytes, file_name: str) -> str:
     try:
         result = parser.parse(temp_path)
         return result.text
+    except ParseError as e:
+        detail = str(e)
+        if e.stderr:
+            detail += f" | stderr: {e.stderr}"
+        raise RuntimeError(detail)
     finally:
         os.remove(temp_path)
