@@ -1,14 +1,15 @@
+import logging
 import os
 import tempfile
 
 from liteparse import LiteParse
 from liteparse.types import ParseError
 
+logger = logging.getLogger(__name__)
 parser = LiteParse()
 
 
 def extract_text(file_bytes: bytes, file_name: str) -> str:
-
     extension = os.path.splitext(file_name)[1]
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=extension) as tmp:
