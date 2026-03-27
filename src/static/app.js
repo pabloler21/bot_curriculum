@@ -1,4 +1,6 @@
-const BACKEND_URL = 'https://bot-curriculum.onrender.com';
+const BACKEND_URL = window.location.hostname === 'bot-curriculum-1.onrender.com'
+  ? 'https://bot-curriculum.onrender.com'
+  : '';
 
 const dropZone       = document.getElementById('drop-zone');
 const fileInput      = document.getElementById('file-input');

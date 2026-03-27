@@ -32,7 +32,7 @@ class ResumeEvaluation(BaseModel):
 
 
 # creamos el modelo de Claude con LangChain
-model = ChatAnthropic(model="claude-sonnet-4-6")
+model = ChatAnthropic(model="claude-haiku-4-5")
 
 # forzamos estructura de ResumeEvaluation
 structured_model = model.with_structured_output(ResumeEvaluation)
