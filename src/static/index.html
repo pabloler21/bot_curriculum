@@ -19,15 +19,15 @@
     <div id="upload-section">
       <div id="drop-zone" class="drop-zone">
         <div class="drop-zone-content">
-          <div class="drop-icon">📄</div>
+          <div class="drop-icon" aria-hidden="true">📄</div>
           <p>Arrastrá tu CV acá</p>
           <p class="secondary-text">PDF o DOCX</p>
           <button id="select-btn" class="btn-primary">Seleccionar archivo</button>
-          <p id="file-name" class="file-name hidden"></p>
+          <p id="file-name" class="file-name hidden" aria-live="polite"></p>
         </div>
-        <input type="file" id="file-input" accept=".pdf,.docx" hidden>
+        <input type="file" id="file-input" accept=".pdf,.docx" hidden aria-label="Seleccionar archivo CV">
       </div>
-      <p id="error-msg" class="error-msg hidden"></p>
+      <p id="error-msg" class="error-msg hidden" aria-live="assertive"></p>
       <button id="analyze-btn" class="btn-primary btn-large hidden">Analizar CV</button>
     </div>
 
