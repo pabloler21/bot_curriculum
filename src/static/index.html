@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CV Evaluator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anta&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <header class="header">
     <h1>CV Evaluator</h1>
-    <p>Analizá tu CV con IA</p>
+    <p>Analyze your CV with AI</p>
   </header>
 
   <main class="container">
@@ -20,25 +23,30 @@
       <div id="drop-zone" class="drop-zone">
         <div class="drop-zone-content">
           <div class="drop-icon" aria-hidden="true">📄</div>
-          <p>Arrastrá tu CV acá</p>
-          <p class="secondary-text">PDF o DOCX</p>
-          <button id="select-btn" class="btn-primary">Seleccionar archivo</button>
+          <p>Drop your CV here</p>
+          <p class="secondary-text">PDF or DOCX</p>
+          <button id="select-btn" class="btn-primary">Select file</button>
           <p id="file-name" class="file-name hidden" aria-live="polite"></p>
         </div>
-        <input type="file" id="file-input" accept=".pdf,.docx" hidden aria-label="Seleccionar archivo CV">
+        <input type="file" id="file-input" accept=".pdf,.docx" hidden aria-label="Select CV file">
       </div>
       <p id="error-msg" class="error-msg hidden" aria-live="assertive"></p>
-      <button id="analyze-btn" class="btn-primary btn-large hidden">Analizar CV</button>
+      <button id="analyze-btn" class="btn-primary btn-large hidden">Analyze CV</button>
     </div>
 
     <!-- Loading section -->
     <div id="loading-section" class="hidden">
       <div class="spinner"></div>
-      <p class="loading-text">Analizando CV...</p>
+      <p class="loading-text">Analyzing CV...</p>
     </div>
 
     <!-- Results dashboard -->
     <div id="results-section" class="hidden">
+
+      <!-- Top bar with reset button -->
+      <div class="results-header">
+        <button id="reset-btn" class="btn-reset">← Analyze another CV</button>
+      </div>
 
       <!-- Panel 1: Score + Verdict -->
       <div class="panel panel-score">
@@ -53,37 +61,35 @@
         </div>
       </div>
 
-      <!-- Panel 2: Resumen -->
+      <!-- Panel 2: Summary -->
       <div class="panel">
-        <h3>Resumen</h3>
+        <h3>Summary <button class="copy-btn" data-copy-target="summary-text" aria-label="Copy summary">copy</button></h3>
         <p id="summary-text"></p>
       </div>
 
-      <!-- Panel 3: Keywords Encontradas -->
+      <!-- Panel 3: Found Keywords -->
       <div class="panel">
-        <h3>Keywords Encontradas</h3>
+        <h3>Found Keywords <button class="copy-btn" data-copy-target="keywords-found" aria-label="Copy found keywords">copy</button></h3>
         <div id="keywords-found" class="tag-cloud"></div>
       </div>
 
-      <!-- Panel 4: Keywords Faltantes -->
+      <!-- Panel 4: Missing Keywords -->
       <div class="panel">
-        <h3>Keywords Faltantes</h3>
+        <h3>Missing Keywords <button class="copy-btn" data-copy-target="keywords-missing" aria-label="Copy missing keywords">copy</button></h3>
         <div id="keywords-missing" class="tag-cloud"></div>
       </div>
 
-      <!-- Panel 5: Problemas de Formato -->
+      <!-- Panel 5: Formatting Issues -->
       <div class="panel">
-        <h3>Problemas de Formato</h3>
+        <h3>Formatting Issues <button class="copy-btn" data-copy-target="formatting-issues" aria-label="Copy formatting issues">copy</button></h3>
         <ul id="formatting-issues" class="issue-list"></ul>
       </div>
 
-      <!-- Panel 6: Recomendaciones -->
+      <!-- Panel 6: Recommendations -->
       <div class="panel">
-        <h3>Recomendaciones</h3>
+        <h3>Recommendations <button class="copy-btn" data-copy-target="recommendations" aria-label="Copy recommendations">copy</button></h3>
         <ol id="recommendations" class="recommendations-list"></ol>
       </div>
-
-      <button id="reset-btn" class="btn-secondary">Analizar otro CV</button>
 
     </div>
   </main>

@@ -49,7 +49,7 @@ fileInput.addEventListener('change', () => {
 function handleFile(file) {
   const ext = file.name.split('.').pop().toLowerCase();
   if (!['pdf', 'docx'].includes(ext)) {
-    showError('Solo se aceptan archivos PDF o DOCX.');
+    showError('Only PDF or DOCX files are accepted.');
     return;
   }
   selectedFile = file;
@@ -91,7 +91,7 @@ analyzeBtn.addEventListener('click', async () => {
   } catch (err) {
     setLoading(false);
     const isNetworkError = err instanceof TypeError && err.message === 'Failed to fetch';
-    showError(isNetworkError ? 'No se pudo conectar al servidor. Verificá tu conexión.' : err.message);
+    showError(isNetworkError ? 'Could not connect to the server. Check your connection.' : err.message);
   }
 });
 
@@ -137,7 +137,7 @@ function renderResults(data) {
   document.getElementById('candidate-name').textContent = data.candidate_name;
 
   const badge = document.getElementById('verdict-badge');
-  badge.textContent = data.approved ? 'APROBADO' : 'RECHAZADO';
+  badge.textContent = data.approved ? 'APPROVED' : 'REJECTED';
   badge.className   = 'badge ' + (data.approved ? 'approved' : 'rejected');
 
   // Panel 2 — Resumen
@@ -159,6 +159,24 @@ function renderResults(data) {
   document.getElementById('recommendations').innerHTML =
     data.recommendations.map(r => `<li>${escHtml(r)}</li>`).join('');
 }
+
+// ── Copy buttons ─────────────────────────────────────────────────────────────
+
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const el = document.getElementById(btn.dataset.copyTarget);
+    try {
+      await navigator.clipboard.writeText(el.innerText.trim());
+      btn.textContent = '✓ copied';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    } catch (_) { /* clipboard unavailable (non-HTTPS); silently ignore */ }
+  });
+});
 
 // ── Reset ─────────────────────────────────────────────────────────────────────
 

@@ -10,7 +10,7 @@ router = APIRouter()
 
 # máximo 10 requests por minuto por IP
 @router.post("/evaluate")
-@limiter.limit("10/minute")
+@limiter.limit("3/minute")
 async def evaluate_resume(request: Request, file: UploadFile = File(...)):
     try:
         file_bytes = await file.read()
@@ -28,7 +28,6 @@ async def evaluate_resume(request: Request, file: UploadFile = File(...)):
                     "Scanned PDFs may not be readable."
                 ),
             )
-
         result = evaluate_cv(cv_text)
 
         return JSONResponse(status_code=200, content=result)
