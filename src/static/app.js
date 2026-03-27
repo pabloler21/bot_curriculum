@@ -96,7 +96,7 @@ analyzeBtn.addEventListener('click', async () => {
   hideError();
 
   await waitForServer();
-  setLoadingMessage('Analyzing your resume...');
+  setLoadingMessage('Analyzing your resume, this may take a few seconds...');
 
   const formData = new FormData();
   formData.append('file', selectedFile);
@@ -132,7 +132,7 @@ function setLoading(active) {
   if (active) {
     uploadSection.classList.add('hidden');
     loadingSection.classList.remove('hidden');
-    setLoadingMessage('Analyzing your resume...');
+    setLoadingMessage('Analyzing your resume, this may take a few seconds...');
   } else {
     loadingSection.classList.add('hidden');
     uploadSection.classList.remove('hidden');
