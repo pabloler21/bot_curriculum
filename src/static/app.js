@@ -8,6 +8,7 @@ const uploadSection  = document.getElementById('upload-section');
 const loadingSection = document.getElementById('loading-section');
 const resultsSection = document.getElementById('results-section');
 const resetBtn       = document.getElementById('reset-btn');
+const loadingText    = document.querySelector('#loading-section .loading-text');
 
 let selectedFile = null;
 
@@ -59,6 +60,29 @@ function handleFile(file) {
   hideError();
 }
 
+// ── Wakeup polling ────────────────────────────────────────────────────────────
+
+const HEALTH_TIMEOUT_MS = 5000;
+const POLL_INTERVAL_MS  = 3000;
+
+async function waitForServer() {
+  while (true) {
+    try {
+      const controller = new AbortController();
+      const timeoutId  = setTimeout(() => controller.abort(), HEALTH_TIMEOUT_MS);
+      const res        = await fetch('/health', { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) return;
+    } catch (_) {
+      // server not responding yet — fall through to show waking message
+    }
+    setLoadingMessage(
+      'The server was inactive and is waking up. This may take ~30 seconds, please wait...'
+    );
+    await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
+  }
+}
+
 // ── Analyze ───────────────────────────────────────────────────────────────────
 
 analyzeBtn.addEventListener('click', async () => {
@@ -66,6 +90,9 @@ analyzeBtn.addEventListener('click', async () => {
 
   setLoading(true);
   hideError();
+
+  await waitForServer();
+  setLoadingMessage('Analyzing your resume...');
 
   const formData = new FormData();
   formData.append('file', selectedFile);
@@ -101,10 +128,15 @@ function setLoading(active) {
   if (active) {
     uploadSection.classList.add('hidden');
     loadingSection.classList.remove('hidden');
+    setLoadingMessage('Analyzing your resume...');
   } else {
     loadingSection.classList.add('hidden');
     uploadSection.classList.remove('hidden');
   }
+}
+
+function setLoadingMessage(msg) {
+  loadingText.textContent = msg;
 }
 
 function showResults() {
