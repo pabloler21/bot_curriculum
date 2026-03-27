@@ -1,4 +1,5 @@
 import os
+import pathlib
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -30,4 +31,5 @@ app.add_middleware(
 
 app.include_router(router)
 
-app.mount("/", StaticFiles(directory="src/static", html=True), name="static")
+STATIC_DIR = pathlib.Path(__file__).parent / "static"
+app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
