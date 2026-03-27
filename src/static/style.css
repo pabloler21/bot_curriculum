@@ -11,6 +11,8 @@
   --danger-red:       #e74c3c;
   --warning-amber:    #f39c12;
   --color-white:      #fff;
+  --accent-blue-alpha: rgba(102, 192, 244, 0.12);
+  --danger-red-alpha:  rgba(231, 76, 60, 0.12);
 }
 
 *, *::before, *::after {
@@ -283,13 +285,13 @@ body {
 }
 
 .tag.found {
-  background-color: rgba(102, 192, 244, 0.12);
+  background-color: var(--accent-blue-alpha);
   border: 1px solid var(--accent-blue);
   color: var(--accent-blue);
 }
 
 .tag.missing {
-  background-color: rgba(231, 76, 60, 0.12);
+  background-color: var(--danger-red-alpha);
   border: 1px solid var(--danger-red);
   color: var(--danger-red);
 }
