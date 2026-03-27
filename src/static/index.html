@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CV Evaluator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="header">
+    <h1>CV Evaluator</h1>
+    <p>Analizá tu CV con IA</p>
+  </header>
+
+  <main class="container">
+
+    <!-- Upload section -->
+    <div id="upload-section">
+      <div id="drop-zone" class="drop-zone">
+        <div class="drop-zone-content">
+          <div class="drop-icon">📄</div>
+          <p>Arrastrá tu CV acá</p>
+          <p class="secondary-text">PDF o DOCX</p>
+          <button id="select-btn" class="btn-primary">Seleccionar archivo</button>
+          <p id="file-name" class="file-name hidden"></p>
+        </div>
+        <input type="file" id="file-input" accept=".pdf,.docx" hidden>
+      </div>
+      <p id="error-msg" class="error-msg hidden"></p>
+      <button id="analyze-btn" class="btn-primary btn-large hidden">Analizar CV</button>
+    </div>
+
+    <!-- Loading section -->
+    <div id="loading-section" class="hidden">
+      <div class="spinner"></div>
+      <p class="loading-text">Analizando CV...</p>
+    </div>
+
+    <!-- Results dashboard -->
+    <div id="results-section" class="hidden">
+
+      <!-- Panel 1: Score + Verdict -->
+      <div class="panel panel-score">
+        <div class="score-left">
+          <div id="score-circle" class="score-circle">
+            <span id="score-value"></span>
+          </div>
+        </div>
+        <div class="score-right">
+          <h2 id="candidate-name"></h2>
+          <span id="verdict-badge" class="badge"></span>
+        </div>
+      </div>
+
+      <!-- Panel 2: Resumen -->
+      <div class="panel">
+        <h3>Resumen</h3>
+        <p id="summary-text"></p>
+      </div>
+
+      <!-- Panel 3: Keywords Encontradas -->
+      <div class="panel">
+        <h3>Keywords Encontradas</h3>
+        <div id="keywords-found" class="tag-cloud"></div>
+      </div>
+
+      <!-- Panel 4: Keywords Faltantes -->
+      <div class="panel">
+        <h3>Keywords Faltantes</h3>
+        <div id="keywords-missing" class="tag-cloud"></div>
+      </div>
+
+      <!-- Panel 5: Problemas de Formato -->
+      <div class="panel">
+        <h3>Problemas de Formato</h3>
+        <ul id="formatting-issues" class="issue-list"></ul>
+      </div>
+
+      <!-- Panel 6: Recomendaciones -->
+      <div class="panel">
+        <h3>Recomendaciones</h3>
+        <ol id="recommendations" class="recommendations-list"></ol>
+      </div>
+
+      <button id="reset-btn" class="btn-secondary">Analizar otro CV</button>
+
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
