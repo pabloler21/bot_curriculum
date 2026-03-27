@@ -18,8 +18,10 @@ dropZone.addEventListener('dragover', (e) => {
   dropZone.classList.add('drag-over');
 });
 
-dropZone.addEventListener('dragleave', () => {
-  dropZone.classList.remove('drag-over');
+dropZone.addEventListener('dragleave', (e) => {
+  if (!dropZone.contains(e.relatedTarget)) {
+    dropZone.classList.remove('drag-over');
+  }
 });
 
 dropZone.addEventListener('drop', (e) => {
@@ -74,17 +76,22 @@ analyzeBtn.addEventListener('click', async () => {
       body: formData,
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
-      throw new Error(data.detail || `Error ${response.status}`);
+      let detail = `Error ${response.status}`;
+      try {
+        const errData = await response.json();
+        detail = errData.detail || detail;
+      } catch (_) { /* non-JSON error body */ }
+      throw new Error(detail);
     }
 
+    const data = await response.json();
     renderResults(data);
     showResults();
   } catch (err) {
     setLoading(false);
-    showError(err.message);
+    const isNetworkError = err instanceof TypeError && err.message === 'Failed to fetch';
+    showError(isNetworkError ? 'No se pudo conectar al servidor. Verificá tu conexión.' : err.message);
   }
 });
 
@@ -116,6 +123,10 @@ function hideError() {
 
 // ── Render results ────────────────────────────────────────────────────────────
 
+function escHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function renderResults(data) {
   // Panel 1 — Score + Verdict
   const scoreCircle = document.getElementById('score-circle');
@@ -134,19 +145,19 @@ function renderResults(data) {
 
   // Panel 3 — Keywords Encontradas
   document.getElementById('keywords-found').innerHTML =
-    data.keywords_found.map(k => `<span class="tag found">${k}</span>`).join('');
+    data.keywords_found.map(k => `<span class="tag found">${escHtml(k)}</span>`).join('');
 
   // Panel 4 — Keywords Faltantes
   document.getElementById('keywords-missing').innerHTML =
-    data.keywords_missing.map(k => `<span class="tag missing">${k}</span>`).join('');
+    data.keywords_missing.map(k => `<span class="tag missing">${escHtml(k)}</span>`).join('');
 
   // Panel 5 — Problemas de Formato
   document.getElementById('formatting-issues').innerHTML =
-    data.formatting_issues.map(i => `<li>${i}</li>`).join('');
+    data.formatting_issues.map(i => `<li>${escHtml(i)}</li>`).join('');
 
   // Panel 6 — Recomendaciones
   document.getElementById('recommendations').innerHTML =
-    data.recommendations.map(r => `<li>${r}</li>`).join('');
+    data.recommendations.map(r => `<li>${escHtml(r)}</li>`).join('');
 }
 
 // ── Reset ─────────────────────────────────────────────────────────────────────
