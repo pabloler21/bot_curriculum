@@ -1,3 +1,5 @@
+const BACKEND_URL = 'https://bot-curriculum.onrender.com';
+
 const dropZone       = document.getElementById('drop-zone');
 const fileInput      = document.getElementById('file-input');
 const fileNameEl     = document.getElementById('file-name');
@@ -70,7 +72,7 @@ async function waitForServer() {
     try {
       const controller = new AbortController();
       const timeoutId  = setTimeout(() => controller.abort(), HEALTH_TIMEOUT_MS);
-      const res        = await fetch('/health', { signal: controller.signal });
+      const res        = await fetch(`${BACKEND_URL}/health`, { signal: controller.signal });
       clearTimeout(timeoutId);
       if (res.ok) return;
     } catch (_) {
@@ -98,7 +100,7 @@ analyzeBtn.addEventListener('click', async () => {
   formData.append('file', selectedFile);
 
   try {
-    const response = await fetch('/evaluate', {
+    const response = await fetch(`${BACKEND_URL}/evaluate`, {
       method: 'POST',
       body: formData,
     });
