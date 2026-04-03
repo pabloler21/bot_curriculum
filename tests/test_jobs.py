@@ -1,10 +1,8 @@
 # tests/test_jobs.py
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 
 import httpx
 import respx
-from datetime import datetime, timedelta, timezone
-from unittest.mock import patch
 
 from backend.jobs import Job, strip_html
 
@@ -82,7 +80,7 @@ REMOTIVE_SAMPLE = {
 
 @respx.mock
 async def test_fetch_jobs_returns_normalized_jobs():
-    from backend.jobs import fetch_jobs, _cache
+    from backend.jobs import _cache, fetch_jobs
     _cache["data"] = None  # clear cache
 
     respx.get("https://remotive.com/api/remote-jobs").mock(
@@ -101,7 +99,7 @@ async def test_fetch_jobs_returns_normalized_jobs():
 
 @respx.mock
 async def test_fetch_jobs_uses_cache():
-    from backend.jobs import fetch_jobs, _cache, Job
+    from backend.jobs import Job, _cache, fetch_jobs
     # Prime cache with a recent timestamp
     _cache["data"] = (
         [
@@ -122,7 +120,7 @@ async def test_fetch_jobs_uses_cache():
 
 @respx.mock
 async def test_fetch_jobs_invalidates_stale_cache():
-    from backend.jobs import fetch_jobs, _cache
+    from backend.jobs import _cache, fetch_jobs
     old_time = datetime.now(timezone.utc) - timedelta(minutes=20)
     _cache["data"] = ([], old_time)
 
@@ -137,7 +135,7 @@ async def test_fetch_jobs_invalidates_stale_cache():
 
 @respx.mock
 async def test_fetch_jobs_raises_on_http_error():
-    from backend.jobs import fetch_jobs, _cache
+    from backend.jobs import _cache, fetch_jobs
     _cache["data"] = None
 
     respx.get("https://remotive.com/api/remote-jobs").mock(

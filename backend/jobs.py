@@ -89,8 +89,8 @@ async def fetch_jobs() -> list[Job]:
     async with httpx.AsyncClient(timeout=10.0) as client:
         response = await client.get(REMOTIVE_URL, params=REMOTIVE_PARAMS)
         response.raise_for_status()
+        data = response.json()
 
-    data = response.json()
     jobs = [_map_job(raw) for raw in data.get("jobs", [])]
     _cache["data"] = (jobs, datetime.now(timezone.utc))
     logger.info("[jobs] Cached %d jobs", len(jobs))
