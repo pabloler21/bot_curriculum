@@ -1,5 +1,6 @@
 # tests/test_jobs.py
 from datetime import date, datetime, timedelta, timezone
+from unittest.mock import AsyncMock, patch
 
 import httpx
 import respx
@@ -147,3 +148,34 @@ async def test_fetch_jobs_raises_on_http_error():
         assert False, "Should have raised"
     except httpx.HTTPStatusError:
         pass
+
+
+def test_get_jobs_returns_200(client):
+    sample_jobs = [
+        Job(
+            id="1", title="Dev", company="Co", location="Remote",
+            employment_type="full_time",
+            description="desc", tags=["python"],
+            url="https://example.com", posted_at=date(2025, 3, 1),
+        )
+    ]
+    with patch("src.routes.jobs.fetch_jobs", new=AsyncMock(return_value=sample_jobs)):
+        response = client.get("/jobs")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["title"] == "Dev"
+    assert data[0]["posted_at"] == "2025-03-01"
+
+
+def test_get_jobs_returns_502_on_upstream_error(client):
+    import httpx as _httpx
+
+    async def boom():
+        raise _httpx.RequestError("connection failed")
+
+    with patch("src.routes.jobs.fetch_jobs", new=boom):
+        response = client.get("/jobs")
+    assert response.status_code == 502
+    body = response.json()
+    assert body["code"] == "upstream_error"
