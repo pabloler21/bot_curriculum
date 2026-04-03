@@ -10,6 +10,10 @@ from backend.sessions import (
 )
 
 
+def setup_function():
+    cv_sessions.clear()
+
+
 def test_store_and_get_session():
     token = store_session("cv text here", "resume.pdf")
     session = get_session(token)

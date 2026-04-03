@@ -11,7 +11,6 @@ SESSION_TTL_MINUTES = 60
 
 
 class CVSession(BaseModel):
-    token: str
     cv_text: str
     filename: str
     char_count: int
@@ -27,7 +26,6 @@ def store_session(cv_text: str, filename: str) -> str:
     cleanup_sessions()
     token = str(uuid.uuid4())
     cv_sessions[token] = CVSession(
-        token=token,
         cv_text=cv_text,
         filename=filename,
         char_count=len(cv_text),
