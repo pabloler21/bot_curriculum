@@ -1,5 +1,9 @@
 # tests/test_sessions.py
+import io
 from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
+
+from fastapi.testclient import TestClient
 
 from backend.sessions import (
     cleanup_sessions,
@@ -8,6 +12,7 @@ from backend.sessions import (
     get_session,
     store_session,
 )
+from src.main import app
 
 
 def setup_function():
@@ -15,12 +20,13 @@ def setup_function():
 
 
 def test_store_and_get_session():
-    token = store_session("cv text here", "resume.pdf")
-    session = get_session(token)
-    assert session is not None
-    assert session.cv_text == "cv text here"
-    assert session.filename == "resume.pdf"
-    assert session.char_count == len("cv text here")
+    session = store_session("cv text here", "resume.pdf")
+    token = session.token
+    fetched = get_session(token)
+    assert fetched is not None
+    assert fetched.cv_text == "cv text here"
+    assert fetched.filename == "resume.pdf"
+    assert fetched.token == token
 
 
 def test_get_session_returns_none_for_unknown_token():
@@ -28,7 +34,7 @@ def test_get_session_returns_none_for_unknown_token():
 
 
 def test_delete_session_unit():
-    token = store_session("text", "file.pdf")
+    token = store_session("text", "file.pdf").token
     delete_session(token)
     assert get_session(token) is None
 
@@ -38,7 +44,7 @@ def test_delete_nonexistent_session_does_not_raise():
 
 
 def test_cleanup_removes_expired_sessions():
-    token = store_session("text", "file.pdf")
+    token = store_session("text", "file.pdf").token
     # Manually backdate the session
     cv_sessions[token].uploaded_at = datetime.now(timezone.utc) - timedelta(minutes=61)
     cleanup_sessions()
@@ -46,17 +52,12 @@ def test_cleanup_removes_expired_sessions():
 
 
 def test_cleanup_keeps_fresh_sessions():
-    token = store_session("text", "file.pdf")
+    token = store_session("text", "file.pdf").token
     cleanup_sessions()
     assert get_session(token) is not None
 
 
 # ── Route tests ──────────────────────────────────────────────────────────────
-import io
-from fastapi.testclient import TestClient
-from src.main import app
-from unittest.mock import patch
-
 
 route_client = TestClient(app)
 

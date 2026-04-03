@@ -30,9 +30,13 @@ async def create_session(file: UploadFile = File(...)):
             detail="Could not extract text. Scanned PDFs may not be readable.",
         )
 
-    token = store_session(cv_text, file.filename)
+    session = store_session(cv_text, file.filename)
     logger.info("[session] Created session for %s", file.filename)
-    return {"token": token, "filename": file.filename, "char_count": len(cv_text)}
+    return {
+        "token": session.token,
+        "filename": session.filename,
+        "char_count": len(cv_text),
+    }
 
 
 @router.get("/session/{token}")

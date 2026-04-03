@@ -2,6 +2,7 @@
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -11,30 +12,33 @@ SESSION_TTL_MINUTES = 60
 
 
 class CVSession(BaseModel):
+    token: str
     cv_text: str
+    cv_embedding: list[float] = []
     filename: str
-    char_count: int
     uploaded_at: datetime
+    scored_jobs: dict[str, Any] = {}
 
 
 # Module-level store: token → CVSession
 cv_sessions: dict[str, CVSession] = {}
 
 
-def store_session(cv_text: str, filename: str) -> str:
-    """Store extracted CV text, return session token."""
+def store_session(cv_text: str, filename: str) -> CVSession:
+    """Store extracted CV text, return CVSession object."""
     cleanup_sessions()
     token = str(uuid.uuid4())
-    cv_sessions[token] = CVSession(
+    session = CVSession(
+        token=token,
         cv_text=cv_text,
         filename=filename,
-        char_count=len(cv_text),
         uploaded_at=datetime.now(timezone.utc),
     )
+    cv_sessions[token] = session
     logger.info(
         "[sessions] Stored session %s (%d chars, %s)", token[:8], len(cv_text), filename
     )
-    return token
+    return session
 
 
 def get_session(token: str) -> CVSession | None:
