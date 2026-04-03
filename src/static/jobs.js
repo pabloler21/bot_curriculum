@@ -33,6 +33,15 @@ function escHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
+function safeUrl(u) {
+  try {
+    const parsed = new URL(u);
+    return (parsed.protocol === 'https:' || parsed.protocol === 'http:') ? u : '#';
+  } catch {
+    return '#';
+  }
+}
+
 function formatEmploymentType(type) {
   return type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -43,12 +52,11 @@ function renderJobCard(job, index) {
   const article = document.createElement('article');
   article.className = 'job-card';
   article.setAttribute('tabindex', '0');
-  article.setAttribute('role', 'article');
   article.setAttribute(
     'aria-label',
     `${escHtml(job.title)} at ${escHtml(job.company)}`
   );
-  article.style.animationDelay = `${index * 0.04}s`;
+  article.style.animationDelay = `${Math.min(index * 0.04, 0.4)}s`;
   article.dataset.jobId = job.id;
 
   const tags = job.tags
@@ -81,7 +89,7 @@ function renderJobCard(job, index) {
         aria-label="See your match for ${escHtml(job.title)}"
       >See your match →</a>
       <a
-        href="${escHtml(job.url)}"
+        href="${safeUrl(job.url)}"
         target="_blank"
         rel="noopener noreferrer"
         class="view-original"
@@ -94,6 +102,7 @@ function renderJobCard(job, index) {
   // Keyboard: Enter/Space activates primary CTA
   article.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
+      if (e.target !== article) return; // let child links/buttons handle their own events
       e.preventDefault();
       window.location.href = `job-detail.html?id=${encodeURIComponent(job.id)}`;
     }
@@ -105,9 +114,7 @@ function renderJobCard(job, index) {
 function renderJobs(jobs) {
   jobsGrid.innerHTML = '';
   if (jobs.length === 0) {
-    jobsGrid.innerHTML =
-      '<p style="color:var(--text-secondary);text-align:center;padding:40px 0;">'
-      + 'No job listings available right now.</p>';
+    jobsGrid.innerHTML = '<p class="empty-state">No job listings available right now.</p>';
     return;
   }
   jobs.forEach((job, i) => jobsGrid.appendChild(renderJobCard(job, i)));
