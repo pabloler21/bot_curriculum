@@ -17,6 +17,7 @@ dependencies = [
     "requests>=2.33.0",
     "slowapi>=0.1.9",
     "streamlit>=1.55.0",
+    "sentence-transformers>=3.0.0",
     "uvicorn>=0.42.0",
 ]
 
