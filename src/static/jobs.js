@@ -22,6 +22,7 @@ let allJobs = [];
 let currentSort = 'date';   // 'date' | 'score'
 let scoresByJobId = {};      // populated in Phase 3
 let cvSessionToken = null;
+let rankingBanner = null;
 
 // ── Format helpers ─────────────────────────────────────────────────────────
 
@@ -55,6 +56,12 @@ function formatEmploymentType(type) {
   return type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function simBarClass(score) {
+  if (score >= 0.6) return 'sim-high';
+  if (score >= 0.4) return 'sim-mid';
+  return 'sim-low';
+}
+
 // ── Render ─────────────────────────────────────────────────────────────────
 
 function renderJobCard(job, index) {
@@ -77,11 +84,18 @@ function renderJobCard(job, index) {
     ? `<span class="job-salary">${escHtml(job.salary_range)}</span>`
     : '';
 
+  const simBar = (job.similarity_score != null)
+    ? `<div class="similarity-bar-wrap" aria-label="Relevance: ${Math.round(job.similarity_score * 100)}%">
+         <div class="similarity-bar ${simBarClass(job.similarity_score)}" style="width:${Math.round(job.similarity_score * 100)}%"></div>
+       </div>`
+    : '';
+
   article.innerHTML = `
     <div class="job-card-header">
       <h2 class="job-title">${escHtml(job.title)}</h2>
       <span class="score-badge" aria-label="Match score" aria-hidden="true"></span>
     </div>
+    ${simBar}
     <div class="job-meta">
       <span class="job-company">${escHtml(job.company)}</span>
       <span class="job-meta-sep" aria-hidden="true">·</span>
@@ -95,8 +109,8 @@ function renderJobCard(job, index) {
       <a
         href="job-detail.html?id=${encodeURIComponent(job.id)}"
         class="btn-match"
-        aria-label="See your match for ${escHtml(job.title)}"
-      >See your match →</a>
+        aria-label="See full analysis for ${escHtml(job.title)}"
+      >See full analysis →</a>
       <a
         href="${safeUrl(job.url)}"
         target="_blank"
@@ -126,7 +140,42 @@ function renderJobs(jobs) {
     jobsGrid.innerHTML = '<p class="empty-state">No job listings available right now.</p>';
     return;
   }
-  jobs.forEach((job, i) => jobsGrid.appendChild(renderJobCard(job, i)));
+
+  const cvActive = jobs.some(j => j.similarity_score != null);
+
+  if (cvActive) {
+    const relevant = jobs.filter(j => j.similarity_score == null || j.similarity_score >= 0.25);
+    const lowRelevance = jobs.filter(j => j.similarity_score != null && j.similarity_score < 0.25);
+
+    relevant.forEach((job, i) => jobsGrid.appendChild(renderJobCard(job, i)));
+
+    if (lowRelevance.length > 0) {
+      const toggle = document.createElement('button');
+      toggle.className = 'low-relevance-toggle';
+      toggle.textContent = `Show ${lowRelevance.length} low-relevance jobs`;
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-controls', 'low-relevance-jobs');
+
+      const lowSection = document.createElement('div');
+      lowSection.id = 'low-relevance-jobs';
+      lowSection.className = 'hidden';
+      lowRelevance.forEach((job, i) => lowSection.appendChild(renderJobCard(job, relevant.length + i)));
+
+      toggle.addEventListener('click', () => {
+        const expanded = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!expanded));
+        toggle.textContent = expanded
+          ? `Show ${lowRelevance.length} low-relevance jobs`
+          : `Hide ${lowRelevance.length} low-relevance jobs`;
+        lowSection.classList.toggle('hidden', expanded);
+      });
+
+      jobsGrid.appendChild(toggle);
+      jobsGrid.appendChild(lowSection);
+    }
+  } else {
+    jobs.forEach((job, i) => jobsGrid.appendChild(renderJobCard(job, i)));
+  }
 }
 
 // ── Sort ───────────────────────────────────────────────────────────────────
@@ -220,6 +269,7 @@ cvFileInput.addEventListener('change', async () => {
     cvSessionToken = data.token;
     localStorage.setItem('cv_session_token', data.token);
     showCvChip(data.filename);
+    loadRankedJobs(data.token);
   } catch (err) {
     showCvError(err instanceof TypeError
       ? 'Could not connect. Check your connection.'
@@ -244,6 +294,7 @@ cvRemoveBtn.addEventListener('click', async () => {
   cvSessionToken = null;
   localStorage.removeItem('cv_session_token');
   showCvButton();
+  loadJobs();
 });
 
 async function restoreCvSession() {
@@ -258,9 +309,26 @@ async function restoreCvSession() {
     const data = await res.json();
     cvSessionToken = token;
     showCvChip(data.filename);
+    loadRankedJobs(token);
   } catch {
     localStorage.removeItem('cv_session_token');
   }
+}
+
+// ── Ranking banner ─────────────────────────────────────────────────────────
+
+function showRankingBanner(count) {
+  if (!rankingBanner) {
+    rankingBanner = document.createElement('p');
+    rankingBanner.className = 'ranking-banner';
+    jobsGrid.parentNode.insertBefore(rankingBanner, jobsGrid);
+  }
+  rankingBanner.textContent = `Showing ${count} jobs ranked by relevance to your CV.`;
+  rankingBanner.classList.remove('hidden');
+}
+
+function hideRankingBanner() {
+  if (rankingBanner) rankingBanner.classList.add('hidden');
 }
 
 // ── Fetch ──────────────────────────────────────────────────────────────────
@@ -269,6 +337,7 @@ async function loadJobs() {
   loadingEl.classList.remove('hidden');
   errorEl.classList.add('hidden');
   jobsGrid.innerHTML = '';
+  hideRankingBanner();
 
   try {
     const res = await fetch(`${BACKEND_URL}/jobs`);
@@ -279,6 +348,32 @@ async function loadJobs() {
     allJobs = await res.json();
     loadingEl.classList.add('hidden');
     renderJobs(sortedJobs());
+  } catch (err) {
+    loadingEl.classList.add('hidden');
+    errorEl.textContent = err instanceof TypeError
+      ? 'Could not connect to the server. Check your connection.'
+      : err.message;
+    errorEl.classList.remove('hidden');
+  }
+}
+
+async function loadRankedJobs(token) {
+  loadingEl.classList.remove('hidden');
+  errorEl.classList.add('hidden');
+  jobsGrid.innerHTML = '';
+  hideRankingBanner();
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/jobs/ranked?token=${encodeURIComponent(token)}`);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.detail || `Error ${res.status}`);
+    }
+    allJobs = await res.json();
+    loadingEl.classList.add('hidden');
+    const rankedCount = allJobs.filter(j => j.similarity_score != null).length;
+    if (rankedCount > 0) showRankingBanner(rankedCount);
+    renderJobs(allJobs);
   } catch (err) {
     loadingEl.classList.add('hidden');
     errorEl.textContent = err instanceof TypeError

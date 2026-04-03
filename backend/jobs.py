@@ -5,7 +5,7 @@ from html.parser import HTMLParser
 from typing import Optional
 
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +42,7 @@ class Job(BaseModel):
     tags: list[str]
     url: str
     posted_at: date
+    embedding: list[float] | None = Field(default=None, exclude=True)
 
 
 REMOTIVE_URL = "https://remotive.com/api/remote-jobs"
@@ -92,6 +93,14 @@ async def fetch_jobs() -> list[Job]:
         data = response.json()
 
     jobs = [_map_job(raw) for raw in data.get("jobs", [])]
+
+    from backend.ranker import embed_text  # lazy import to avoid circular dependency
+    for job in jobs:
+        try:
+            job.embedding = embed_text(job.description)
+        except Exception:
+            logger.warning("[jobs] Failed to embed job %s", job.id, exc_info=True)
+
     _cache["data"] = (jobs, datetime.now(timezone.utc))
     logger.info("[jobs] Cached %d jobs", len(jobs))
     return jobs

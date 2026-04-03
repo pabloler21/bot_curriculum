@@ -6,6 +6,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from backend.ranker import embed_text
+
 logger = logging.getLogger(__name__)
 
 SESSION_TTL_MINUTES = 60
@@ -38,6 +40,13 @@ def store_session(cv_text: str, filename: str) -> CVSession:
     logger.info(
         "[sessions] Stored session %s (%d chars, %s)", token[:8], len(cv_text), filename
     )
+    try:
+        session.cv_embedding = embed_text(cv_text)
+        logger.info(
+            "[sessions] CV embedding computed (%d dims)", len(session.cv_embedding)
+        )
+    except Exception:
+        logger.warning("[sessions] Failed to compute CV embedding", exc_info=True)
     return session
 
 
