@@ -11,3 +11,6 @@ wheels/
 
 # Variables de entorno (API keys)
 .env
+
+# Git worktrees
+.worktrees/
