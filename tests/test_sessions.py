@@ -49,3 +49,78 @@ def test_cleanup_keeps_fresh_sessions():
     token = store_session("text", "file.pdf")
     cleanup_sessions()
     assert get_session(token) is not None
+
+
+# ── Route tests ──────────────────────────────────────────────────────────────
+import io
+from fastapi.testclient import TestClient
+from src.main import app
+from unittest.mock import patch
+
+
+route_client = TestClient(app)
+
+
+def test_post_session_returns_token():
+    fake_pdf = b"%PDF-1.4 fake content"
+    with patch("src.routes.session.extract_text", return_value="extracted cv text"):
+        response = route_client.post(
+            "/session",
+            files={"file": ("resume.pdf", io.BytesIO(fake_pdf), "application/pdf")},
+        )
+    assert response.status_code == 200
+    data = response.json()
+    assert "token" in data
+    assert data["filename"] == "resume.pdf"
+    assert data["char_count"] == len("extracted cv text")
+
+
+def test_post_session_rejects_empty_file():
+    with patch("src.routes.session.extract_text", return_value="text"):
+        response = route_client.post(
+            "/session",
+            files={"file": ("empty.pdf", io.BytesIO(b""), "application/pdf")},
+        )
+    assert response.status_code == 400
+
+
+def test_post_session_rejects_oversized_file():
+    big_content = b"x" * (5 * 1024 * 1024 + 1)
+    with patch("src.routes.session.extract_text", return_value="text"):
+        response = route_client.post(
+            "/session",
+            files={"file": ("big.pdf", io.BytesIO(big_content), "application/pdf")},
+        )
+    assert response.status_code == 413
+
+
+def test_get_session_exists():
+    with patch("src.routes.session.extract_text", return_value="cv text"):
+        post_res = route_client.post(
+            "/session",
+            files={"file": ("cv.pdf", io.BytesIO(b"data"), "application/pdf")},
+        )
+    token = post_res.json()["token"]
+    response = route_client.get(f"/session/{token}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["exists"] is True
+    assert data["filename"] == "cv.pdf"
+
+
+def test_get_session_not_found():
+    response = route_client.get("/session/00000000-0000-0000-0000-000000000000")
+    assert response.status_code == 404
+
+
+def test_delete_session():
+    with patch("src.routes.session.extract_text", return_value="text"):
+        post_res = route_client.post(
+            "/session",
+            files={"file": ("cv.pdf", io.BytesIO(b"data"), "application/pdf")},
+        )
+    token = post_res.json()["token"]
+    del_res = route_client.delete(f"/session/{token}")
+    assert del_res.status_code == 204
+    get_res = route_client.get(f"/session/{token}")
+    assert get_res.status_code == 404
