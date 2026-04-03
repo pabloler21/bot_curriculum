@@ -10,9 +10,18 @@ const errorEl      = document.getElementById('error-jobs');
 const sortDateBtn  = document.getElementById('sort-date');
 const sortScoreBtn = document.getElementById('sort-score');
 
+const cvUploadBtn  = document.getElementById('cv-upload-btn');
+const cvFileInput  = document.getElementById('cv-file-input');
+const cvUploadArea = document.getElementById('cv-upload-area');
+const cvActiveArea = document.getElementById('cv-active-area');
+const cvChipName   = document.getElementById('cv-chip-name');
+const cvRemoveBtn  = document.getElementById('cv-remove-btn');
+const cvError      = document.getElementById('cv-error');
+
 let allJobs = [];
 let currentSort = 'date';   // 'date' | 'score'
 let scoresByJobId = {};      // populated in Phase 3
+let cvSessionToken = null;
 
 // ── Format helpers ─────────────────────────────────────────────────────────
 
@@ -150,6 +159,110 @@ sortScoreBtn.addEventListener('click', () => {
   if (!sortScoreBtn.disabled) setSort('score');
 });
 
+// ── CV Session ─────────────────────────────────────────────────────────────
+
+function showCvChip(filename) {
+  cvChipName.textContent = filename;   // textContent is safe, no escHtml needed
+  cvUploadArea.classList.add('hidden');
+  cvActiveArea.classList.remove('hidden');
+  cvError.classList.add('hidden');
+  cvError.textContent = '';
+}
+
+function showCvButton() {
+  cvActiveArea.classList.add('hidden');
+  cvUploadArea.classList.remove('hidden');
+  cvError.classList.add('hidden');
+  cvError.textContent = '';
+}
+
+function showCvError(msg) {
+  cvError.textContent = msg;
+  cvError.classList.remove('hidden');
+}
+
+cvUploadBtn.addEventListener('click', () => cvFileInput.click());
+
+cvFileInput.addEventListener('change', async () => {
+  const file = cvFileInput.files[0];
+  if (!file) return;
+
+  // Reset input so the same file can be re-selected
+  cvFileInput.value = '';
+
+  // Client-side validation
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['pdf', 'docx'].includes(ext)) {
+    showCvError('Only PDF and DOCX files are supported.');
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showCvError('File must be under 5 MB.');
+    return;
+  }
+
+  cvError.classList.add('hidden');
+  cvUploadBtn.disabled = true;
+  cvUploadBtn.textContent = 'Uploading…';
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${BACKEND_URL}/session`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.detail || `Upload failed (${res.status})`);
+    }
+    const data = await res.json();
+    cvSessionToken = data.token;
+    localStorage.setItem('cv_session_token', data.token);
+    showCvChip(data.filename);
+  } catch (err) {
+    showCvError(err instanceof TypeError
+      ? 'Could not connect. Check your connection.'
+      : err.message);
+  } finally {
+    cvUploadBtn.disabled = false;
+    cvUploadBtn.textContent = 'Upload your CV';
+  }
+});
+
+cvRemoveBtn.addEventListener('click', async () => {
+  const token = cvSessionToken || localStorage.getItem('cv_session_token');
+  if (token) {
+    try {
+      await fetch(`${BACKEND_URL}/session/${encodeURIComponent(token)}`, {
+        method: 'DELETE',
+      });
+    } catch {
+      // ignore network errors on removal
+    }
+  }
+  cvSessionToken = null;
+  localStorage.removeItem('cv_session_token');
+  showCvButton();
+});
+
+async function restoreCvSession() {
+  const token = localStorage.getItem('cv_session_token');
+  if (!token) return;
+  try {
+    const res = await fetch(`${BACKEND_URL}/session/${encodeURIComponent(token)}`);
+    if (!res.ok) {
+      localStorage.removeItem('cv_session_token');
+      return;
+    }
+    const data = await res.json();
+    cvSessionToken = token;
+    showCvChip(data.filename);
+  } catch {
+    localStorage.removeItem('cv_session_token');
+  }
+}
+
 // ── Fetch ──────────────────────────────────────────────────────────────────
 
 async function loadJobs() {
@@ -175,4 +288,5 @@ async function loadJobs() {
   }
 }
 
+restoreCvSession();
 loadJobs();
