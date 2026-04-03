@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CV Evaluator — Job Board</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anta&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="jobs.css">
+</head>
+<body>
+
+  <!-- Sticky CV bar (Phase 2 will populate this — for now it's a placeholder) -->
+  <div id="cv-bar" class="cv-bar" role="complementary" aria-label="CV upload status">
+    <div class="cv-bar-inner">
+      <div id="cv-upload-area">
+        <button id="cv-upload-btn" class="btn-primary cv-upload-trigger" aria-label="Upload your CV to see match scores">
+          Upload your CV
+        </button>
+        <input type="file" id="cv-file-input" accept=".pdf,.docx" hidden aria-label="Select CV file">
+      </div>
+      <div id="cv-active-area" class="hidden">
+        <div class="cv-chip" role="status" aria-live="polite">
+          <span class="cv-chip-icon" aria-hidden="true">📄</span>
+          <span id="cv-chip-name" class="cv-chip-name"></span>
+          <button id="cv-remove-btn" class="cv-chip-remove" aria-label="Remove uploaded CV">×</button>
+        </div>
+        <span id="cv-scoring-status" class="cv-scoring-status hidden" aria-live="polite">
+          <span class="spinner-small" aria-hidden="true"></span>
+          Scoring jobs against your CV…
+        </span>
+      </div>
+      <p id="cv-error" class="cv-error hidden" role="alert"></p>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="header-inner">
+      <div>
+        <h1>CV Evaluator</h1>
+        <p>Remote Tech Job Board</p>
+      </div>
+      <nav class="header-nav" aria-label="App navigation">
+        <a href="index.html" class="nav-link">ATS Evaluator</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Sort toolbar -->
+    <div class="toolbar" role="toolbar" aria-label="Sort options">
+      <span class="toolbar-label">Sort by:</span>
+      <button id="sort-date" class="sort-btn active" aria-pressed="true">Date posted</button>
+      <button id="sort-score" class="sort-btn" aria-pressed="false" disabled title="Upload your CV to sort by match score">Match score</button>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading-jobs" class="loading-state" aria-live="polite" aria-label="Loading jobs">
+      <div class="spinner"></div>
+      <p class="loading-text">Loading job listings...</p>
+    </div>
+
+    <!-- Error -->
+    <p id="error-jobs" class="error-msg hidden" role="alert"></p>
+
+    <!-- Job grid -->
+    <div id="jobs-grid" class="jobs-grid" aria-label="Job listings"></div>
+
+  </main>
+
+  <script src="jobs.js"></script>
+</body>
+</html>
