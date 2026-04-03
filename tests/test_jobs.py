@@ -179,3 +179,13 @@ def test_get_jobs_returns_502_on_upstream_error(client):
     assert response.status_code == 502
     body = response.json()
     assert body["code"] == "upstream_error"
+
+
+def test_get_jobs_returns_500_on_unexpected_error(client):
+    async def explode():
+        raise ValueError("unexpected bug")
+
+    with patch("src.routes.jobs.fetch_jobs", new=explode):
+        response = client.get("/jobs")
+    assert response.status_code == 500
+    assert response.json()["code"] == "internal_error"
