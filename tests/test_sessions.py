@@ -27,7 +27,7 @@ def test_get_session_returns_none_for_unknown_token():
     assert get_session("nonexistent-token") is None
 
 
-def test_delete_session():
+def test_delete_session_unit():
     token = store_session("text", "file.pdf")
     delete_session(token)
     assert get_session(token) is None
