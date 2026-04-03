@@ -429,3 +429,59 @@
   padding: 40px 0;
   font-size: 14px;
 }
+
+/* ── Similarity bar (Phase 2.5) ─────────── */
+.similarity-bar-wrap {
+  height: 3px;
+  background: rgba(76, 107, 138, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 4px 0 2px;
+}
+
+.similarity-bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.similarity-bar.sim-high { background: #57cbde; }
+.similarity-bar.sim-mid  { background: #e5a330; }
+.similarity-bar.sim-low  { background: rgba(76, 107, 138, 0.5); }
+
+/* ── Ranking banner ──────────────────────── */
+.ranking-banner {
+  font-size: 12px;
+  color: var(--accent-blue);
+  letter-spacing: 0.04em;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: rgba(102, 192, 244, 0.07);
+  border: 1px solid rgba(102, 192, 244, 0.25);
+  border-radius: 2px;
+}
+
+/* ── Low-relevance toggle ────────────────── */
+.low-relevance-toggle {
+  grid-column: 1 / -1;
+  background: transparent;
+  border: 1px dashed rgba(76, 107, 138, 0.4);
+  color: var(--text-secondary);
+  font-family: 'Inter', Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: color 0.15s, border-color 0.15s;
+  margin-top: 4px;
+}
+
+.low-relevance-toggle:hover,
+.low-relevance-toggle:focus-visible {
+  color: var(--accent-blue);
+  border-color: rgba(102, 192, 244, 0.4);
+  outline: none;
+}
