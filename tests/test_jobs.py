@@ -1,6 +1,11 @@
 # tests/test_jobs.py
 from datetime import date
 
+import httpx
+import respx
+from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
+
 from backend.jobs import Job, strip_html
 
 
@@ -55,3 +60,92 @@ def test_job_model_serializable():
     data = job.model_dump(mode="json")
     assert data["posted_at"] == "2025-03-01"
     json.dumps(data)  # must not raise
+
+
+REMOTIVE_SAMPLE = {
+    "jobs": [
+        {
+            "id": 1,
+            "title": "Python Developer",
+            "company_name": "TechCorp",
+            "candidate_required_location": "Worldwide",
+            "job_type": "full_time",
+            "salary": "$80k - $110k",
+            "description": "<p>We need a <b>Python</b> dev.</p>",
+            "tags": ["python", "django"],
+            "url": "https://remotive.com/job/1",
+            "publication_date": "2025-03-15T10:00:00",
+        }
+    ]
+}
+
+
+@respx.mock
+async def test_fetch_jobs_returns_normalized_jobs():
+    from backend.jobs import fetch_jobs, _cache
+    _cache["data"] = None  # clear cache
+
+    respx.get("https://remotive.com/api/remote-jobs").mock(
+        return_value=httpx.Response(200, json=REMOTIVE_SAMPLE)
+    )
+
+    jobs = await fetch_jobs()
+    assert len(jobs) == 1
+    assert jobs[0].title == "Python Developer"
+    assert jobs[0].company == "TechCorp"
+    assert jobs[0].description == "We need a Python dev."  # HTML stripped
+    assert jobs[0].tags == ["python", "django"]
+    assert jobs[0].posted_at == date(2025, 3, 15)
+    assert jobs[0].url == "https://remotive.com/job/1"
+
+
+@respx.mock
+async def test_fetch_jobs_uses_cache():
+    from backend.jobs import fetch_jobs, _cache, Job
+    # Prime cache with a recent timestamp
+    _cache["data"] = (
+        [
+            Job(
+                id="99", title="Cached Job", company="CacheCo",
+                location="Remote", employment_type="full_time",
+                description="cached", tags=[],
+                url="https://example.com", posted_at=date(2025, 1, 1),
+            )
+        ],
+        datetime.now(timezone.utc),
+    )
+
+    # No HTTP mock — if fetch_jobs makes a real call it will raise
+    jobs = await fetch_jobs()
+    assert jobs[0].title == "Cached Job"
+
+
+@respx.mock
+async def test_fetch_jobs_invalidates_stale_cache():
+    from backend.jobs import fetch_jobs, _cache
+    old_time = datetime.now(timezone.utc) - timedelta(minutes=20)
+    _cache["data"] = ([], old_time)
+
+    respx.get("https://remotive.com/api/remote-jobs").mock(
+        return_value=httpx.Response(200, json=REMOTIVE_SAMPLE)
+    )
+
+    jobs = await fetch_jobs()
+    assert len(jobs) == 1
+    assert jobs[0].title == "Python Developer"
+
+
+@respx.mock
+async def test_fetch_jobs_raises_on_http_error():
+    from backend.jobs import fetch_jobs, _cache
+    _cache["data"] = None
+
+    respx.get("https://remotive.com/api/remote-jobs").mock(
+        return_value=httpx.Response(503)
+    )
+
+    try:
+        await fetch_jobs()
+        assert False, "Should have raised"
+    except httpx.HTTPStatusError:
+        pass
