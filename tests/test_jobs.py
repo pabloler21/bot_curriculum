@@ -1,6 +1,6 @@
 # tests/test_jobs.py
-import pytest
 from datetime import date
+
 from backend.jobs import Job, strip_html
 
 

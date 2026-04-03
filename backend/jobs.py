@@ -1,6 +1,6 @@
 # backend/jobs.py
 import logging
-from datetime import date, datetime
+from datetime import date
 from html.parser import HTMLParser
 from typing import Optional
 
@@ -36,7 +36,7 @@ class Job(BaseModel):
     company: str
     location: str
     employment_type: str
-    salary_range: Optional[str]
+    salary_range: Optional[str] = None
     description: str
     tags: list[str]
     url: str
