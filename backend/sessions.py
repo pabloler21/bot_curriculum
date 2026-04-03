@@ -54,9 +54,9 @@ def get_session(token: str) -> CVSession | None:
     return session
 
 
-def delete_session(token: str) -> None:
-    """Explicitly remove a session."""
-    cv_sessions.pop(token, None)
+def delete_session(token: str) -> bool:
+    """Explicitly remove a session. Returns True if it existed."""
+    return cv_sessions.pop(token, None) is not None
 
 
 def cleanup_sessions() -> None:

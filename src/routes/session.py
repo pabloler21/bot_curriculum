@@ -1,8 +1,9 @@
 # src/routes/session.py
 import logging
+import uuid
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 
 from backend.extractor import extract_text
 from backend.sessions import delete_session, get_session, store_session
@@ -41,6 +42,13 @@ async def create_session(file: UploadFile = File(...)):
 
 @router.get("/session/{token}")
 async def read_session(token: str):
+    try:
+        uuid.UUID(token)
+    except ValueError:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "Invalid session token format", "code": "invalid_token"},
+        )
     session = get_session(token)
     if session is None:
         raise HTTPException(status_code=404, detail="Session not found or expired")
@@ -53,5 +61,17 @@ async def read_session(token: str):
 
 @router.delete("/session/{token}", status_code=204)
 async def remove_session(token: str):
-    delete_session(token)
+    try:
+        uuid.UUID(token)
+    except ValueError:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "Invalid session token format", "code": "invalid_token"},
+        )
+    deleted = delete_session(token)
+    if not deleted:
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "Session not found", "code": "session_not_found"},
+        )
     return Response(status_code=204)

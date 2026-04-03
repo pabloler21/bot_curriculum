@@ -125,3 +125,25 @@ def test_delete_session():
     assert del_res.status_code == 204
     get_res = route_client.get(f"/session/{token}")
     assert get_res.status_code == 404
+
+
+def test_get_session_malformed_token():
+    response = route_client.get("/session/not-a-uuid")
+    assert response.status_code == 400
+    data = response.json()
+    assert data["code"] == "invalid_token"
+
+
+def test_delete_session_malformed_token():
+    response = route_client.delete("/session/not-a-uuid")
+    assert response.status_code == 400
+    data = response.json()
+    assert data["code"] == "invalid_token"
+
+
+def test_delete_session_not_found():
+    # Valid UUID format but no session exists for it
+    response = route_client.delete("/session/00000000-0000-0000-0000-000000000000")
+    assert response.status_code == 404
+    data = response.json()
+    assert data["code"] == "session_not_found"
