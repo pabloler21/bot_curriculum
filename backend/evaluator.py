@@ -71,10 +71,17 @@ keywords missing, recommendations, and a brief summary.
 chain = prompt_template | structured_model
 
 
-def evaluate_cv(cv_text: str) -> dict:
+def evaluate_cv(cv_text: str, job_context: str | None = None) -> dict:
+    job_section = (
+        f"\n\nTARGET JOB DESCRIPTION:\n{job_context}" if job_context else ""
+    )
     try:
-        logger.info("[evaluator] Invoking Claude with %d chars of CV text", len(cv_text))
-        result = chain.invoke({"ats_skill": ats_skill, "cv_text": cv_text})
+        logger.info(
+            "[evaluator] Invoking Claude with %d chars of CV text", len(cv_text)
+        )
+        result = chain.invoke(
+            {"ats_skill": ats_skill, "cv_text": cv_text + job_section}
+        )
         logger.info("[evaluator] Claude response received")
         return result.model_dump()
     except Exception as e:
