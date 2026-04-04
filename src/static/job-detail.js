@@ -46,15 +46,14 @@ async function loadJobDetail() {
     }
 
     const cvToken = localStorage.getItem('cv_session_token');
+    // Use relative URLs directly — safeUrl() rejects relative paths (no protocol)
     const ctaHref = cvToken
       ? `index.html?job_id=${encodeURIComponent(job.id)}`
-      : null;
+      : 'index.html';
     const ctaText = cvToken
       ? 'See how to improve your match →'
       : 'Upload your CV to see your match score';
-    const ctaHtml = cvToken
-      ? `<a href="${safeUrl(ctaHref)}" class="btn-match detail-cta">${escHtml(ctaText)}</a>`
-      : `<a href="jobs.html" class="btn-match detail-cta">${escHtml(ctaText)}</a>`;
+    const ctaHtml = `<a href="${escHtml(ctaHref)}" class="btn-match detail-cta">${escHtml(ctaText)}</a>`;
 
     const tags = (job.tags || [])
       .map(t => `<span class="tag found">${escHtml(t)}</span>`)
