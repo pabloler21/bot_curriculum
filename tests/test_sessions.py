@@ -13,10 +13,13 @@ from backend.sessions import (
     store_session,
 )
 from src.main import app
+from src.routes.session import limiter as session_limiter
 
 
 def setup_function():
     cv_sessions.clear()
+    app.state.limiter.reset()
+    session_limiter.reset()
 
 
 def test_store_and_get_session():

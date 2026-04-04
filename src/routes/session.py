@@ -2,20 +2,24 @@
 import logging
 import uuid
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, Response
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from backend.extractor import extract_text
 from backend.sessions import delete_session, get_session, store_session
 
 logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 router = APIRouter()
 
 MAX_FILE_BYTES = 5 * 1024 * 1024  # 5 MB
 
 
 @router.post("/session")
-async def create_session(file: UploadFile = File(...)):
+@limiter.limit("3/minute")
+async def create_session(request: Request, file: UploadFile = File(...)):
     file_bytes = await file.read()
 
     if not file_bytes:
