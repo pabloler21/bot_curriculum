@@ -11,6 +11,8 @@ from backend.jobs import Job
 from backend.scorer import JobMatch, score_job
 from backend.sessions import cv_sessions
 from src.main import app
+from src.routes.jobs import limiter as jobs_limiter
+from src.routes.session import limiter as session_limiter
 
 scorer_client = TestClient(app)
 
@@ -77,6 +79,9 @@ async def test_score_job_returns_job_match():
 
 def setup_function():
     cv_sessions.clear()
+    app.state.limiter.reset()
+    session_limiter.reset()
+    jobs_limiter.reset()
 
 
 def test_post_jobs_score_no_session_returns_400():

@@ -4,9 +4,11 @@ import logging
 import uuid
 
 import httpx
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel as PydanticBaseModel
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from backend.jobs import Job, fetch_jobs
 from backend.ranker import rank_jobs
@@ -14,6 +16,7 @@ from backend.scorer import score_job
 from backend.sessions import get_session
 
 logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 router = APIRouter()
 
 
@@ -104,7 +107,8 @@ class ScoreRequest(PydanticBaseModel):
 
 
 @router.post("/jobs/score")
-async def score_jobs(body: ScoreRequest):
+@limiter.limit("3/minute")
+async def score_jobs(request: Request, body: ScoreRequest):
     # UUID validation
     try:
         uuid.UUID(body.token)
