@@ -2,6 +2,30 @@ const BACKEND_URL = window.location.hostname === 'bot-curriculum-1.onrender.com'
   ? 'https://bot-curriculum.onrender.com'
   : '';
 
+// ── Job context (Phase 4) ──────────────────────────────────────────────────
+const urlParams = new URLSearchParams(window.location.search);
+const contextJobId = urlParams.get('job_id');
+let contextJobData = null;
+
+async function loadJobContext() {
+  if (!contextJobId) return;
+  try {
+    const res = await fetch(`${BACKEND_URL}/jobs`);
+    if (!res.ok) return;
+    const jobs = await res.json();
+    const job = jobs.find(j => String(j.id) === String(contextJobId));
+    if (!job) return;
+    contextJobData = job;
+    const badge = document.getElementById('job-context-badge');
+    if (badge) {
+      badge.textContent = `Evaluating for: ${job.title} at ${job.company}`;
+      badge.classList.remove('hidden');
+    }
+  } catch { /* silently ignore */ }
+}
+
+loadJobContext();
+
 const dropZone       = document.getElementById('drop-zone');
 const fileInput      = document.getElementById('file-input');
 const fileNameEl     = document.getElementById('file-name');
@@ -100,11 +124,14 @@ analyzeBtn.addEventListener('click', async () => {
 
   const formData = new FormData();
   formData.append('file', selectedFile);
+  if (contextJobId) formData.append('job_id', contextJobId);
 
+  const cvToken = localStorage.getItem('cv_session_token');
   try {
     const response = await fetch(`${BACKEND_URL}/evaluate`, {
       method: 'POST',
       body: formData,
+      headers: cvToken ? { 'X-CV-Session-Token': cvToken } : {},
     });
 
     if (!response.ok) {

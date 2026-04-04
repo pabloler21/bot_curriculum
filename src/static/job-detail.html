@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Detail — CV Evaluator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anta&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="jobs.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <div>
+        <h1>CV Evaluator</h1>
+        <p>Remote Tech Job Board</p>
+      </div>
+      <nav class="header-nav" aria-label="App navigation">
+        <a href="jobs.html" class="nav-link">← Back to jobs</a>
+        <a href="index.html" class="nav-link">ATS Evaluator</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="loading-detail" class="loading-state" aria-live="polite">
+      <div class="spinner"></div>
+      <p class="loading-text">Loading job details...</p>
+    </div>
+    <p id="error-detail" class="error-msg hidden" role="alert"></p>
+    <div id="job-detail" class="hidden">
+      <!-- populated by job-detail.js -->
+    </div>
+  </main>
+
+  <script src="job-detail.js"></script>
+</body>
+</html>
