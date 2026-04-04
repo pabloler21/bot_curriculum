@@ -62,6 +62,12 @@ function simBarClass(score) {
   return 'sim-low';
 }
 
+function scoreBadgeClass(score) {
+  if (score >= 75) return 'score-strong';
+  if (score >= 50) return 'score-good';
+  return 'score-weak';
+}
+
 // ── Render ─────────────────────────────────────────────────────────────────
 
 function renderJobCard(job, index) {
@@ -293,6 +299,12 @@ cvRemoveBtn.addEventListener('click', async () => {
   }
   cvSessionToken = null;
   localStorage.removeItem('cv_session_token');
+  // Reset LLM scoring state
+  scoresByJobId = {};
+  sortScoreBtn.disabled = true;
+  sortScoreBtn.title = 'Upload your CV to sort by match score';
+  const scoreMore = document.getElementById('score-more-btn');
+  if (scoreMore) scoreMore.remove();
   showCvButton();
   loadJobs();
 });
@@ -374,6 +386,8 @@ async function loadRankedJobs(token) {
     const rankedCount = allJobs.filter(j => j.similarity_score != null).length;
     if (rankedCount > 0) showRankingBanner(rankedCount);
     renderJobs(allJobs);
+    // Start background LLM scoring — do not await, progressive enhancement
+    startBackgroundScoring(token);
   } catch (err) {
     loadingEl.classList.add('hidden');
     errorEl.textContent = err instanceof TypeError
@@ -381,6 +395,145 @@ async function loadRankedJobs(token) {
       : err.message;
     errorEl.classList.remove('hidden');
   }
+}
+
+async function startBackgroundScoring(token) {
+  // Show skeleton badges on top 8 cards
+  const topCards = Array.from(jobsGrid.querySelectorAll('.job-card')).slice(0, 8);
+  topCards.forEach(card => {
+    const badge = card.querySelector('.score-badge');
+    if (badge) {
+      badge.textContent = '—';
+      badge.style.display = 'flex';
+      badge.className = 'score-badge score-loading';
+    }
+  });
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/jobs/score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, limit: 8 }),
+    });
+    if (!res.ok) {
+      // Silently hide skeleton badges
+      jobsGrid.querySelectorAll('.score-badge.score-loading').forEach(b => {
+        b.style.display = 'none';
+        b.className = 'score-badge';
+      });
+      return;
+    }
+    const results = await res.json();
+
+    results.forEach(r => { scoresByJobId[r.job_id] = r; });
+
+    results.forEach(r => {
+      const card = jobsGrid.querySelector(`[data-job-id="${CSS.escape(String(r.job_id))}"]`);
+      if (!card) return;
+      const badge = card.querySelector('.score-badge');
+      if (!badge) return;
+
+      if (r.score == null) {
+        badge.style.display = 'none';
+        badge.className = 'score-badge';
+        return;
+      }
+
+      // Animate counter 0 → score
+      let current = 0;
+      badge.style.display = 'flex';
+      badge.className = `score-badge ${scoreBadgeClass(r.score)}`;
+      const target = r.score;
+      const interval = setInterval(() => {
+        current = Math.min(current + 3, target);
+        badge.textContent = current;
+        if (current >= target) clearInterval(interval);
+      }, 20);
+
+      // Add one_line_summary subtitle
+      if (r.one_line_summary) {
+        const titleEl = card.querySelector('.job-title');
+        if (titleEl && !card.querySelector('.job-one-line')) {
+          const summary = document.createElement('p');
+          summary.className = 'job-one-line';
+          summary.textContent = r.one_line_summary;
+          titleEl.insertAdjacentElement('afterend', summary);
+        }
+      }
+
+      // Highlight matched skills
+      if (r.matched_skills && r.matched_skills.length > 0) {
+        card.querySelectorAll('.tag').forEach(tag => {
+          const tagText = tag.textContent.toLowerCase();
+          if (r.matched_skills.some(s => tagText.includes(s.toLowerCase()))) {
+            tag.classList.add('matched');
+            tag.classList.remove('found');
+          }
+        });
+      }
+    });
+
+    // Enable "By match score" sort
+    sortScoreBtn.disabled = false;
+    sortScoreBtn.title = '';
+
+    // Add "Score more jobs" button if unscored jobs remain
+    const scoredCount = results.filter(r => r.score != null).length;
+    if (allJobs.length > scoredCount) {
+      addScoreMoreButton(scoredCount);
+    }
+
+  } catch {
+    // Silently fail — progressive enhancement
+    jobsGrid.querySelectorAll('.score-badge.score-loading').forEach(b => {
+      b.style.display = 'none';
+      b.className = 'score-badge';
+    });
+  }
+}
+
+function addScoreMoreButton(alreadyScored) {
+  const existing = document.getElementById('score-more-btn');
+  if (existing) existing.remove();
+
+  const btn = document.createElement('button');
+  btn.id = 'score-more-btn';
+  btn.className = 'score-more-btn';
+  btn.textContent = 'Score more jobs';
+  btn.setAttribute('aria-label', 'Score more jobs with your CV');
+
+  btn.addEventListener('click', async () => {
+    const token = cvSessionToken || localStorage.getItem('cv_session_token');
+    if (!token) return;
+    btn.disabled = true;
+    btn.textContent = 'Scoring…';
+    try {
+      const res = await fetch(`${BACKEND_URL}/jobs/score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, limit: 12 }),
+      });
+      if (!res.ok) { btn.disabled = false; btn.textContent = 'Score more jobs'; return; }
+      const results = await res.json();
+      results.forEach(r => { scoresByJobId[r.job_id] = r; });
+      results.slice(alreadyScored).forEach(r => {
+        const card = jobsGrid.querySelector(`[data-job-id="${CSS.escape(String(r.job_id))}"]`);
+        if (!card || r.score == null) return;
+        const badge = card.querySelector('.score-badge');
+        if (badge) {
+          badge.textContent = r.score;
+          badge.style.display = 'flex';
+          badge.className = `score-badge ${scoreBadgeClass(r.score)}`;
+        }
+      });
+      btn.remove();
+    } catch {
+      btn.disabled = false;
+      btn.textContent = 'Score more jobs';
+    }
+  });
+
+  jobsGrid.insertAdjacentElement('afterend', btn);
 }
 
 restoreCvSession();

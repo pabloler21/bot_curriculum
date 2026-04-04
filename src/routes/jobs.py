@@ -1,13 +1,16 @@
 # src/routes/jobs.py
+import asyncio
 import logging
 import uuid
 
 import httpx
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel as PydanticBaseModel
 
-from backend.jobs import fetch_jobs
+from backend.jobs import Job, fetch_jobs
 from backend.ranker import rank_jobs
+from backend.scorer import score_job
 from backend.sessions import get_session
 
 logger = logging.getLogger(__name__)
@@ -93,3 +96,81 @@ async def get_jobs():
                 "code": "internal_error",
             },
         )
+
+
+class ScoreRequest(PydanticBaseModel):
+    token: str
+    limit: int = 8
+
+
+@router.post("/jobs/score")
+async def score_jobs(body: ScoreRequest):
+    # UUID validation
+    try:
+        uuid.UUID(body.token)
+    except ValueError:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "Invalid session token format", "code": "invalid_token"},
+        )
+
+    # Validate limit
+    limit = min(max(body.limit, 1), 12)
+
+    session = get_session(body.token)
+    if session is None:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "No active CV session", "code": "no_session"},
+        )
+
+    try:
+        jobs = await fetch_jobs()
+    except Exception as e:
+        logger.exception("[jobs/score] Failed to fetch jobs: %s", e)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error", "code": "internal_error"},
+        )
+
+    # Rank to find top N
+    ranked = rank_jobs(session.cv_embedding or [], jobs)
+    top_jobs = [job for job, _ in ranked[:limit]]
+
+    # Score in parallel, using cache when available
+    async def score_one(job: Job):
+        if job.id in session.scored_jobs:
+            cached = session.scored_jobs[job.id]
+            # Return cached dict (may be None if it failed before)
+            if cached is not None:
+                return cached
+            return None  # previously failed
+
+        try:
+            match = await score_job(session.cv_text, job)
+            session.scored_jobs[job.id] = match.model_dump()
+            return session.scored_jobs[job.id]
+        except Exception:
+            logger.warning(
+                "[jobs/score] Scoring failed for job %s", job.id, exc_info=True
+            )
+            session.scored_jobs[job.id] = None
+            return None
+
+    results_list = await asyncio.gather(*[score_one(j) for j in top_jobs])
+
+    response = []
+    for job, result in zip(top_jobs, results_list):
+        if result is not None:
+            response.append({"job_id": job.id, **result})
+        else:
+            response.append({
+                "job_id": job.id,
+                "score": None,
+                "match_level": None,
+                "matched_skills": [],
+                "missing_skills": [],
+                "one_line_summary": None,
+            })
+
+    return response
