@@ -189,6 +189,7 @@ function renderJobs(jobs) {
 // ── Score application ──────────────────────────────────────────────────────
 
 function applyScoresToCards() {
+  // Pass 1: apply LLM scores where available
   Object.entries(scoresByJobId).forEach(([jobId, r]) => {
     const card = jobsGrid.querySelector(`[data-job-id="${CSS.escape(String(jobId))}"]`);
     if (!card || r.score == null) return;
@@ -219,6 +220,19 @@ function applyScoresToCards() {
         }
       });
     }
+  });
+
+  // Pass 2: similarity fallback for ranked jobs that have no LLM score
+  allJobs.forEach(job => {
+    if (scoresByJobId[job.id]?.score != null) return; // already has LLM score
+    if (job.similarity_score == null) return;          // not ranked, skip
+    const card = jobsGrid.querySelector(`[data-job-id="${CSS.escape(String(job.id))}"]`);
+    if (!card) return;
+    const badge = card.querySelector('.score-badge');
+    if (!badge) return;
+    badge.textContent = Math.round(job.similarity_score * 100);
+    badge.style.display = 'flex';
+    badge.className = 'score-badge score-sim';
   });
 }
 

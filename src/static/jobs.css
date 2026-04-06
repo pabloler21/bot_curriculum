@@ -499,6 +499,13 @@
 }
 
 
+/* Similarity fallback badge (no LLM score available) */
+.score-badge.score-sim {
+  border-color: rgba(76, 107, 138, 0.45);
+  color: var(--text-secondary);
+  background: rgba(76, 107, 138, 0.08);
+}
+
 /* Skeleton loading state for score badge */
 .score-badge.score-loading {
   border-color: rgba(76, 107, 138, 0.4);

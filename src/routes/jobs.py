@@ -187,7 +187,7 @@ async def score_jobs(request: Request, body: ScoreRequest):
             logger.warning(
                 "[jobs/score] Scoring failed for job %s", job.id, exc_info=True
             )
-            session.scored_jobs[job.id] = None
+            # Don't cache failures — allow retry on next request
             return None
 
     results_list = await asyncio.gather(*[score_one(j) for j in top_jobs])
