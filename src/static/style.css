@@ -29,7 +29,7 @@ body {
   color: var(--text-primary);
   font-family: 'Inter', Arial, sans-serif;
   min-height: 100vh;
-  background-image: radial-gradient(ellipse 160% 80% at 50% 0%, rgba(44, 71, 94, 0.22) 0%, transparent 65%);
+  background-image: radial-gradient(ellipse 160% 80% at 50% 0%, rgba(44, 71, 94, 0.35) 0%, transparent 65%);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
