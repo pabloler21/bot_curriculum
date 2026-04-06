@@ -40,15 +40,21 @@ _inserted_ids: set[str] = set()
 def upsert_job(job: Job) -> None:
     """Embed job.description and insert into Zvec collection.
 
-    Skips if already indexed.
+    Idempotent: safe to call across server restarts. If the job already exists
+    in the on-disk collection (e.g. from a previous run), the insert returns a
+    non-ok status — we log it and carry on rather than raising.
     """
     if job.id in _inserted_ids:
         return
     col = get_jobs_collection()
     embedding = embed_text(job.description)
-    col.insert(zvec.Doc(id=job.id, vectors={"embedding": embedding}))
+    status = col.insert(zvec.Doc(id=job.id, vectors={"embedding": embedding}))
+    if status.ok():
+        logger.debug("[ranker] Upserted job %s into Zvec", job.id)
+    else:
+        logger.debug("[ranker] Job %s already in Zvec collection, skipping insert", job.id)
+    # Always track in-memory so we skip the embed + insert attempt next time
     _inserted_ids.add(job.id)
-    logger.debug("[ranker] Upserted job %s into Zvec", job.id)
 
 
 def _get_model() -> SentenceTransformer:
