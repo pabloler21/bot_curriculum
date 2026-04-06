@@ -84,16 +84,3 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
     return float(np.dot(va, vb) / (norm_a * norm_b))
 
 
-def rank_jobs(cv_embedding: list[float], jobs: list[Job]) -> list[tuple[Job, float]]:
-    """Return jobs sorted by cosine similarity to cv_embedding, descending.
-
-    Uses pre-computed job.embedding when available; falls back to embedding
-    job.description on the fly.
-    """
-    scored = []
-    for job in jobs:
-        job_emb = embed_text(job.description)
-        score = max(0.0, min(1.0, cosine_similarity(cv_embedding, job_emb)))
-        scored.append((job, round(score, 2)))
-    scored.sort(key=lambda x: x[1], reverse=True)
-    return scored
