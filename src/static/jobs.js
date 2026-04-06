@@ -17,6 +17,7 @@ const cvActiveArea = document.getElementById('cv-active-area');
 const cvChipName   = document.getElementById('cv-chip-name');
 const cvRemoveBtn  = document.getElementById('cv-remove-btn');
 const cvError      = document.getElementById('cv-error');
+const cvBannerCopy = document.getElementById('cv-banner-copy');
 
 let allJobs = [];
 let currentSort = 'date';   // 'date' | 'score'
@@ -184,6 +185,42 @@ function renderJobs(jobs) {
   }
 }
 
+// ── Score application ──────────────────────────────────────────────────────
+
+function applyScoresToCards() {
+  Object.entries(scoresByJobId).forEach(([jobId, r]) => {
+    const card = jobsGrid.querySelector(`[data-job-id="${CSS.escape(String(jobId))}"]`);
+    if (!card || r.score == null) return;
+
+    const badge = card.querySelector('.score-badge');
+    if (badge) {
+      badge.textContent = r.score;
+      badge.style.display = 'flex';
+      badge.className = `score-badge ${scoreBadgeClass(r.score)}`;
+    }
+
+    if (r.one_line_summary && !card.querySelector('.job-one-line')) {
+      const titleEl = card.querySelector('.job-title');
+      if (titleEl) {
+        const summary = document.createElement('p');
+        summary.className = 'job-one-line';
+        summary.textContent = r.one_line_summary;
+        titleEl.insertAdjacentElement('afterend', summary);
+      }
+    }
+
+    if (r.matched_skills && r.matched_skills.length > 0) {
+      card.querySelectorAll('.tag').forEach(tag => {
+        const tagText = tag.textContent.toLowerCase();
+        if (r.matched_skills.some(s => tagText.includes(s.toLowerCase()))) {
+          tag.classList.add('matched');
+          tag.classList.remove('found');
+        }
+      });
+    }
+  });
+}
+
 // ── Sort ───────────────────────────────────────────────────────────────────
 
 function sortedJobs() {
@@ -207,6 +244,7 @@ function setSort(mode) {
   sortScoreBtn.classList.toggle('active', mode === 'score');
   sortScoreBtn.setAttribute('aria-pressed', String(mode === 'score'));
   renderJobs(sortedJobs());
+  applyScoresToCards();
 }
 
 sortDateBtn.addEventListener('click', () => setSort('date'));
@@ -222,6 +260,7 @@ function showCvChip(filename) {
   cvActiveArea.classList.remove('hidden');
   cvError.classList.add('hidden');
   cvError.textContent = '';
+  if (cvBannerCopy) cvBannerCopy.classList.add('hidden');
 }
 
 function showCvButton() {
@@ -229,6 +268,7 @@ function showCvButton() {
   cvUploadArea.classList.remove('hidden');
   cvError.classList.add('hidden');
   cvError.textContent = '';
+  if (cvBannerCopy) cvBannerCopy.classList.remove('hidden');
 }
 
 function showCvError(msg) {
@@ -426,56 +466,10 @@ async function startBackgroundScoring(token) {
     const results = await res.json();
 
     results.forEach(r => { scoresByJobId[r.job_id] = r; });
+    applyScoresToCards();
 
-    results.forEach(r => {
-      const card = jobsGrid.querySelector(`[data-job-id="${CSS.escape(String(r.job_id))}"]`);
-      if (!card) return;
-      const badge = card.querySelector('.score-badge');
-      if (!badge) return;
-
-      if (r.score == null) {
-        badge.style.display = 'none';
-        badge.className = 'score-badge';
-        return;
-      }
-
-      // Animate counter 0 → score
-      let current = 0;
-      badge.style.display = 'flex';
-      badge.className = `score-badge ${scoreBadgeClass(r.score)}`;
-      const target = r.score;
-      const interval = setInterval(() => {
-        current = Math.min(current + 3, target);
-        badge.textContent = current;
-        if (current >= target) clearInterval(interval);
-      }, 20);
-
-      // Add one_line_summary subtitle
-      if (r.one_line_summary) {
-        const titleEl = card.querySelector('.job-title');
-        if (titleEl && !card.querySelector('.job-one-line')) {
-          const summary = document.createElement('p');
-          summary.className = 'job-one-line';
-          summary.textContent = r.one_line_summary;
-          titleEl.insertAdjacentElement('afterend', summary);
-        }
-      }
-
-      // Highlight matched skills
-      if (r.matched_skills && r.matched_skills.length > 0) {
-        card.querySelectorAll('.tag').forEach(tag => {
-          const tagText = tag.textContent.toLowerCase();
-          if (r.matched_skills.some(s => tagText.includes(s.toLowerCase()))) {
-            tag.classList.add('matched');
-            tag.classList.remove('found');
-          }
-        });
-      }
-    });
-
-    // Enable "By match score" sort
-    sortScoreBtn.disabled = false;
-    sortScoreBtn.title = '';
+    // Auto-switch to match score sort now that LLM scores are ready
+    setSort('score');
 
     // Add "Score more jobs" button if unscored jobs remain
     const scoredCount = results.filter(r => r.score != null).length;
