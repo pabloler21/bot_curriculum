@@ -189,3 +189,22 @@ def test_get_jobs_returns_500_on_unexpected_error(client):
         response = client.get("/jobs")
     assert response.status_code == 500
     assert response.json()["code"] == "internal_error"
+
+
+@respx.mock
+async def test_fetch_jobs_calls_upsert_for_each_job():
+    from unittest.mock import patch
+
+    from backend.jobs import _cache, fetch_jobs
+    _cache["data"] = None
+
+    respx.get("https://remotive.com/api/remote-jobs").mock(
+        return_value=httpx.Response(200, json=REMOTIVE_SAMPLE)
+    )
+
+    with patch("backend.ranker.upsert_job") as mock_upsert:
+        jobs = await fetch_jobs()
+
+    assert mock_upsert.call_count == len(jobs)
+    called_ids = {c.args[0].id for c in mock_upsert.call_args_list}
+    assert jobs[0].id in called_ids

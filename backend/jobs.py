@@ -5,7 +5,7 @@ from html.parser import HTMLParser
 from typing import Optional
 
 import httpx
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +42,10 @@ class Job(BaseModel):
     tags: list[str]
     url: str
     posted_at: date
-    embedding: list[float] | None = Field(default=None, exclude=True)
 
 
 REMOTIVE_URL = "https://remotive.com/api/remote-jobs"
-REMOTIVE_PARAMS = {"category": "software-dev", "limit": 20}
+REMOTIVE_PARAMS = {"category": "software-dev", "limit": 100}
 CACHE_TTL_SECONDS = 900  # 15 minutes
 
 # Module-level cache: {"data": (list[Job], datetime) | None}
@@ -94,12 +93,14 @@ async def fetch_jobs() -> list[Job]:
 
     jobs = [_map_job(raw) for raw in data.get("jobs", [])]
 
-    from backend.ranker import embed_text  # lazy import to avoid circular dependency
+    from backend.ranker import upsert_job as _upsert_job  # noqa: PLC0415 lazy
     for job in jobs:
         try:
-            job.embedding = embed_text(job.description)
+            _upsert_job(job)
         except Exception:
-            logger.warning("[jobs] Failed to embed job %s", job.id, exc_info=True)
+            logger.warning(  # noqa: TRY400
+                "[jobs] Failed to upsert job %s into Zvec", job.id, exc_info=True
+            )
 
     _cache["data"] = (jobs, datetime.now(timezone.utc))
     logger.info("[jobs] Cached %d jobs", len(jobs))

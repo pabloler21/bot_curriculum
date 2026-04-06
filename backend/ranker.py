@@ -92,7 +92,7 @@ def rank_jobs(cv_embedding: list[float], jobs: list[Job]) -> list[tuple[Job, flo
     """
     scored = []
     for job in jobs:
-        job_emb = job.embedding if job.embedding else embed_text(job.description)
+        job_emb = embed_text(job.description)
         score = max(0.0, min(1.0, cosine_similarity(cv_embedding, job_emb)))
         scored.append((job, round(score, 2)))
     scored.sort(key=lambda x: x[1], reverse=True)
