@@ -5,7 +5,6 @@ import uuid
 from datetime import date
 from unittest.mock import AsyncMock, patch
 
-import zvec
 from fastapi.testclient import TestClient
 
 from backend.jobs import Job
