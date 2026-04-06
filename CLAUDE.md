@@ -15,7 +15,7 @@ CV Evaluator: app web que analiza CVs y evalúa su compatibilidad ATS usando Cla
 - **Tests**: pytest + pytest-asyncio + respx
 - **Deploy**: Render.com (`render.yaml`)
 
-## Estructura actual (post Fase 5)
+## Estructura actual (post Fase 6)
 ```
 src/
   main.py             # FastAPI app, CORS, static files, rate limiter
@@ -39,7 +39,7 @@ backend/
   extractor.py        # extract_text() via liteparse
   jobs.py             # Job model, strip_html(), fetch_jobs(), caché 15 min
   sessions.py         # ★ NUEVO — CVSession model, cv_sessions dict, store/get/delete/cleanup
-  ranker.py           # ★ NUEVO — SentenceTransformer (all-MiniLM-L6-v2), embed_text(), rank_jobs()
+  ranker.py           # embed_text(), cosine_similarity(), get_jobs_collection(), upsert_job() — Zvec index at ./zvec_jobs
   scorer.py           # ★ NUEVO — JobMatch model, score_job() con claude-haiku-4-5
   prompts/
     ats_skill.md      # prompt de evaluación ATS
@@ -117,6 +117,7 @@ Plan completo en: `docs/superpowers/plans/2026-04-03-job-board-cv-scoring.md`
 | **Fase 3** — LLM scoring CV vs jobs (per-job) | ✅ Completa | mergeada a `develop` |
 | **Fase 4** — Job detail + integración evaluate | ✅ Completa | mergeada a `develop` |
 | **Fase 5** — Polish + rate limiting | ✅ Completa | `feature/phase-5-polish` |
+| **Fase 6** — Zvec persistent vector DB, job limit 100 | ✅ Completa | `feature/phase-6-zvec` |
 
 ### Fase 1 — Qué se implementó
 
