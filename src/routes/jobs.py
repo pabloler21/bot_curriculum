@@ -4,6 +4,7 @@ import logging
 import uuid
 
 import httpx
+import zvec
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel as PydanticBaseModel
@@ -11,7 +12,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from backend.jobs import Job, fetch_jobs
-from backend.ranker import rank_jobs
+from backend.ranker import get_jobs_collection, rank_jobs
 from backend.scorer import score_job
 from backend.sessions import get_session
 
@@ -57,12 +58,29 @@ async def get_ranked_jobs(token: str | None = Query(default=None)):
     session = get_session(token) if token else None
 
     if session and session.cv_embedding:
-        ranked = rank_jobs(session.cv_embedding, jobs)
+        col = get_jobs_collection()
+        results = col.query(
+            vectors=zvec.VectorQuery("embedding", vector=session.cv_embedding),
+            topk=20,
+        )
+        jobs_by_id = {job.id: job for job in jobs}
+        ranked_ids = {r.id for r in results}
+
         result = []
-        for job, score in ranked:
-            job_dict = job.model_dump(mode="json")
-            job_dict["similarity_score"] = round(score, 2)
-            result.append(job_dict)
+        for r in results:
+            job = jobs_by_id.get(r.id)
+            if job:
+                job_dict = job.model_dump(mode="json")
+                job_dict["similarity_score"] = round(r.score, 2)
+                result.append(job_dict)
+
+        # Jobs in cache not yet indexed by Zvec → append with no score
+        for job in jobs:
+            if job.id not in ranked_ids:
+                job_dict = job.model_dump(mode="json")
+                job_dict["similarity_score"] = None
+                result.append(job_dict)
+
         return result
     else:
         # Graceful fallback: return unranked with similarity_score null

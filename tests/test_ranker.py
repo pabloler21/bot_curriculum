@@ -12,7 +12,6 @@ from backend.ranker import (
     cosine_similarity,
     embed_text,
     get_jobs_collection,
-    rank_jobs,
     upsert_job,
 )
 from backend.sessions import cv_sessions
@@ -42,27 +41,6 @@ def test_cosine_similarity_orthogonal_vectors():
     b = [0.0, 1.0]
     assert abs(cosine_similarity(a, b)) < 1e-6
 
-
-def test_rank_jobs_returns_sorted_by_similarity():
-    cv_embedding = embed_text("Python FastAPI developer")
-    jobs = [
-        Job(id="1", title="Java Developer", company="Co", location="Remote",
-            employment_type="full_time", salary_range=None,
-            description="Java Spring Boot microservices", tags=[],
-            url="https://example.com/1", posted_at=date(2025, 1, 1)),
-        Job(id="2", title="Python Backend", company="Co", location="Remote",
-            employment_type="full_time", salary_range=None,
-            description="Python FastAPI REST API development", tags=[],
-            url="https://example.com/2", posted_at=date(2025, 1, 1)),
-    ]
-    results = rank_jobs(cv_embedding, jobs)
-    assert len(results) == 2
-    # Python job should rank higher than Java job
-    assert results[0][0].id == "2"
-    # Scores are between 0 and 1
-    assert all(0.0 <= score <= 1.0 for _, score in results)
-    # Sorted descending
-    assert results[0][1] >= results[1][1]
 
 
 jobs_client = TestClient(app)
@@ -99,36 +77,51 @@ def test_get_jobs_ranked_without_token_returns_unranked():
     assert all(job["similarity_score"] is None for job in data)
 
 
-def test_get_jobs_ranked_with_valid_token_returns_ranked():
+def test_get_jobs_ranked_with_valid_token_uses_zvec_query():
+    from unittest.mock import MagicMock, patch
     cv_sessions.clear()
     test_jobs = [
         make_test_job("1", "Java Spring Boot microservices developer"),
         make_test_job("2", "Python FastAPI REST API senior engineer"),
     ]
+
+    # Build mock Zvec result: job "2" ranks first
+    mock_result_2 = MagicMock()
+    mock_result_2.id = "2"
+    mock_result_2.score = 0.95
+    mock_result_1 = MagicMock()
+    mock_result_1.id = "1"
+    mock_result_1.score = 0.60
+
+    mock_col = MagicMock()
+    mock_col.query.return_value = [mock_result_2, mock_result_1]
+
     fetch_patch = patch(
         "src.routes.jobs.fetch_jobs", new_callable=AsyncMock, return_value=test_jobs
     )
     extract_patch = patch(
         "src.routes.session.extract_text", return_value="Python FastAPI developer"
     )
-    with fetch_patch, extract_patch:
+    col_patch = patch("src.routes.jobs.get_jobs_collection", return_value=mock_col)
+
+    with fetch_patch, extract_patch, col_patch:
         post_res = jobs_client.post(
             "/session",
             files={"file": ("cv.pdf", io.BytesIO(b"data"), "application/pdf")},
         )
     token = post_res.json()["token"]
 
-    with fetch_patch:
+    with fetch_patch, col_patch:
         response = jobs_client.get(f"/jobs/ranked?token={token}")
+
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 2
-    assert all(job["similarity_score"] is not None for job in data)
-    # Python job should rank higher (or at least scores are present)
-    scores = [job["similarity_score"] for job in data]
-    assert all(0.0 <= s <= 1.0 for s in scores)
-    # Sorted descending
-    assert scores[0] >= scores[1]
+    # job "2" should appear first with score 0.95
+    assert data[0]["id"] == "2"
+    assert data[0]["similarity_score"] == 0.95
+    assert data[1]["id"] == "1"
+    assert data[1]["similarity_score"] == 0.60
 
 
 def test_get_jobs_ranked_with_malformed_token_returns_400():
