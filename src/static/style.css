@@ -55,11 +55,11 @@ body {
 }
 
 .header h1 {
-  font-family: 'Anta', Arial, sans-serif;
+  font-family: 'Space Grotesk', Arial, sans-serif;
   color: var(--accent-blue);
   font-size: 30px;
-  font-weight: 400;
-  letter-spacing: 0.06em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   text-shadow: 0 0 28px rgba(102, 192, 244, 0.38);
   line-height: 1;
 }

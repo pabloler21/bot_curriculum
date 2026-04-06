@@ -63,10 +63,8 @@ function simBarClass(score) {
   return 'sim-low';
 }
 
-function scoreBadgeClass(score) {
-  if (score >= 75) return 'score-strong';
-  if (score >= 50) return 'score-good';
-  return 'score-weak';
+function scoreBadgeClass() {
+  return 'score-default';
 }
 
 // ── Render ─────────────────────────────────────────────────────────────────
@@ -232,8 +230,23 @@ function applyScoresToCards() {
     if (!badge) return;
     badge.textContent = Math.round(job.similarity_score * 100);
     badge.style.display = 'flex';
-    badge.className = 'score-badge score-sim';
+    badge.className = 'score-badge score-default';
   });
+
+  // Pass 3: highest visible score gets score-best (green), all others stay score-default (red)
+  let bestBadge = null;
+  let bestValue = -1;
+  jobsGrid.querySelectorAll('.score-badge').forEach(badge => {
+    if (badge.style.display === 'none') return;
+    const val = parseInt(badge.textContent, 10);
+    if (!isNaN(val) && val > bestValue) {
+      bestValue = val;
+      bestBadge = badge;
+    }
+  });
+  if (bestBadge) {
+    bestBadge.className = 'score-badge score-best';
+  }
 }
 
 // ── Sort ───────────────────────────────────────────────────────────────────

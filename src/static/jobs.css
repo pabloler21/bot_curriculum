@@ -400,22 +400,16 @@
 }
 
 /* ── Score badge states ───────────────────── */
-.score-badge.score-strong {
-  border-color: var(--success-green);
-  color: var(--success-green);
-  background: rgba(87, 203, 222, 0.12);
+.score-badge.score-best {
+  border-color: rgba(87, 203, 100, 0.6);
+  color: #7ecf82;
+  background: rgba(87, 203, 100, 0.13);
 }
 
-.score-badge.score-good {
-  border-color: var(--warning-amber);
-  color: var(--warning-amber);
-  background: rgba(229, 163, 48, 0.1);
-}
-
-.score-badge.score-weak {
-  border-color: var(--danger-red);
-  color: var(--danger-red);
-  background: rgba(231, 76, 60, 0.08);
+.score-badge.score-default {
+  border-color: rgba(231, 76, 60, 0.5);
+  color: #f08070;
+  background: rgba(231, 76, 60, 0.1);
 }
 
 /* Matched skill highlight (Phase 3) */
@@ -499,12 +493,6 @@
 }
 
 
-/* Similarity fallback badge (no LLM score available) */
-.score-badge.score-sim {
-  border-color: rgba(76, 107, 138, 0.45);
-  color: var(--text-secondary);
-  background: rgba(76, 107, 138, 0.08);
-}
 
 /* Skeleton loading state for score badge */
 .score-badge.score-loading {
