@@ -52,7 +52,7 @@ def upsert_job(job: Job) -> None:
     if status.ok():
         logger.debug("[ranker] Upserted job %s into Zvec", job.id)
     else:
-        logger.debug("[ranker] Job %s already in Zvec collection, skipping insert", job.id)
+        logger.debug("[ranker] Job %s already in Zvec, skipping insert", job.id)
     # Always track in-memory so we skip the embed + insert attempt next time
     _inserted_ids.add(job.id)
 
