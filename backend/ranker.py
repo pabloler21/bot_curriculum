@@ -34,6 +34,23 @@ def get_jobs_collection() -> zvec.Collection:
     return _collection
 
 
+_inserted_ids: set[str] = set()
+
+
+def upsert_job(job: Job) -> None:
+    """Embed job.description and insert into Zvec collection.
+
+    Skips if already indexed.
+    """
+    if job.id in _inserted_ids:
+        return
+    col = get_jobs_collection()
+    embedding = embed_text(job.description)
+    col.insert(zvec.Doc(id=job.id, vectors={"embedding": embedding}))
+    _inserted_ids.add(job.id)
+    logger.debug("[ranker] Upserted job %s into Zvec", job.id)
+
+
 def _get_model() -> SentenceTransformer:
     global _model
     if _model is None:

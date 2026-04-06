@@ -8,7 +8,13 @@ from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 
 from backend.jobs import Job
-from backend.ranker import cosine_similarity, embed_text, get_jobs_collection, rank_jobs
+from backend.ranker import (
+    cosine_similarity,
+    embed_text,
+    get_jobs_collection,
+    rank_jobs,
+    upsert_job,
+)
 from backend.sessions import cv_sessions
 from src.main import app
 
@@ -185,3 +191,65 @@ def test_get_jobs_collection_returns_singleton(tmp_path, monkeypatch):
     col1 = get_jobs_collection()
     col2 = get_jobs_collection()
     assert col1 is col2
+
+
+def test_upsert_job_inserts_and_queryable(tmp_path, monkeypatch):
+    import zvec
+    path = str(tmp_path / "test_zvec")
+    monkeypatch.setattr("backend.ranker._ZVEC_PATH", path)
+    monkeypatch.setattr("backend.ranker._collection", None)
+    monkeypatch.setattr("backend.ranker._inserted_ids", set())
+
+    job = Job(
+        id="upsert-1",
+        title="Python Developer",
+        company="Co",
+        location="Remote",
+        employment_type="full_time",
+        description="Python FastAPI developer needed",
+        tags=[],
+        url="https://example.com/1",
+        posted_at=date(2025, 1, 1),
+    )
+    upsert_job(job)
+
+    col = get_jobs_collection()
+    cv_emb = embed_text("Python FastAPI engineer")
+    results = col.query(
+        vectors=zvec.VectorQuery("embedding", vector=cv_emb),
+        topk=1,
+    )
+    assert len(results) == 1
+    assert results[0].id == "upsert-1"
+
+
+def test_upsert_job_skips_duplicate(tmp_path, monkeypatch):
+    import zvec
+    path = str(tmp_path / "test_zvec")
+    monkeypatch.setattr("backend.ranker._ZVEC_PATH", path)
+    monkeypatch.setattr("backend.ranker._collection", None)
+    monkeypatch.setattr("backend.ranker._inserted_ids", set())
+
+    job = Job(
+        id="upsert-2",
+        title="Java Developer",
+        company="Co",
+        location="Remote",
+        employment_type="full_time",
+        description="Java Spring Boot developer",
+        tags=[],
+        url="https://example.com/2",
+        posted_at=date(2025, 1, 1),
+    )
+    upsert_job(job)
+    upsert_job(job)  # second call must not raise
+
+    col = get_jobs_collection()
+    cv_emb = embed_text("Java developer")
+    results = col.query(
+        vectors=zvec.VectorQuery("embedding", vector=cv_emb),
+        topk=5,
+    )
+    # Only one entry for this job
+    matching = [r for r in results if r.id == "upsert-2"]
+    assert len(matching) == 1
