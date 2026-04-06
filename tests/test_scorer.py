@@ -252,6 +252,31 @@ def test_score_jobs_uses_zvec_for_top_n(client):
     assert mock_col.query.called
 
 
+def test_score_jobs_returns_400_when_no_embedding(client):
+    import uuid
+    from datetime import datetime, timezone
+
+    from backend.sessions import CVSession, cv_sessions
+
+    # Create a session with no embedding
+    token = str(uuid.uuid4())
+    session = CVSession(
+        token=token,
+        cv_text="some text",
+        filename="cv.pdf",
+        uploaded_at=datetime.now(timezone.utc),
+        cv_embedding=[],
+    )
+    cv_sessions[token] = session
+
+    try:
+        response = client.post("/jobs/score", json={"token": token, "limit": 1})
+        assert response.status_code == 400
+        assert response.json()["code"] == "no_embedding"
+    finally:
+        cv_sessions.pop(token, None)
+
+
 def test_post_jobs_score_handles_partial_failure():
     from unittest.mock import MagicMock
 

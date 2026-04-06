@@ -47,7 +47,7 @@ tests/
   conftest.py         # fixture client (TestClient de FastAPI)
   test_jobs.py        # 13 tests: strip_html, Job model, fetch_jobs, GET /jobs
   test_sessions.py    # ★ NUEVO — tests de CVSession store/get/delete/cleanup/TTL
-  test_ranker.py      # ★ NUEVO — tests de embed_text, cosine_similarity, rank_jobs
+  test_ranker.py      # ★ NUEVO — tests de embed_text, cosine_similarity, get_jobs_collection, upsert_job
   test_scorer.py      # ★ NUEVO — tests de score_job (mocked LLM)
   test_evaluate.py    # ★ NUEVO — tests de POST /evaluate con session CV header
 ```

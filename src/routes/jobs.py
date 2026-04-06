@@ -146,6 +146,12 @@ async def score_jobs(request: Request, body: ScoreRequest):
             content={"detail": "No active CV session", "code": "no_session"},
         )
 
+    if not session.cv_embedding:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "CV embedding not available", "code": "no_embedding"},
+        )
+
     try:
         jobs = await fetch_jobs()
     except Exception as e:

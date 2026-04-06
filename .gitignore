@@ -14,3 +14,7 @@ wheels/
 
 # Git worktrees
 .worktrees/
+
+# Zvec vector DB
+zvec_jobs/
+zvec_test_*/

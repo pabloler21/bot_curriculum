@@ -81,14 +81,17 @@ REMOTIVE_SAMPLE = {
 
 @respx.mock
 async def test_fetch_jobs_returns_normalized_jobs():
+    from unittest.mock import patch
+
     from backend.jobs import _cache, fetch_jobs
-    _cache["data"] = None  # clear cache
+    _cache["data"] = None
 
     respx.get("https://remotive.com/api/remote-jobs").mock(
         return_value=httpx.Response(200, json=REMOTIVE_SAMPLE)
     )
 
-    jobs = await fetch_jobs()
+    with patch("backend.ranker.upsert_job"):
+        jobs = await fetch_jobs()
     assert len(jobs) == 1
     assert jobs[0].title == "Python Developer"
     assert jobs[0].company == "TechCorp"
@@ -121,6 +124,8 @@ async def test_fetch_jobs_uses_cache():
 
 @respx.mock
 async def test_fetch_jobs_invalidates_stale_cache():
+    from unittest.mock import patch
+
     from backend.jobs import _cache, fetch_jobs
     old_time = datetime.now(timezone.utc) - timedelta(minutes=20)
     _cache["data"] = ([], old_time)
@@ -129,7 +134,8 @@ async def test_fetch_jobs_invalidates_stale_cache():
         return_value=httpx.Response(200, json=REMOTIVE_SAMPLE)
     )
 
-    jobs = await fetch_jobs()
+    with patch("backend.ranker.upsert_job"):
+        jobs = await fetch_jobs()
     assert len(jobs) == 1
     assert jobs[0].title == "Python Developer"
 
