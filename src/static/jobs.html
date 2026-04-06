@@ -12,12 +12,24 @@
 </head>
 <body>
 
-  <!-- Sticky CV bar (Phase 2 will populate this — for now it's a placeholder) -->
-  <div id="cv-bar" class="cv-bar" role="complementary" aria-label="CV upload status">
-    <div class="cv-bar-inner">
+  <header class="header">
+    <div class="header-inner">
+      <div>
+        <h1>CV Evaluator</h1>
+        <p>Remote Tech Job Board</p>
+      </div>
+      <nav class="header-nav" aria-label="App navigation">
+        <a href="index.html" class="nav-link">ATS Evaluator</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CV banner (below header, scrolls with page) -->
+  <div id="cv-banner" class="cv-banner" role="complementary" aria-label="CV upload status">
+    <div class="cv-banner-inner">
       <div id="cv-upload-area">
-        <button id="cv-upload-btn" class="btn-primary cv-upload-trigger" aria-label="Upload your CV to see match scores">
-          Upload your CV
+        <button id="cv-upload-btn" class="cv-banner-btn" aria-label="Upload your CV to see match scores">
+          ↑ Upload CV
         </button>
         <input type="file" id="cv-file-input" accept=".pdf,.docx" hidden aria-label="Select CV file">
       </div>
@@ -33,20 +45,9 @@
         </span>
       </div>
       <p id="cv-error" class="cv-error hidden" role="alert"></p>
+      <p id="cv-banner-copy" class="cv-banner-copy"><strong>Upload your CV</strong> to see how well you match each role</p>
     </div>
   </div>
-
-  <header class="header">
-    <div class="header-inner">
-      <div>
-        <h1>CV Evaluator</h1>
-        <p>Remote Tech Job Board</p>
-      </div>
-      <nav class="header-nav" aria-label="App navigation">
-        <a href="index.html" class="nav-link">ATS Evaluator</a>
-      </nav>
-    </div>
-  </header>
 
   <main class="container">
 
