@@ -137,7 +137,7 @@ async def score_jobs(request: Request, body: ScoreRequest):
         )
 
     # Validate limit
-    limit = min(max(body.limit, 1), 12)
+    limit = min(max(body.limit, 1), 30)
 
     session = get_session(body.token)
     if session is None:

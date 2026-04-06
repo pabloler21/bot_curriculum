@@ -460,7 +460,7 @@ async function startBackgroundScoring(token) {
     const res = await fetch(`${BACKEND_URL}/jobs/score`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, limit: allJobs.length }),
+      body: JSON.stringify({ token, limit: allJobs.filter(j => j.similarity_score != null).length }),
     });
     if (!res.ok) {
       jobsGrid.querySelectorAll('.score-badge.score-loading').forEach(b => {
