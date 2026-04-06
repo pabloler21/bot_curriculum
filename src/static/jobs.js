@@ -71,7 +71,7 @@ function scoreBadgeClass(score) {
 
 // ── Render ─────────────────────────────────────────────────────────────────
 
-function renderJobCard(job, index) {
+function renderJobCard(job, index, cvActive = false) {
   const article = document.createElement('article');
   article.className = 'job-card';
   article.setAttribute('tabindex', '0');
@@ -113,11 +113,11 @@ function renderJobCard(job, index) {
     ${tags ? `<div class="job-tags" aria-label="Skills">${tags}</div>` : ''}
     <p class="job-date">Posted ${formatDate(job.posted_at)}</p>
     <div class="card-actions">
-      <a
+      ${cvActive ? `<a
         href="job-detail.html?id=${encodeURIComponent(job.id)}"
         class="btn-match"
         aria-label="See full analysis for ${escHtml(job.title)}"
-      >See full analysis →</a>
+      >See full analysis →</a>` : ''}
       <a
         href="${safeUrl(job.url)}"
         target="_blank"
@@ -148,13 +148,14 @@ function renderJobs(jobs) {
     return;
   }
 
-  const cvActive = jobs.some(j => j.similarity_score != null);
+  const cvActive = cvSessionToken != null;
+  const hasRanking = jobs.some(j => j.similarity_score != null);
 
-  if (cvActive) {
+  if (hasRanking) {
     const relevant = jobs.filter(j => j.similarity_score == null || j.similarity_score >= 0.25);
     const lowRelevance = jobs.filter(j => j.similarity_score != null && j.similarity_score < 0.25);
 
-    relevant.forEach((job, i) => jobsGrid.appendChild(renderJobCard(job, i)));
+    relevant.forEach((job, i) => jobsGrid.appendChild(renderJobCard(job, i, cvActive)));
 
     if (lowRelevance.length > 0) {
       const toggle = document.createElement('button');
@@ -166,7 +167,7 @@ function renderJobs(jobs) {
       const lowSection = document.createElement('div');
       lowSection.id = 'low-relevance-jobs';
       lowSection.className = 'hidden';
-      lowRelevance.forEach((job, i) => lowSection.appendChild(renderJobCard(job, relevant.length + i)));
+      lowRelevance.forEach((job, i) => lowSection.appendChild(renderJobCard(job, relevant.length + i, cvActive)));
 
       toggle.addEventListener('click', () => {
         const expanded = toggle.getAttribute('aria-expanded') === 'true';
@@ -181,7 +182,7 @@ function renderJobs(jobs) {
       jobsGrid.appendChild(lowSection);
     }
   } else {
-    jobs.forEach((job, i) => jobsGrid.appendChild(renderJobCard(job, i)));
+    jobs.forEach((job, i) => jobsGrid.appendChild(renderJobCard(job, i, cvActive)));
   }
 }
 
@@ -229,8 +230,8 @@ function sortedJobs() {
     jobs.sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
   } else if (currentSort === 'score') {
     jobs.sort((a, b) => {
-      const sa = scoresByJobId[a.id]?.score ?? -1;
-      const sb = scoresByJobId[b.id]?.score ?? -1;
+      const sa = scoresByJobId[a.id]?.score ?? (a.similarity_score != null ? a.similarity_score * 100 : -1);
+      const sb = scoresByJobId[b.id]?.score ?? (b.similarity_score != null ? b.similarity_score * 100 : -1);
       return sb - sa;
     });
   }
@@ -315,6 +316,8 @@ cvFileInput.addEventListener('change', async () => {
     cvSessionToken = data.token;
     localStorage.setItem('cv_session_token', data.token);
     showCvChip(data.filename);
+    sortScoreBtn.disabled = false;
+    sortScoreBtn.title = '';
     loadRankedJobs(data.token);
   } catch (err) {
     showCvError(err instanceof TypeError
@@ -343,6 +346,11 @@ cvRemoveBtn.addEventListener('click', async () => {
   scoresByJobId = {};
   sortScoreBtn.disabled = true;
   sortScoreBtn.title = 'Upload your CV to sort by match score';
+  sortScoreBtn.classList.remove('active');
+  sortScoreBtn.setAttribute('aria-pressed', 'false');
+  currentSort = 'date';
+  sortDateBtn.classList.add('active');
+  sortDateBtn.setAttribute('aria-pressed', 'true');
   const scoreMore = document.getElementById('score-more-btn');
   if (scoreMore) scoreMore.remove();
   showCvButton();
@@ -361,6 +369,8 @@ async function restoreCvSession() {
     const data = await res.json();
     cvSessionToken = token;
     showCvChip(data.filename);
+    sortScoreBtn.disabled = false;
+    sortScoreBtn.title = '';
     loadRankedJobs(token);
   } catch {
     localStorage.removeItem('cv_session_token');
