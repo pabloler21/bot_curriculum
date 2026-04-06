@@ -351,8 +351,6 @@ cvRemoveBtn.addEventListener('click', async () => {
   currentSort = 'date';
   sortDateBtn.classList.add('active');
   sortDateBtn.setAttribute('aria-pressed', 'true');
-  const scoreMore = document.getElementById('score-more-btn');
-  if (scoreMore) scoreMore.remove();
   showCvButton();
   loadJobs();
 });
@@ -448,9 +446,8 @@ async function loadRankedJobs(token) {
 }
 
 async function startBackgroundScoring(token) {
-  // Show skeleton badges on top 8 cards
-  const topCards = Array.from(jobsGrid.querySelectorAll('.job-card')).slice(0, 8);
-  topCards.forEach(card => {
+  // Show skeleton badges on all cards
+  jobsGrid.querySelectorAll('.job-card').forEach(card => {
     const badge = card.querySelector('.score-badge');
     if (badge) {
       badge.textContent = '—';
@@ -463,10 +460,9 @@ async function startBackgroundScoring(token) {
     const res = await fetch(`${BACKEND_URL}/jobs/score`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, limit: 8 }),
+      body: JSON.stringify({ token, limit: allJobs.length }),
     });
     if (!res.ok) {
-      // Silently hide skeleton badges
       jobsGrid.querySelectorAll('.score-badge.score-loading').forEach(b => {
         b.style.display = 'none';
         b.className = 'score-badge';
@@ -481,12 +477,6 @@ async function startBackgroundScoring(token) {
     // Auto-switch to match score sort now that LLM scores are ready
     setSort('score');
 
-    // Add "Score more jobs" button if unscored jobs remain
-    const scoredCount = results.filter(r => r.score != null).length;
-    if (allJobs.length > scoredCount) {
-      addScoreMoreButton(scoredCount);
-    }
-
   } catch {
     // Silently fail — progressive enhancement
     jobsGrid.querySelectorAll('.score-badge.score-loading').forEach(b => {
@@ -496,49 +486,6 @@ async function startBackgroundScoring(token) {
   }
 }
 
-function addScoreMoreButton(alreadyScored) {
-  const existing = document.getElementById('score-more-btn');
-  if (existing) existing.remove();
-
-  const btn = document.createElement('button');
-  btn.id = 'score-more-btn';
-  btn.className = 'score-more-btn';
-  btn.textContent = 'Score more jobs';
-  btn.setAttribute('aria-label', 'Score more jobs with your CV');
-
-  btn.addEventListener('click', async () => {
-    const token = cvSessionToken || localStorage.getItem('cv_session_token');
-    if (!token) return;
-    btn.disabled = true;
-    btn.textContent = 'Scoring…';
-    try {
-      const res = await fetch(`${BACKEND_URL}/jobs/score`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, limit: 12 }),
-      });
-      if (!res.ok) { btn.disabled = false; btn.textContent = 'Score more jobs'; return; }
-      const results = await res.json();
-      results.forEach(r => { scoresByJobId[r.job_id] = r; });
-      results.slice(alreadyScored).forEach(r => {
-        const card = jobsGrid.querySelector(`[data-job-id="${CSS.escape(String(r.job_id))}"]`);
-        if (!card || r.score == null) return;
-        const badge = card.querySelector('.score-badge');
-        if (badge) {
-          badge.textContent = r.score;
-          badge.style.display = 'flex';
-          badge.className = `score-badge ${scoreBadgeClass(r.score)}`;
-        }
-      });
-      btn.remove();
-    } catch {
-      btn.disabled = false;
-      btn.textContent = 'Score more jobs';
-    }
-  });
-
-  jobsGrid.insertAdjacentElement('afterend', btn);
-}
 
 restoreCvSession();
 loadJobs();

@@ -498,35 +498,6 @@
   outline: none;
 }
 
-/* ── Score more button (Phase 3) ─────────── */
-.score-more-btn {
-  display: block;
-  margin: 16px auto 0;
-  background: transparent;
-  border: 1px solid rgba(76, 107, 138, 0.45);
-  color: var(--text-secondary);
-  font-family: 'Inter', Arial, sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 8px 20px;
-  border-radius: 2px;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-}
-
-.score-more-btn:hover,
-.score-more-btn:focus-visible {
-  color: var(--accent-blue);
-  border-color: rgba(102, 192, 244, 0.38);
-  outline: none;
-}
-
-.score-more-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
 
 /* Skeleton loading state for score badge */
 .score-badge.score-loading {
