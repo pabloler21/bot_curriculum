@@ -1,13 +1,15 @@
 # tests/test_ranker.py
 import io
+import os
 import uuid
 from datetime import date
 from unittest.mock import AsyncMock, patch
 
+import zvec
 from fastapi.testclient import TestClient
 
 from backend.jobs import Job
-from backend.ranker import cosine_similarity, embed_text, rank_jobs
+from backend.ranker import cosine_similarity, embed_text, get_jobs_collection, rank_jobs
 from backend.sessions import cv_sessions
 from src.main import app
 
@@ -147,3 +149,40 @@ def test_get_jobs_ranked_with_expired_token_returns_unranked():
     assert response.status_code == 200
     data = response.json()
     assert all(job["similarity_score"] is None for job in data)
+
+
+def test_get_jobs_collection_creates_directory(tmp_path, monkeypatch):
+    path = str(tmp_path / "test_zvec")
+    monkeypatch.setattr("backend.ranker._ZVEC_PATH", path)
+    monkeypatch.setattr("backend.ranker._collection", None)
+    col = get_jobs_collection()
+    assert col is not None
+    assert os.path.exists(path)
+
+
+def test_get_jobs_collection_reopens_existing(tmp_path, monkeypatch):
+    import gc
+
+    import backend.ranker as ranker_module
+
+    path = str(tmp_path / "test_zvec")
+    monkeypatch.setattr("backend.ranker._ZVEC_PATH", path)
+    monkeypatch.setattr("backend.ranker._collection", None)
+    col1 = get_jobs_collection()
+    # Release the file lock: clear the module-level reference first, then GC
+    ranker_module._collection = None
+    del col1
+    gc.collect()
+    # Reset singleton so get_jobs_collection() will reopen
+    monkeypatch.setattr("backend.ranker._collection", None)
+    col2 = get_jobs_collection()
+    assert col2 is not None
+
+
+def test_get_jobs_collection_returns_singleton(tmp_path, monkeypatch):
+    path = str(tmp_path / "test_zvec")
+    monkeypatch.setattr("backend.ranker._ZVEC_PATH", path)
+    monkeypatch.setattr("backend.ranker._collection", None)
+    col1 = get_jobs_collection()
+    col2 = get_jobs_collection()
+    assert col1 is col2

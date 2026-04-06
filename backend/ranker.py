@@ -1,7 +1,9 @@
 # backend/ranker.py
 import logging
+import os
 
 import numpy as np
+import zvec
 from sentence_transformers import SentenceTransformer
 
 from backend.jobs import Job
@@ -10,6 +12,26 @@ logger = logging.getLogger(__name__)
 
 _MODEL_NAME = "all-MiniLM-L6-v2"
 _model: SentenceTransformer | None = None
+
+_ZVEC_PATH = "./zvec_jobs"
+_collection: zvec.Collection | None = None
+_ZVEC_SCHEMA = zvec.CollectionSchema(
+    name="jobs",
+    vectors=zvec.VectorSchema("embedding", zvec.DataType.VECTOR_FP32, 384),
+)
+
+
+def get_jobs_collection() -> zvec.Collection:
+    """Open or create the Zvec jobs collection. Singleton (lazy init)."""
+    global _collection
+    if _collection is None:
+        if os.path.exists(_ZVEC_PATH):
+            logger.info("[ranker] Opening existing Zvec collection at %s", _ZVEC_PATH)
+            _collection = zvec.open(_ZVEC_PATH)
+        else:
+            logger.info("[ranker] Creating new Zvec collection at %s", _ZVEC_PATH)
+            _collection = zvec.create_and_open(path=_ZVEC_PATH, schema=_ZVEC_SCHEMA)
+    return _collection
 
 
 def _get_model() -> SentenceTransformer:
