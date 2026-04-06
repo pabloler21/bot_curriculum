@@ -104,6 +104,8 @@ def test_post_jobs_score_malformed_token_returns_400():
 
 
 def test_post_jobs_score_with_valid_session_returns_results():
+    from unittest.mock import MagicMock
+
     cv_sessions.clear()
     with patch("src.routes.session.extract_text", return_value="Python developer"):
         post_res = scorer_client.post(
@@ -115,15 +117,18 @@ def test_post_jobs_score_with_valid_session_returns_results():
     test_jobs = [make_job("1"), make_job("2"), make_job("3")]
     mock_match = JobMatch(**make_job_match())
 
-    ranked = [(j, 0.8) for j in test_jobs]
+    mock_results = [MagicMock(id=j.id) for j in test_jobs]
+    mock_col = MagicMock()
+    mock_col.query.return_value = mock_results
+
     patch_fetch = patch(
         "src.routes.jobs.fetch_jobs", new_callable=AsyncMock, return_value=test_jobs
     )
     patch_score = patch(
         "src.routes.jobs.score_job", new_callable=AsyncMock, return_value=mock_match
     )
-    patch_rank = patch("src.routes.jobs.rank_jobs", return_value=ranked)
-    with patch_fetch, patch_score, patch_rank:
+    patch_col = patch("src.routes.jobs.get_jobs_collection", return_value=mock_col)
+    with patch_fetch, patch_score, patch_col:
         response = scorer_client.post(
             "/jobs/score",
             json={"token": token, "limit": 3},
@@ -135,6 +140,8 @@ def test_post_jobs_score_with_valid_session_returns_results():
 
 
 def test_post_jobs_score_caches_results():
+    from unittest.mock import MagicMock
+
     cv_sessions.clear()
     with patch("src.routes.session.extract_text", return_value="Python developer"):
         post_res = scorer_client.post(
@@ -146,14 +153,17 @@ def test_post_jobs_score_caches_results():
     test_jobs = [make_job("1")]
     mock_match = JobMatch(**make_job_match())
 
+    mock_col = MagicMock()
+    mock_col.query.return_value = [MagicMock(id="1")]
+
     patch_fetch = patch(
         "src.routes.jobs.fetch_jobs", new_callable=AsyncMock, return_value=test_jobs
     )
     patch_score = patch(
         "src.routes.jobs.score_job", new_callable=AsyncMock, return_value=mock_match
     )
-    patch_rank = patch("src.routes.jobs.rank_jobs", return_value=[(test_jobs[0], 0.8)])
-    with patch_fetch, patch_score as mock_score, patch_rank:
+    patch_col = patch("src.routes.jobs.get_jobs_collection", return_value=mock_col)
+    with patch_fetch, patch_score as mock_score, patch_col:
         # First call
         scorer_client.post("/jobs/score", json={"token": token, "limit": 1})
         # Second call — should use cache, score_job not called again
@@ -161,7 +171,90 @@ def test_post_jobs_score_caches_results():
     assert mock_score.call_count == 1  # only called once due to caching
 
 
+def test_score_jobs_uses_zvec_for_top_n(client):
+    import io
+    from datetime import date
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    from backend.jobs import Job
+
+    test_jobs = [
+        Job(
+            id="j1",
+            title="Python Dev",
+            company="Co",
+            location="Remote",
+            employment_type="full_time",
+            description="Python FastAPI",
+            tags=[],
+            url="https://example.com/j1",
+            posted_at=date(2025, 1, 1),
+        ),
+        Job(
+            id="j2",
+            title="Java Dev",
+            company="Co",
+            location="Remote",
+            employment_type="full_time",
+            description="Java Spring",
+            tags=[],
+            url="https://example.com/j2",
+            posted_at=date(2025, 1, 1),
+        ),
+    ]
+
+    mock_zvec_result = MagicMock()
+    mock_zvec_result.id = "j1"
+    mock_col = MagicMock()
+    mock_col.query.return_value = [mock_zvec_result]
+
+    mock_match = MagicMock()
+    mock_match.model_dump.return_value = {
+        "score": 82,
+        "match_level": "good",
+        "matched_skills": ["Python"],
+        "missing_skills": [],
+        "one_line_summary": "Good match",
+    }
+
+    extract_patch = patch(
+        "src.routes.session.extract_text", return_value="Python dev"
+    )
+    fetch_patch = patch(
+        "src.routes.jobs.fetch_jobs",
+        new_callable=AsyncMock,
+        return_value=test_jobs,
+    )
+    col_patch = patch(
+        "src.routes.jobs.get_jobs_collection", return_value=mock_col
+    )
+    score_patch = patch(
+        "src.routes.jobs.score_job",
+        new_callable=AsyncMock,
+        return_value=mock_match,
+    )
+
+    with extract_patch, fetch_patch:
+        post_res = client.post(
+            "/session",
+            files={"file": ("cv.pdf", io.BytesIO(b"data"), "application/pdf")},
+        )
+    token = post_res.json()["token"]
+
+    with fetch_patch, col_patch, score_patch:
+        response = client.post("/jobs/score", json={"token": token, "limit": 1})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["job_id"] == "j1"
+    assert data[0]["score"] == 82
+    assert mock_col.query.called
+
+
 def test_post_jobs_score_handles_partial_failure():
+    from unittest.mock import MagicMock
+
     cv_sessions.clear()
     with patch("src.routes.session.extract_text", return_value="Python developer"):
         post_res = scorer_client.post(
@@ -178,13 +271,15 @@ def test_post_jobs_score_handles_partial_failure():
             raise Exception("LLM failed")
         return mock_match
 
-    ranked = [(j, 0.8) for j in test_jobs]
+    mock_col = MagicMock()
+    mock_col.query.return_value = [MagicMock(id=j.id) for j in test_jobs]
+
     patch_fetch = patch(
         "src.routes.jobs.fetch_jobs", new_callable=AsyncMock, return_value=test_jobs
     )
     patch_score = patch("src.routes.jobs.score_job", side_effect=score_side_effect)
-    patch_rank = patch("src.routes.jobs.rank_jobs", return_value=ranked)
-    with patch_fetch, patch_score, patch_rank:
+    patch_col = patch("src.routes.jobs.get_jobs_collection", return_value=mock_col)
+    with patch_fetch, patch_score, patch_col:
         response = scorer_client.post(
             "/jobs/score",
             json={"token": token, "limit": 2},

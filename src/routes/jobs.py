@@ -12,7 +12,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from backend.jobs import Job, fetch_jobs
-from backend.ranker import get_jobs_collection, rank_jobs
+from backend.ranker import get_jobs_collection
 from backend.scorer import score_job
 from backend.sessions import get_session
 
@@ -155,9 +155,14 @@ async def score_jobs(request: Request, body: ScoreRequest):
             content={"detail": "Internal server error", "code": "internal_error"},
         )
 
-    # Rank to find top N
-    ranked = rank_jobs(session.cv_embedding or [], jobs)
-    top_jobs = [job for job, _ in ranked[:limit]]
+    # Select top N via Zvec
+    col = get_jobs_collection()
+    zvec_results = col.query(
+        vectors=zvec.VectorQuery("embedding", vector=session.cv_embedding or []),
+        topk=limit,
+    )
+    jobs_by_id = {job.id: job for job in jobs}
+    top_jobs = [jobs_by_id[r.id] for r in zvec_results if r.id in jobs_by_id]
 
     # Score in parallel, using cache when available
     async def score_one(job: Job):
