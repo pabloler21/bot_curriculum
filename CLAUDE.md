@@ -116,8 +116,8 @@ Plan completo en: `docs/superpowers/plans/2026-04-03-job-board-cv-scoring.md`
 | **Fase 2.5** — Embedding-based job ranking | ✅ Completa | mergeada a `develop` |
 | **Fase 3** — LLM scoring CV vs jobs (per-job) | ✅ Completa | mergeada a `develop` |
 | **Fase 4** — Job detail + integración evaluate | ✅ Completa | mergeada a `develop` |
-| **Fase 5** — Polish + rate limiting | ✅ Completa | `feature/phase-5-polish` |
-| **Fase 6** — Zvec persistent vector DB, job limit 100 | ✅ Completa | `feature/phase-6-zvec` |
+| **Fase 5** — Polish + rate limiting | ✅ Completa | mergeada a `develop` |
+| **Fase 6** — Zvec vector DB, glassmorphism, UX redesign | ✅ Completa | mergeada a `develop` |
 
 ### Fase 1 — Qué se implementó
 
@@ -151,7 +151,7 @@ Plan completo en: `docs/superpowers/plans/2026-04-03-job-board-cv-scoring.md`
 ### Fase 2.5 — Qué se implementó
 
 **Backend:**
-- `backend/ranker.py`: carga `SentenceTransformer("all-MiniLM-L6-v2")` (lazy), `embed_text()`, `cosine_similarity()`, `rank_jobs()` — ordena lista de `Job` por similitud coseno contra el embedding del CV
+- `backend/ranker.py`: carga `SentenceTransformer("all-MiniLM-L6-v2")` (lazy), `embed_text()`, `cosine_similarity()` — ordenamiento en memoria por similitud coseno contra el embedding del CV (luego reemplazado por Zvec en Fase 6)
 - `CVSession` extendida con campo `cv_embedding: list[float]` — se calcula al hacer `store_session()`
 - `GET /jobs/ranked`: acepta `?token=` query param, devuelve jobs ordenados por `similarity_score` (0–1). Fallback graceful si no hay sesión o embedding.
 
@@ -190,4 +190,28 @@ Plan completo en: `docs/superpowers/plans/2026-04-03-job-board-cv-scoring.md`
 
 - Rate limiting aplicado a `POST /session` (3/min por IP) con `slowapi`
 - Rate limiting aplicado a `POST /jobs/score` (3/min por IP)
-- `TESTING.md`: guía de testing manual y escenarios de prueba documentados
+- `docs/TESTING.md`: guía de testing manual y escenarios de prueba documentados
+
+### Fase 6 — Qué se implementó
+
+**Backend — Zvec persistent vector DB:**
+- `backend/ranker.py` refactorizado: se elimina `rank_jobs()` (ranking en memoria). Se agrega `get_jobs_collection()` (abre o crea colección Zvec en `./zvec_jobs`, singleton lazy) y `upsert_job()` (idempotente — skipea si ya está en `_inserted_ids` o si Zvec rechaza el insert)
+- `backend/jobs.py`: límite de jobs elevado de 20 a 100; se elimina `Job.embedding` (ahora el embedding vive solo en Zvec)
+- `src/routes/jobs.py`: `GET /jobs/ranked` usa `col.query(VectorQuery(...), topk=20)` en lugar de coseno en memoria; `POST /jobs/score` usa Zvec `topk=limit` para seleccionar top-N jobs a scorear
+- Guard anti-crash en sesiones con `cv_embedding` vacío
+
+**Frontend — Glassmorphism + UX:**
+- `jobs.html`: se reemplaza el sticky `#cv-bar` por `#cv-banner` posicionado debajo del header (scrolls con la página)
+- `jobs.css`: rediseño glassmorphism completo — cards con `background: rgba(255,255,255,0.04)`, `border-radius: 12px`, `backdrop-filter`; botones pill (`border-radius: 20px`); `.score-badge` pill; `.btn-match` glass (sin gradiente); `.cv-banner-btn` pill; similarity bars más gruesas y redondeadas
+- `style.css`: `.tag` `border-radius: 2px → 20px`
+- `jobs.js` (4 fixes):
+  - `applyScoresToCards()`: helper que re-aplica badges/skills/summary tras re-render; `setSort()` lo llama después de `renderJobs()` para que los scores persistan al cambiar de sort
+  - `cvActive` param en `renderJobCard()`: el botón "See full analysis" solo aparece si hay CV subido
+  - Sort habilitado inmediatamente al subir CV (antes esperaba al scoring LLM)
+  - Auto-switch a "Match score" sort cuando el scoring LLM completa
+- `jobs.js` (fixes adicionales):
+  - Scoring automático de todos los ranked jobs al subir CV (se elimina botón "Score more")
+  - Límite de scoring elevado a 30
+  - Fallback badge de similitud para jobs rankeados pero aún no scoreados
+  - Badge del mejor score en verde, los demás en rojo
+  - Fuente Space Grotesk para el header
