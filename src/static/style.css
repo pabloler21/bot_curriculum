@@ -564,3 +564,37 @@ body {
 .hidden {
   display: none !important;
 }
+
+/* ── Header inner (shared with jobs.html) ─── */
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-nav {
+  display: flex;
+  gap: 16px;
+}
+
+/* ── CV Evaluator back button ─────────────── */
+.cv-back-btn {
+  display: inline-block;
+  padding: 8px 18px;
+  border-radius: 20px;
+  background: linear-gradient(to bottom, #7ec2e2 0%, #3f8bae 100%);
+  color: #0d1521;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  transition: filter 0.15s, box-shadow 0.15s;
+}
+
+.cv-back-btn:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 16px rgba(102, 192, 244, 0.28), 0 1px 4px rgba(0, 0, 0, 0.4);
+}
