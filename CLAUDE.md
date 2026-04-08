@@ -27,8 +27,9 @@ src/
     session.py        # POST /session, GET /session/{token}, DELETE /session/{token}
     view/public/      # sirve job-detail.html como página estática
   static/
-    index.html        # página ATS original
-    app.js / style.css
+    index.html        # CV Evaluator — layout two-column, header con botón back prominente
+    app.js            # lógica del evaluador: session preload, escHtml top-level, visibility management
+    style.css         # estilos globales + evaluator redesign (.evaluator-layout, .cv-back-btn, .session-chip, .job-context-panel, .results-cta)
     jobs.html         # job board con CV bar, similarity bars, score badges
     jobs.css          # estilos del job board
     jobs.js           # fetch /jobs/ranked, score badges, CV upload bar, keyboard nav
@@ -118,6 +119,7 @@ Plan completo en: `docs/superpowers/plans/2026-04-03-job-board-cv-scoring.md`
 | **Fase 4** — Job detail + integración evaluate | ✅ Completa | mergeada a `develop` |
 | **Fase 5** — Polish + rate limiting | ✅ Completa | mergeada a `develop` |
 | **Fase 6** — Zvec vector DB, glassmorphism, UX redesign | ✅ Completa | mergeada a `develop` |
+| **Fase 7** — CV Evaluator UX redesign + user flow fixes | ✅ Completa | mergeada a `develop` |
 
 ### Fase 1 — Qué se implementó
 
@@ -215,3 +217,35 @@ Plan completo en: `docs/superpowers/plans/2026-04-03-job-board-cv-scoring.md`
   - Fallback badge de similitud para jobs rankeados pero aún no scoreados
   - Badge del mejor score en verde, los demás en rojo
   - Fuente Space Grotesk para el header
+
+### Fase 7 — Qué se implementó
+
+**Frontend — CV Evaluator UX redesign (solo frontend, cero backend):**
+
+- `src/static/index.html`: rediseño completo de la página
+  - Header con `header-inner` + botón pill azul prominente "← Job Board" (`.cv-back-btn`)
+  - Layout two-column: izquierda panel "What you get" (features list + "Powered by Claude AI"), derecha dropzone
+  - `#job-context-badge` movido dentro del container, clase `job-context-panel` — panel prominente con border-left azul que muestra título y empresa al llegar desde un job detail (`?job_id=`)
+  - `#session-chip` dentro de `#upload-section`: chip con nombre del CV y botón "Change file" cuando hay sesión activa del job board
+  - `.results-cta` al pie de los resultados: "Ready to apply? Browse matching jobs →" cierra el loop hacia el job board
+
+- `src/static/style.css`: nuevas clases
+  - `.header-inner` + `.header-nav` — layout del header (antes solo en jobs.css)
+  - `.cv-back-btn` — botón pill con gradiente azul
+  - `.evaluator-layout` — CSS Grid 2fr/3fr, colapsa a 1 col en ≤640px
+  - `.evaluator-left-*` — panel izquierdo con header strip + accent bar (mismo patrón que `.panel h3`)
+  - `.job-context-panel` + `.job-context-label/title/company` — panel de contexto de job
+  - `.session-chip` + `.session-chip-*` — chip de sesión preloaded
+  - `.results-cta` + `.btn-browse-jobs` — CTA al final de resultados
+
+- `src/static/app.js`: tres cambios de comportamiento
+  - `escHtml()` movida al top del archivo (antes estaba dentro de `renderResults`, lo que impedía usarla en `loadJobContext`)
+  - `loadJobContext()`: usa `innerHTML` con estructura HTML en lugar de `textContent` plano
+  - `checkExistingSession()`: al cargar la página, llama `GET /session/{token}` — si la sesión sigue viva muestra el chip con el filename y habilita "Analyze CV" sin re-subir el archivo. Si el token es inválido/expirado, lo elimina de localStorage
+  - `setLoading()` / `showResults()` / `resetBtn`: manejan visibilidad de `.evaluator-layout` (se oculta durante loading y results, se muestra al resetear)
+  - Analyze handler: soporta `sessionPreloaded` — si hay sesión activa sin nuevo archivo, envía el request sin file (backend usa `X-CV-Session-Token`)
+
+**UX fixes (los 3 problemas que resolvió esta fase):**
+1. Re-upload innecesario: si el usuario ya subió CV en el job board, no tiene que subirlo de nuevo en el evaluador
+2. Job context invisible: el badge de 12px se reemplazó por un panel con jerarquía visual clara
+3. Dead end en resultados: se agregó CTA "Browse matching jobs →" al pie de los resultados
