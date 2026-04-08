@@ -162,6 +162,17 @@ analyzeBtn.addEventListener('click', async () => {
   await waitForServer();
   setLoadingMessage('Analyzing your resume, this may take a few seconds...');
 
+  // If a new file is being uploaded, create/refresh the session in background
+  // so it's available on the Job Board when the user navigates there after analysis
+  if (selectedFile) {
+    const sessionFormData = new FormData();
+    sessionFormData.append('file', selectedFile);
+    fetch(`${BACKEND_URL}/session`, { method: 'POST', body: sessionFormData })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.token) localStorage.setItem('cv_session_token', data.token); })
+      .catch(() => {});
+  }
+
   const formData = new FormData();
   if (selectedFile) {
     formData.append('file', selectedFile);
