@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV Evaluator — Layout Options</title>
+<style>
+  :root {
+    --bg-main: #1b2838;
+    --bg-panel: #16202d;
+    --bg-secondary: #2a475e;
+    --bg-deep: #0d1521;
+    --border: #4c6b8a;
+    --text-primary: #c6d4df;
+    --text-secondary: #8f98a0;
+    --accent-blue: #66c0f4;
+    --accent-blue-hover: #4fa8d5;
+    --success-green: #57cbde;
+    --danger-red: #e74c3c;
+    --accent-blue-alpha: rgba(102,192,244,0.12);
+    --shadow-panel: 0 2px 12px rgba(0,0,0,0.45);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #111820;
+    color: var(--text-primary);
+    font-family: 'Inter', Arial, sans-serif;
+    padding: 32px 24px 60px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1.page-title {
+    font-family: 'Inter', Arial, sans-serif;
+    color: var(--accent-blue);
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .page-sub {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-bottom: 36px;
+  }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .option-card {
+    background: #161f2b;
+    border: 2px solid rgba(76,107,138,0.4);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .option-card:hover {
+    border-color: rgba(102,192,244,0.5);
+    box-shadow: 0 0 20px rgba(102,192,244,0.1);
+  }
+  .option-card.selected {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 24px rgba(102,192,244,0.2);
+  }
+
+  .option-label {
+    background: rgba(102,192,244,0.08);
+    border-bottom: 1px solid rgba(76,107,138,0.4);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .option-letter {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    color: #0d1521;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .option-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+  /* ─ Mockup container ─ */
+  .mockup {
+    background: var(--bg-main);
+    margin: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(76,107,138,0.3);
+    font-size: 11px;
+  }
+
+  /* Shared header styles */
+  .m-header {
+    background: linear-gradient(180deg, #0d1521 0%, #192538 100%);
+    border-bottom: 1px solid rgba(76,107,138,0.55);
+    padding: 10px 14px;
+    position: relative;
+  }
+  .m-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--accent-blue) 40%, var(--accent-blue) 60%, transparent 100%);
+    opacity: 0.35;
+  }
+  .m-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .m-title {
+    font-family: Arial, sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--accent-blue);
+    text-shadow: 0 0 14px rgba(102,192,244,0.4);
+  }
+  .m-sub { font-size: 9px; color: var(--text-secondary); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+
+  .m-body { padding: 12px; }
+
+  /* Back button variants */
+  .back-tiny {
+    font-size: 9px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 2px 6px;
+    border: 1px solid rgba(76,107,138,0.4);
+    border-radius: 2px;
+  }
+
+  .back-nav-link {
+    font-size: 11px;
+    color: var(--accent-blue);
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 1px solid rgba(102,192,244,0.3);
+    border-radius: 14px;
+    background: rgba(102,192,244,0.07);
+    white-space: nowrap;
+  }
+
+  .back-btn-prominent {
+    font-size: 10px;
+    color: #0d1521;
+    padding: 5px 14px;
+    border-radius: 14px;
+    background: linear-gradient(to bottom, #7ec2e2 0%, #3f8bae 100%);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* Dropzone */
+  .m-dropzone {
+    border: 1px solid rgba(76,107,138,0.6);
+    border-radius: 3px;
+    background: linear-gradient(180deg, rgba(22,40,57,0.75) 0%, #16202d 100%);
+    padding: 18px 10px;
+    text-align: center;
+    position: relative;
+  }
+  .m-dropzone::before {
+    content: '';
+    position: absolute; top: 5px; left: 5px;
+    width: 8px; height: 8px;
+    border-top: 1px solid var(--accent-blue);
+    border-left: 1px solid var(--accent-blue);
+    opacity: 0.5;
+  }
+  .m-dropzone::after {
+    content: '';
+    position: absolute; bottom: 5px; right: 5px;
+    width: 8px; height: 8px;
+    border-bottom: 1px solid var(--accent-blue);
+    border-right: 1px solid var(--accent-blue);
+    opacity: 0.5;
+  }
+  .m-drop-icon { font-size: 18px; opacity: 0.5; margin-bottom: 6px; }
+  .m-drop-text { font-size: 11px; color: var(--text-primary); margin-bottom: 3px; }
+  .m-drop-sub { font-size: 9px; color: var(--text-secondary); margin-bottom: 8px; }
+  .m-btn {
+    display: inline-block;
+    background: linear-gradient(to bottom, #7ec2e2 0%, #3f8bae 100%);
+    color: #0d1521;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Feature pills/chips */
+  .m-features {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 8px 0;
+  }
+  .m-feature-pill {
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 9px;
+    background: var(--accent-blue-alpha);
+    border: 1px solid rgba(102,192,244,0.3);
+    color: var(--accent-blue);
+  }
+
+  /* Feature row (option B) */
+  .m-feature-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .m-feature-card {
+    background: var(--bg-panel);
+    border: 1px solid rgba(76,107,138,0.4);
+    border-radius: 4px;
+    padding: 8px 6px;
+    text-align: center;
+  }
+  .m-feature-icon { font-size: 14px; margin-bottom: 4px; opacity: 0.8; }
+  .m-feature-name { font-size: 9px; color: var(--text-secondary); }
+
+  /* Two-column layout (option C) */
+  .m-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .m-left-panel {
+    background: var(--bg-panel);
+    border: 1px solid rgba(76,107,138,0.4);
+    border-radius: 4px;
+    padding: 10px;
+  }
+  .m-left-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .m-left-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    margin-bottom: 7px;
+  }
+  .m-left-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    flex-shrink: 0;
+    margin-top: 3px;
+    opacity: 0.7;
+  }
+  .m-left-text { font-size: 9px; color: var(--text-secondary); line-height: 1.4; }
+
+  /* Description blocks */
+  .option-desc {
+    padding: 10px 14px 14px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .option-desc strong { color: var(--text-primary); }
+
+  /* Selected indicator */
+  .selected-badge {
+    display: none;
+    font-size: 11px;
+    color: var(--accent-blue);
+    font-weight: 600;
+    padding: 6px 0 0 16px;
+  }
+  .option-card.selected .selected-badge { display: block; }
+
+  @media (max-width: 860px) {
+    .options-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">CV Evaluator — Layout Options</h1>
+<p class="page-sub">Clic en la opción que preferís</p>
+
+<div class="options-grid">
+
+  <!-- OPTION A -->
+  <div class="option-card" onclick="select(this, 'A')">
+    <div class="option-label">
+      <div class="option-letter">A</div>
+      <div class="option-title">Header mejorado solamente</div>
+    </div>
+
+    <div class="mockup">
+      <!-- Header with proper back button -->
+      <div class="m-header">
+        <div class="m-header-inner">
+          <div>
+            <div class="m-title">CV Evaluator</div>
+            <div class="m-sub">ATS Resume Analysis</div>
+          </div>
+          <div class="back-btn-prominent">← Job Board</div>
+        </div>
+      </div>
+
+      <!-- Body: same single column, dropzone centered -->
+      <div class="m-body">
+        <div style="height: 10px"></div>
+        <div class="m-dropzone">
+          <div class="m-drop-icon">📄</div>
+          <div class="m-drop-text">Drop your CV here</div>
+          <div class="m-drop-sub">PDF or DOCX</div>
+          <div class="m-btn">Select file</div>
+        </div>
+        <div style="height: 8px"></div>
+        <!-- invisible analyze btn placeholder -->
+        <div style="background:rgba(102,192,244,0.08);border:1px dashed rgba(76,107,138,0.3);border-radius:2px;height:24px;opacity:0.4"></div>
+      </div>
+    </div>
+
+    <div class="option-desc">
+      El botón "← Job Board" pasa de ser un link tiny a un <strong>botón pill prominente</strong> en el header (igual estética que los badges del job board). Cambio mínimo, impacto visual alto.
+    </div>
+    <div class="selected-badge">✓ Seleccionada</div>
+  </div>
+
+  <!-- OPTION B -->
+  <div class="option-card" onclick="select(this, 'B')">
+    <div class="option-label">
+      <div class="option-letter">B</div>
+      <div class="option-title">Feature cards + dropzone</div>
+    </div>
+
+    <div class="mockup">
+      <div class="m-header">
+        <div class="m-header-inner">
+          <div>
+            <div class="m-title">CV Evaluator</div>
+            <div class="m-sub">ATS Resume Analysis</div>
+          </div>
+          <div class="back-btn-prominent">← Job Board</div>
+        </div>
+      </div>
+
+      <div class="m-body">
+        <!-- Feature row above dropzone -->
+        <div class="m-feature-row">
+          <div class="m-feature-card">
+            <div class="m-feature-icon">🎯</div>
+            <div class="m-feature-name">ATS Score</div>
+          </div>
+          <div class="m-feature-card">
+            <div class="m-feature-icon">🔑</div>
+            <div class="m-feature-name">Keywords</div>
+          </div>
+          <div class="m-feature-card">
+            <div class="m-feature-icon">✅</div>
+            <div class="m-feature-name">Recommendations</div>
+          </div>
+        </div>
+
+        <div class="m-dropzone">
+          <div class="m-drop-icon">📄</div>
+          <div class="m-drop-text">Drop your CV here</div>
+          <div class="m-drop-sub">PDF or DOCX</div>
+          <div class="m-btn">Select file</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="option-desc">
+      Se agregan <strong>3 feature cards</strong> encima del dropzone que muestran qué obtenés del análisis. Llena el espacio vacío sin cambiar la funcionalidad. Botón back prominente en header.
+    </div>
+    <div class="selected-badge">✓ Seleccionada</div>
+  </div>
+
+  <!-- OPTION C -->
+  <div class="option-card" onclick="select(this, 'C')">
+    <div class="option-label">
+      <div class="option-letter">C</div>
+      <div class="option-title">Two-column layout</div>
+    </div>
+
+    <div class="mockup">
+      <div class="m-header">
+        <div class="m-header-inner">
+          <div>
+            <div class="m-title">CV Evaluator</div>
+            <div class="m-sub">ATS Resume Analysis</div>
+          </div>
+          <div class="back-btn-prominent">← Job Board</div>
+        </div>
+      </div>
+
+      <div class="m-body">
+        <div class="m-two-col">
+          <!-- Left: what you get -->
+          <div class="m-left-panel">
+            <div class="m-left-title">What you get</div>
+            <div class="m-left-item">
+              <div class="m-left-dot"></div>
+              <div class="m-left-text">ATS compatibility score 0–100</div>
+            </div>
+            <div class="m-left-item">
+              <div class="m-left-dot"></div>
+              <div class="m-left-text">Found & missing keywords</div>
+            </div>
+            <div class="m-left-item">
+              <div class="m-left-dot"></div>
+              <div class="m-left-text">Formatting issues</div>
+            </div>
+            <div class="m-left-item">
+              <div class="m-left-dot"></div>
+              <div class="m-left-text">Actionable recommendations</div>
+            </div>
+            <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(76,107,138,0.3)">
+              <div style="font-size:9px;color:var(--text-secondary);">Works with any tech role.<br>Powered by Claude AI.</div>
+            </div>
+          </div>
+          <!-- Right: dropzone -->
+          <div class="m-dropzone" style="margin:0">
+            <div class="m-drop-icon">📄</div>
+            <div class="m-drop-text">Drop your CV here</div>
+            <div class="m-drop-sub">PDF or DOCX</div>
+            <div class="m-btn">Select file</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="option-desc">
+      Layout de <strong>dos columnas</strong>: izquierda explica qué hace la herramienta, derecha tiene el dropzone. El espacio horizontal queda balanceado. Colapsa a una columna en mobile.
+    </div>
+    <div class="selected-badge">✓ Seleccionada</div>
+  </div>
+
+</div>
+
+<script>
+function select(el, choice) {
+  document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+
+  // Report to server
+  if (window.__companion_report) {
+    window.__companion_report({ type: 'click', choice: choice.toLowerCase(), text: el.querySelector('.option-title').textContent });
+  }
+}
+</script>
+</body>
+</html>
