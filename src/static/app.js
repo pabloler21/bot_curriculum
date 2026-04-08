@@ -38,6 +38,28 @@ async function loadJobContext() {
 
 loadJobContext();
 
+async function checkExistingSession() {
+  const token = localStorage.getItem('cv_session_token');
+  if (!token) return;
+  try {
+    const res = await fetch(`${BACKEND_URL}/session/${encodeURIComponent(token)}`);
+    if (!res.ok) {
+      localStorage.removeItem('cv_session_token');
+      return;
+    }
+    const data = await res.json();
+    sessionPreloaded = true;
+    sessionChipName.textContent = data.filename;
+    sessionChip.classList.remove('hidden');
+    dropZone.classList.add('hidden');
+    analyzeBtn.classList.remove('hidden');
+  } catch {
+    // Server unreachable — degrade gracefully, show normal dropzone
+  }
+}
+
+checkExistingSession();
+
 const dropZone       = document.getElementById('drop-zone');
 const fileInput      = document.getElementById('file-input');
 const fileNameEl     = document.getElementById('file-name');
@@ -132,7 +154,7 @@ async function waitForServer() {
 // ── Analyze ───────────────────────────────────────────────────────────────────
 
 analyzeBtn.addEventListener('click', async () => {
-  if (!selectedFile) return;
+  if (!selectedFile && !sessionPreloaded) return;
 
   setLoading(true);
   hideError();
@@ -141,7 +163,9 @@ analyzeBtn.addEventListener('click', async () => {
   setLoadingMessage('Analyzing your resume, this may take a few seconds...');
 
   const formData = new FormData();
-  formData.append('file', selectedFile);
+  if (selectedFile) {
+    formData.append('file', selectedFile);
+  }
   if (contextJobId) formData.append('job_id', contextJobId);
 
   const cvToken = localStorage.getItem('cv_session_token');
@@ -254,6 +278,19 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
       }, 2000);
     } catch (_) { /* clipboard unavailable (non-HTTPS); silently ignore */ }
   });
+});
+
+// ── Session chip change ───────────────────────────────────────────────────────
+
+sessionChipChange.addEventListener('click', () => {
+  sessionPreloaded = false;
+  sessionChip.classList.add('hidden');
+  dropZone.classList.remove('hidden');
+  analyzeBtn.classList.add('hidden');
+  selectedFile    = null;
+  fileInput.value = '';
+  fileNameEl.classList.add('hidden');
+  hideError();
 });
 
 // ── Reset ─────────────────────────────────────────────────────────────────────
