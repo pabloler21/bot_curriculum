@@ -45,7 +45,7 @@ class Job(BaseModel):
 
 
 REMOTIVE_URL = "https://remotive.com/api/remote-jobs"
-REMOTIVE_PARAMS = {"category": "software-dev", "limit": 100}
+REMOTIVE_PARAMS = {"category": "software-dev", "limit": 20}
 CACHE_TTL_SECONDS = 900  # 15 minutes
 
 # Module-level cache: {"data": (list[Job], datetime) | None}

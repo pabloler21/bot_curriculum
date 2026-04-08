@@ -4,14 +4,14 @@ import os
 
 import numpy as np
 import zvec
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 
 from backend.jobs import Job
 
 logger = logging.getLogger(__name__)
 
-_MODEL_NAME = "all-MiniLM-L6-v2"
-_model: SentenceTransformer | None = None
+_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+_model: TextEmbedding | None = None
 
 _ZVEC_PATH = "./zvec_jobs"
 _collection: zvec.Collection | None = None
@@ -57,11 +57,11 @@ def upsert_job(job: Job) -> None:
     _inserted_ids.add(job.id)
 
 
-def _get_model() -> SentenceTransformer:
+def _get_model() -> TextEmbedding:
     global _model
     if _model is None:
-        logger.info("[ranker] Loading SentenceTransformer model: %s", _MODEL_NAME)
-        _model = SentenceTransformer(_MODEL_NAME)
+        logger.info("[ranker] Loading fastembed model: %s", _MODEL_NAME)
+        _model = TextEmbedding(_MODEL_NAME)
         logger.info("[ranker] Model loaded")
     return _model
 
@@ -69,8 +69,8 @@ def _get_model() -> SentenceTransformer:
 def embed_text(text: str) -> list[float]:
     """Embed text and return as list of floats."""
     model = _get_model()
-    embedding = model.encode(text, convert_to_numpy=True)
-    return embedding.tolist()
+    embeddings = list(model.embed([text]))
+    return embeddings[0].tolist()
 
 
 def cosine_similarity(a: list[float], b: list[float]) -> float:
