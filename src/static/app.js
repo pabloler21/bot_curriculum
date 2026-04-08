@@ -2,6 +2,14 @@ const BACKEND_URL = window.location.hostname === 'bot-curriculum-1.onrender.com'
   ? 'https://bot-curriculum.onrender.com'
   : '';
 
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 // ── Job context (Phase 4) ──────────────────────────────────────────────────
 const urlParams = new URLSearchParams(window.location.search);
 const contextJobId = urlParams.get('job_id');
@@ -16,10 +24,14 @@ async function loadJobContext() {
     const job = jobs.find(j => String(j.id) === String(contextJobId));
     if (!job) return;
     contextJobData = job;
-    const badge = document.getElementById('job-context-badge');
-    if (badge) {
-      badge.textContent = `Evaluating for: ${job.title} at ${job.company}`;
-      badge.classList.remove('hidden');
+    const panel = document.getElementById('job-context-badge');
+    if (panel) {
+      panel.innerHTML = `
+        <span class="job-context-label">Evaluating against</span>
+        <span class="job-context-title">${escHtml(job.title)}</span>
+        <span class="job-context-company">${escHtml(job.company)}</span>
+      `;
+      panel.classList.remove('hidden');
     }
   } catch { /* silently ignore */ }
 }
@@ -192,10 +204,6 @@ function hideError() {
 }
 
 // ── Render results ────────────────────────────────────────────────────────────
-
-function escHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
 
 function renderResults(data) {
   // Panel 1 — Score + Verdict
