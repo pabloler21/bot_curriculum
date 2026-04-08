@@ -37,6 +37,12 @@ const loadingSection = document.getElementById('loading-section');
 const resultsSection = document.getElementById('results-section');
 const resetBtn       = document.getElementById('reset-btn');
 const loadingText    = document.querySelector('#loading-section .loading-text');
+const evaluatorLayout = document.querySelector('.evaluator-layout');
+const sessionChip       = document.getElementById('session-chip');
+const sessionChipName   = document.getElementById('session-chip-name');
+const sessionChipChange = document.getElementById('session-chip-change');
+
+let sessionPreloaded = false;
 
 let selectedFile = null;
 
@@ -157,12 +163,12 @@ analyzeBtn.addEventListener('click', async () => {
 
 function setLoading(active) {
   if (active) {
-    uploadSection.classList.add('hidden');
+    evaluatorLayout.classList.add('hidden');
     loadingSection.classList.remove('hidden');
     setLoadingMessage('Analyzing your resume, this may take a few seconds...');
   } else {
     loadingSection.classList.add('hidden');
-    uploadSection.classList.remove('hidden');
+    evaluatorLayout.classList.remove('hidden');
   }
 }
 
@@ -172,6 +178,7 @@ function setLoadingMessage(msg) {
 
 function showResults() {
   loadingSection.classList.add('hidden');
+  evaluatorLayout.classList.add('hidden');
   resultsSection.classList.remove('hidden');
 }
 
@@ -250,5 +257,5 @@ resetBtn.addEventListener('click', () => {
   analyzeBtn.classList.add('hidden');
   hideError();
   resultsSection.classList.add('hidden');
-  uploadSection.classList.remove('hidden');
+  evaluatorLayout.classList.remove('hidden');
 });
