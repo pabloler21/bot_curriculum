@@ -191,7 +191,11 @@ analyzeBtn.addEventListener('click', async () => {
       let detail = `Error ${response.status}`;
       try {
         const errData = await response.json();
-        detail = errData.detail || detail;
+        if (typeof errData.detail === 'string') {
+          detail = errData.detail;
+        } else if (Array.isArray(errData.detail)) {
+          detail = errData.detail.map(e => e.msg || 'Validation error').join(', ');
+        }
       } catch (_) { /* non-JSON error body */ }
       throw new Error(detail);
     }
@@ -293,7 +297,14 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
 
 // ── Session chip change ───────────────────────────────────────────────────────
 
-sessionChipChange.addEventListener('click', () => {
+sessionChipChange.addEventListener('click', async () => {
+  const token = localStorage.getItem('cv_session_token');
+  if (token) {
+    try {
+      await fetch(`${BACKEND_URL}/session/${encodeURIComponent(token)}`, { method: 'DELETE' });
+    } catch { /* ignore network errors */ }
+    localStorage.removeItem('cv_session_token');
+  }
   sessionPreloaded = false;
   sessionChip.classList.add('hidden');
   dropZone.classList.remove('hidden');

@@ -100,3 +100,37 @@ def test_post_evaluate_with_session_token_uses_session_cv():
         else call_kwargs.kwargs.get("cv_text")
     )
     assert cv_text_used == "Session CV text"
+
+
+def _reset_evaluate_limiter():
+    """Reset slowapi in-memory hit counters for /evaluate."""
+    from src.routes.evaluate import limiter as _lim
+    _lim._storage.reset()
+
+
+def test_post_evaluate_without_file_uses_session_token():
+    """Bug fix: file=None + X-CV-Session-Token must not return 422."""
+    _reset_evaluate_limiter()
+    cv_sessions.clear()
+    token = store_session("Session CV text", "cv.pdf").token
+
+    with patch("src.routes.evaluate.evaluate_cv", return_value=MOCK_EVAL) as mock_eval:
+        response = eval_client.post(
+            "/evaluate",
+            headers={"X-CV-Session-Token": token},
+        )
+    assert response.status_code == 200
+    cv_text_used = (
+        mock_eval.call_args.args[0]
+        if mock_eval.call_args.args
+        else mock_eval.call_args.kwargs.get("cv_text")
+    )
+    assert cv_text_used == "Session CV text"
+
+
+def test_post_evaluate_without_file_or_session_returns_400():
+    """No file and no session token must return 400, not 422."""
+    _reset_evaluate_limiter()
+    response = eval_client.post("/evaluate")
+    assert response.status_code == 400
+    assert response.json()["detail"] == "No CV provided"

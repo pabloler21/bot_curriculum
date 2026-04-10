@@ -21,19 +21,20 @@ router = APIRouter()
 @limiter.limit("3/minute")
 async def evaluate_resume(
     request: Request,
-    file: UploadFile = File(...),
+    file: Optional[UploadFile] = File(None),
     job_id: Optional[str] = Form(None),
 ):
     try:
-        file_bytes = await file.read()
-        logger.info(
-            "[evaluate] File received: %s (%d bytes)", file.filename, len(file_bytes)
-        )
+        file_bytes = await file.read() if file is not None else b""
+        if file is not None:
+            logger.info(
+                "[evaluate] File received: %s (%d bytes)", file.filename, len(file_bytes)
+            )
 
         cv_session_token = request.headers.get("X-CV-Session-Token")
 
         # Determine cv_text source
-        if file_bytes:
+        if file_bytes and file is not None:
             cv_text = extract_text(file_bytes, file.filename)
             logger.info("[evaluate] Text extracted from file: %d chars", len(cv_text))
         elif cv_session_token:
@@ -81,7 +82,7 @@ async def evaluate_resume(
                     )
 
         result = evaluate_cv(cv_text, job_context=job_context)
-        logger.info("[evaluate] Evaluation complete for: %s", file.filename)
+        logger.info("[evaluate] Evaluation complete")
 
         return JSONResponse(status_code=200, content=result)
 
@@ -89,9 +90,7 @@ async def evaluate_resume(
         raise
 
     except Exception as e:
-        logger.exception(
-            "[evaluate] Unexpected error processing %s: %s", file.filename, e
-        )
+        logger.exception("[evaluate] Unexpected error: %s", e)
         raise HTTPException(
             status_code=500, detail=f"Internal server error: {str(e)}"
         )
