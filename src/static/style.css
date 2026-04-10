@@ -83,56 +83,24 @@ body {
 
 /* ── Drop Zone ──────────────────────────── */
 .drop-zone {
-  border: 1px solid rgba(76, 107, 138, 0.65);
-  border-radius: 3px;
-  background: linear-gradient(180deg, rgba(22, 40, 57, 0.75) 0%, var(--bg-panel) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(102, 192, 244, 0.35);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
   padding: 80px 32px;
   text-align: center;
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s;
   position: relative;
-  box-shadow: var(--shadow-panel);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
 }
 
-/* Corner accents — top-left */
-.drop-zone::before {
-  content: '';
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  width: 18px;
-  height: 18px;
-  border-top: 2px solid var(--accent-blue);
-  border-left: 2px solid var(--accent-blue);
-  opacity: 0.4;
-  transition: opacity 0.2s;
-  pointer-events: none;
-}
-
-/* Corner accents — bottom-right */
-.drop-zone::after {
-  content: '';
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  width: 18px;
-  height: 18px;
-  border-bottom: 2px solid var(--accent-blue);
-  border-right: 2px solid var(--accent-blue);
-  opacity: 0.4;
-  transition: opacity 0.2s;
-  pointer-events: none;
-}
 
 .drop-zone.drag-over {
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 22px rgba(102, 192, 244, 0.14), var(--shadow-panel);
-  background: linear-gradient(180deg, rgba(42, 71, 94, 0.5) 0%, var(--bg-secondary) 100%);
-}
-
-.drop-zone.drag-over::before,
-.drop-zone.drag-over::after {
-  opacity: 1;
+  border-color: rgba(102, 192, 244, 0.55);
+  border-top-color: rgba(102, 192, 244, 0.55);
+  box-shadow: 0 0 22px rgba(102, 192, 244, 0.18), 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
 .drop-zone-content {
@@ -170,7 +138,7 @@ body {
   border: none;
   border-bottom: 1px solid rgba(0, 0, 0, 0.38);
   padding: 9px 26px;
-  border-radius: 2px;
+  border-radius: 20px;
   font-family: 'Inter', Arial, sans-serif;
   font-size: 13px;
   font-weight: 700;
@@ -205,7 +173,7 @@ body {
   border: 1px solid rgba(76, 107, 138, 0.65);
   border-bottom-color: rgba(0, 0, 0, 0.4);
   padding: 10px 24px;
-  border-radius: 2px;
+  border-radius: 20px;
   font-family: 'Inter', Arial, sans-serif;
   font-size: 13px;
   font-weight: 700;
@@ -231,7 +199,7 @@ body {
   padding: 8px 14px;
   background: var(--danger-red-alpha);
   border: 1px solid rgba(231, 76, 60, 0.28);
-  border-radius: 2px;
+  border-radius: 8px;
 }
 
 /* ── Loading ────────────────────────────── */
@@ -285,7 +253,7 @@ body {
   color: var(--text-secondary);
   border: 1px solid rgba(76, 107, 138, 0.45);
   padding: 5px 12px;
-  border-radius: 2px;
+  border-radius: 20px;
   font-family: 'Inter', Arial, sans-serif;
   font-size: 11px;
   font-weight: 600;
@@ -302,13 +270,14 @@ body {
 
 /* ── Panels ─────────────────────────────── */
 .panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-top-color: rgba(102, 192, 244, 0.2);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(102, 192, 244, 0.35);
+  border-radius: 12px;
   padding: 0;
   overflow: hidden;
-  box-shadow: var(--shadow-panel);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
   animation: slideUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -614,12 +583,13 @@ body {
 }
 
 .evaluator-left {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-top-color: rgba(102, 192, 244, 0.2);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(102, 192, 244, 0.35);
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: var(--shadow-panel);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
 }
 
 .evaluator-left-header {
@@ -688,7 +658,7 @@ body {
   background: rgba(102, 192, 244, 0.06);
   border: 1px solid rgba(102, 192, 244, 0.25);
   border-left: 3px solid var(--accent-blue);
-  border-radius: 3px;
+  border-radius: 12px;
 }
 
 .job-context-label {
@@ -724,7 +694,7 @@ body {
   padding: 12px 16px;
   background: var(--accent-blue-alpha);
   border: 1px solid rgba(102, 192, 244, 0.3);
-  border-radius: 3px;
+  border-radius: 12px;
   margin-bottom: 12px;
 }
 
@@ -753,7 +723,7 @@ body {
   letter-spacing: 0.07em;
   text-transform: uppercase;
   padding: 4px 10px;
-  border-radius: 2px;
+  border-radius: 20px;
   cursor: pointer;
   flex-shrink: 0;
   transition: color 0.15s, border-color 0.15s;
@@ -766,13 +736,14 @@ body {
 
 /* ── Results CTA ─────────────────────────────── */
 .results-cta {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-top-color: rgba(102, 192, 244, 0.2);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(102, 192, 244, 0.35);
+  border-radius: 12px;
   padding: 24px;
   text-align: center;
-  box-shadow: var(--shadow-panel);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
   animation: slideUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: 0.42s;
 }
