@@ -5,30 +5,6 @@
   justify-content: space-between;
 }
 
-.header-nav {
-  display: flex;
-  gap: 16px;
-}
-
-.nav-link {
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  text-decoration: none;
-  padding: 5px 10px;
-  border: 1px solid rgba(76, 107, 138, 0.45);
-  border-radius: 20px;
-  transition: color 0.15s, border-color 0.15s;
-}
-
-.nav-link:hover,
-.nav-link:focus-visible {
-  color: var(--accent-blue);
-  border-color: rgba(102, 192, 244, 0.38);
-  outline: none;
-}
 
 /* ── CV Banner ───────────────────────────── */
 .cv-banner {
