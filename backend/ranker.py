@@ -1,0 +1,86 @@
+# backend/ranker.py
+import logging
+import os
+
+import numpy as np
+import zvec
+from fastembed import TextEmbedding
+
+from backend.jobs import Job
+
+logger = logging.getLogger(__name__)
+
+_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+_model: TextEmbedding | None = None
+
+_ZVEC_PATH = "./zvec_jobs"
+_collection: zvec.Collection | None = None
+_ZVEC_SCHEMA = zvec.CollectionSchema(
+    name="jobs",
+    vectors=zvec.VectorSchema("embedding", zvec.DataType.VECTOR_FP32, 384),
+)
+
+
+def get_jobs_collection() -> zvec.Collection:
+    """Open or create the Zvec jobs collection. Singleton (lazy init)."""
+    global _collection
+    if _collection is None:
+        if os.path.exists(_ZVEC_PATH):
+            logger.info("[ranker] Opening existing Zvec collection at %s", _ZVEC_PATH)
+            _collection = zvec.open(_ZVEC_PATH)
+        else:
+            logger.info("[ranker] Creating new Zvec collection at %s", _ZVEC_PATH)
+            _collection = zvec.create_and_open(path=_ZVEC_PATH, schema=_ZVEC_SCHEMA)
+    return _collection
+
+
+_inserted_ids: set[str] = set()
+
+
+def upsert_job(job: Job) -> None:
+    """Embed job.description and insert into Zvec collection.
+
+    Idempotent: safe to call across server restarts. If the job already exists
+    in the on-disk collection (e.g. from a previous run), the insert returns a
+    non-ok status — we log it and carry on rather than raising.
+    """
+    if job.id in _inserted_ids:
+        return
+    col = get_jobs_collection()
+    embedding = embed_text(job.description)
+    status = col.insert(zvec.Doc(id=job.id, vectors={"embedding": embedding}))
+    if status.ok():
+        logger.debug("[ranker] Upserted job %s into Zvec", job.id)
+    else:
+        logger.debug("[ranker] Job %s already in Zvec, skipping insert", job.id)
+    # Always track in-memory so we skip the embed + insert attempt next time
+    _inserted_ids.add(job.id)
+
+
+def _get_model() -> TextEmbedding:
+    global _model
+    if _model is None:
+        logger.info("[ranker] Loading fastembed model: %s", _MODEL_NAME)
+        _model = TextEmbedding(_MODEL_NAME)
+        logger.info("[ranker] Model loaded")
+    return _model
+
+
+def embed_text(text: str) -> list[float]:
+    """Embed text and return as list of floats."""
+    model = _get_model()
+    embeddings = list(model.embed([text]))
+    return embeddings[0].tolist()
+
+
+def cosine_similarity(a: list[float], b: list[float]) -> float:
+    """Compute cosine similarity between two vectors."""
+    va = np.array(a, dtype=np.float32)
+    vb = np.array(b, dtype=np.float32)
+    norm_a = np.linalg.norm(va)
+    norm_b = np.linalg.norm(vb)
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+    return float(np.dot(va, vb) / (norm_a * norm_b))
+
+

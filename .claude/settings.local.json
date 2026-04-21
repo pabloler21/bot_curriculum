@@ -1,1 +1,22 @@
-{}
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(pytest:*)",
+      "Bash(python:*)",
+      "Bash(uvx ruff:*)",
+      "Bash(ruff check:*)",
+      "Bash(.venv/Scripts/python -m ruff check backend/jobs.py tests/test_jobs.py)",
+      "Bash(pip install:*)",
+      "Bash(pip show:*)",
+      "Bash(.venv/Scripts/pip install:*)",
+      "Bash(uv pip:*)",
+      "Bash(grep -n \"rank_jobs\" src/routes/jobs.py backend/ranker.py backend/jobs.py tests/test_*.py)",
+      "Bash(claude mcp:*)",
+      "Read(//c/Users/pablo/.claude/**)",
+      "Read(//c/Users/pablo/.config/claude/**)",
+      "Bash(curl -s -u lerner.pb@gmail.com:ATATT3xFfGF0yndBdQTjJYb57a4WkcKR7hpGg7mROZsLvfFaI5UoxfFvJBzB0yPL3nMmtDZRoPtGb033VYh5peL026CXG_PuYrsy7JMTOyfNvqbN9R2-z9E2swS-tBpo207HvzDFDHo3cojZoAbiuULZf68WTCfGw5Qs2BkT31dMQ2exjo-4oAA=04A2CFAB -H 'Accept: application/json' https://lernerpb.atlassian.net/rest/api/3/project/search)",
+      "Bash(curl -s -u lerner.pb@gmail.com:ATATT3xFfGF0yndBdQTjJYb57a4WkcKR7hpGg7mROZsLvfFaI5UoxfFvJBzB0yPL3nMmtDZRoPtGb033VYh5peL026CXG_PuYrsy7JMTOyfNvqbN9R2-z9E2swS-tBpo207HvzDFDHo3cojZoAbiuULZf68WTCfGw5Qs2BkT31dMQ2exjo-4oAA=04A2CFAB -H 'Accept: application/json' 'https://lernerpb.atlassian.net/rest/api/3/issue/createmeta?projectKeys=KAN&expand=projects.issuetypes')"
+    ]
+  }
+}

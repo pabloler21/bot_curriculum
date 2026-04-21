@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UX Flow Analysis</title>
+<style>
+  :root {
+    --bg: #111820;
+    --bg-card: #161f2b;
+    --bg-panel: #1b2838;
+    --border: rgba(76,107,138,0.4);
+    --text: #c6d4df;
+    --sub: #8f98a0;
+    --blue: #66c0f4;
+    --green: #57cbde;
+    --red: #e74c3c;
+    --amber: #f39c12;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', Arial, sans-serif;
+    padding: 28px 24px 60px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1 { color: var(--blue); font-size: 17px; font-weight: 600; text-align: center; margin-bottom: 4px; }
+  .subtitle { text-align: center; color: var(--sub); font-size: 12px; margin-bottom: 32px; }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 14px;
+    padding-left: 10px;
+    border-left: 3px solid;
+  }
+  .section-title.bad { color: var(--red); border-color: var(--red); }
+  .section-title.good { color: var(--green); border-color: var(--green); }
+
+  .flows-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 1000px;
+    margin: 0 auto 36px;
+  }
+
+  /* Flow diagram */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    position: relative;
+  }
+  .flow-step + .flow-step {
+    margin-top: 4px;
+  }
+  .flow-step::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 18px;
+    width: 1px;
+    height: 4px;
+    background: var(--border);
+  }
+  .flow-step:first-child::before { display: none; }
+
+  .step-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .step-body { flex: 1; }
+  .step-label { font-weight: 600; color: var(--text); line-height: 1.3; }
+  .step-note { font-size: 11px; color: var(--sub); margin-top: 2px; line-height: 1.4; }
+
+  .step-problem {
+    margin-top: 5px;
+    padding: 5px 8px;
+    background: rgba(231,76,60,0.08);
+    border: 1px solid rgba(231,76,60,0.25);
+    border-radius: 4px;
+    font-size: 11px;
+    color: #f08070;
+    line-height: 1.4;
+  }
+
+  .step-fix {
+    margin-top: 5px;
+    padding: 5px 8px;
+    background: rgba(87,203,222,0.07);
+    border: 1px solid rgba(87,203,222,0.22);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--green);
+    line-height: 1.4;
+  }
+
+  .badge-problem {
+    display: inline-block;
+    background: rgba(231,76,60,0.12);
+    border: 1px solid rgba(231,76,60,0.3);
+    color: var(--red);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .badge-fix {
+    display: inline-block;
+    background: rgba(87,203,222,0.1);
+    border: 1px solid rgba(87,203,222,0.3);
+    color: var(--green);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* Summary table */
+  .summary {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .summary-header {
+    background: rgba(102,192,244,0.07);
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-row {
+    display: grid;
+    grid-template-columns: 24px 1fr 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    align-items: stretch;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--sub);
+    border-right: 1px solid var(--border);
+    padding: 10px 0;
+  }
+  .summary-cell {
+    padding: 10px 14px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .summary-cell:first-of-type {
+    border-right: 1px solid var(--border);
+    color: #f08070;
+  }
+  .summary-cell:last-of-type {
+    color: var(--green);
+  }
+
+  .arrow { color: var(--sub); font-size: 10px; margin: 0 4px; }
+
+  .flow-connector {
+    text-align: center;
+    color: var(--sub);
+    font-size: 16px;
+    margin: 2px 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>User Flow — Problemas y Fixes</h1>
+<p class="subtitle">3 problemas concretos encontrados analizando el código</p>
+
+<div class="flows-grid">
+
+  <!-- LEFT: Current broken flow -->
+  <div>
+    <div class="section-title bad">Flujo actual — confuso</div>
+    <div class="flow">
+
+      <div class="flow-step">
+        <div class="step-icon">📋</div>
+        <div class="step-body">
+          <div class="step-label">Job Board <span class="arrow">→</span> "ATS Evaluator"</div>
+          <div class="step-note">User subió CV, tiene match scores</div>
+          <div class="step-problem">🔴 Problema 1 — Al llegar al CV Evaluator, tiene que subir el CV <strong>otra vez</strong>. El backend puede reutilizar la sesión, pero el frontend no lo aprovecha.</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-icon">🔗</div>
+        <div class="step-body">
+          <div class="step-label">Job Detail <span class="arrow">→</span> "See how to improve your match"</div>
+          <div class="step-note">Llega a <code style="font-size:10px;color:var(--blue)">index.html?job_id=123</code></div>
+          <div class="step-problem">🔴 Problema 2 — El job context badge es texto tiny de 12px. El user no sabe para qué puesto está evaluando.</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-icon">📄</div>
+        <div class="step-body">
+          <div class="step-label">Sube CV + Analyze</div>
+          <div class="step-note">Dos clics separados: select file → botón "Analyze CV"</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-icon">📊</div>
+        <div class="step-body">
+          <div class="step-label">Ve resultados</div>
+          <div class="step-note">Score, keywords, recomendaciones</div>
+          <div class="step-problem">🔴 Problema 3 — Dead end. El único CTA es "← Analyze another CV". No hay forma de volver al job board o aplicar a un puesto.</div>
+        </div>
+      </div>
+
+      <div class="flow-step" style="background:rgba(231,76,60,0.06);border-color:rgba(231,76,60,0.25)">
+        <div class="step-icon">❓</div>
+        <div class="step-body">
+          <div class="step-label" style="color:var(--red)">¿Y ahora qué?</div>
+          <div class="step-note">El user no sabe qué hacer después.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT: Proposed fixed flow -->
+  <div>
+    <div class="section-title good">Flujo propuesto — claro</div>
+    <div class="flow">
+
+      <div class="flow-step">
+        <div class="step-icon">📋</div>
+        <div class="step-body">
+          <div class="step-label">Job Board <span class="arrow">→</span> "ATS Evaluator"</div>
+          <div class="step-note">User ya tiene CV session</div>
+          <div class="step-fix">✅ Fix 1 — Detectar session token en localStorage. Si existe: mostrar chip "Using CV: [filename]" con opción "Change". El user no tiene que re-subir.</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-icon">🔗</div>
+        <div class="step-body">
+          <div class="step-label">Job Detail <span class="arrow">→</span> "See how to improve"</div>
+          <div class="step-note">Llega con <code style="font-size:10px;color:var(--blue)">?job_id=123</code></div>
+          <div class="step-fix">✅ Fix 2 — Reemplazar badge tiny por un panel de contexto visible: fondo con color, título del job y empresa destacados.</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-icon">📄</div>
+        <div class="step-body">
+          <div class="step-label">Sube CV (o usa el existente)</div>
+          <div class="step-note">Si tiene sesión activa, el botón "Analyze" aparece directo.</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-icon">📊</div>
+        <div class="step-body">
+          <div class="step-label">Ve resultados</div>
+          <div class="step-note">Score, keywords, recomendaciones</div>
+          <div class="step-fix">✅ Fix 3 — Agregar CTA al final de los resultados: botón "Browse matching jobs →" que lleva al job board.</div>
+        </div>
+      </div>
+
+      <div class="flow-step" style="background:rgba(87,203,222,0.05);border-color:rgba(87,203,222,0.25)">
+        <div class="step-icon">✅</div>
+        <div class="step-body">
+          <div class="step-label" style="color:var(--green)">El user sabe qué hacer</div>
+          <div class="step-note">Ve el score, entiende qué mejorar, puede ir al job board a buscar roles que matcheen.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Summary table -->
+<div class="summary">
+  <div class="summary-header">Los 3 fixes — resumen</div>
+  <div class="summary-row">
+    <div class="summary-num">1</div>
+    <div class="summary-cell">Subir CV dos veces si ya lo hiciste en el job board</div>
+    <div class="summary-cell">Detectar session token → mostrar chip con el CV activo. Solo pedí re-upload si quiere otro.</div>
+  </div>
+  <div class="summary-row">
+    <div class="summary-num">2</div>
+    <div class="summary-cell">El badge de contexto de job es invisible (texto tiny)</div>
+    <div class="summary-cell">Panel de contexto prominente arriba del dropzone con título del puesto destacado.</div>
+  </div>
+  <div class="summary-row">
+    <div class="summary-num">3</div>
+    <div class="summary-cell">Dead end después de ver resultados — no hay próximo paso</div>
+    <div class="summary-cell">CTA "Browse matching jobs →" al pie de los resultados. Cierra el loop job board ↔ evaluator.</div>
+  </div>
+</div>
+
+</body>
+</html>

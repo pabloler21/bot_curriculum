@@ -2,6 +2,64 @@ const BACKEND_URL = window.location.hostname === 'bot-curriculum-1.onrender.com'
   ? 'https://bot-curriculum.onrender.com'
   : '';
 
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── Job context (Phase 4) ──────────────────────────────────────────────────
+const urlParams = new URLSearchParams(window.location.search);
+const contextJobId = urlParams.get('job_id');
+let contextJobData = null;
+
+async function loadJobContext() {
+  if (!contextJobId) return;
+  try {
+    const res = await fetch(`${BACKEND_URL}/jobs`);
+    if (!res.ok) return;
+    const jobs = await res.json();
+    const job = jobs.find(j => String(j.id) === String(contextJobId));
+    if (!job) return;
+    contextJobData = job;
+    const panel = document.getElementById('job-context-badge');
+    if (panel) {
+      panel.innerHTML = `
+        <span class="job-context-label">Evaluating against</span>
+        <span class="job-context-title">${escHtml(job.title)}</span>
+        <span class="job-context-company">${escHtml(job.company)}</span>
+      `;
+      panel.classList.remove('hidden');
+    }
+  } catch { /* silently ignore */ }
+}
+
+loadJobContext();
+
+async function checkExistingSession() {
+  const token = localStorage.getItem('cv_session_token');
+  if (!token) return;
+  try {
+    const res = await fetch(`${BACKEND_URL}/session/${encodeURIComponent(token)}`);
+    if (!res.ok) {
+      localStorage.removeItem('cv_session_token');
+      return;
+    }
+    const data = await res.json();
+    sessionPreloaded = true;
+    sessionChipName.textContent = data.filename;
+    sessionChip.classList.remove('hidden');
+    dropZone.classList.add('hidden');
+    analyzeBtn.classList.remove('hidden');
+  } catch {
+    // Server unreachable — degrade gracefully, show normal dropzone
+  }
+}
+
+checkExistingSession();
+
 const dropZone       = document.getElementById('drop-zone');
 const fileInput      = document.getElementById('file-input');
 const fileNameEl     = document.getElementById('file-name');
@@ -13,6 +71,12 @@ const loadingSection = document.getElementById('loading-section');
 const resultsSection = document.getElementById('results-section');
 const resetBtn       = document.getElementById('reset-btn');
 const loadingText    = document.querySelector('#loading-section .loading-text');
+const evaluatorLayout = document.querySelector('.evaluator-layout');
+const sessionChip       = document.getElementById('session-chip');
+const sessionChipName   = document.getElementById('session-chip-name');
+const sessionChipChange = document.getElementById('session-chip-change');
+
+let sessionPreloaded = false;
 
 let selectedFile = null;
 
@@ -90,7 +154,7 @@ async function waitForServer() {
 // ── Analyze ───────────────────────────────────────────────────────────────────
 
 analyzeBtn.addEventListener('click', async () => {
-  if (!selectedFile) return;
+  if (!selectedFile && !sessionPreloaded) return;
 
   setLoading(true);
   hideError();
@@ -98,20 +162,40 @@ analyzeBtn.addEventListener('click', async () => {
   await waitForServer();
   setLoadingMessage('Analyzing your resume, this may take a few seconds...');
 
-  const formData = new FormData();
-  formData.append('file', selectedFile);
+  // If a new file is being uploaded, create/refresh the session in background
+  // so it's available on the Job Board when the user navigates there after analysis
+  if (selectedFile) {
+    const sessionFormData = new FormData();
+    sessionFormData.append('file', selectedFile);
+    fetch(`${BACKEND_URL}/session`, { method: 'POST', body: sessionFormData })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.token) localStorage.setItem('cv_session_token', data.token); })
+      .catch(() => {});
+  }
 
+  const formData = new FormData();
+  if (selectedFile) {
+    formData.append('file', selectedFile);
+  }
+  if (contextJobId) formData.append('job_id', contextJobId);
+
+  const cvToken = localStorage.getItem('cv_session_token');
   try {
     const response = await fetch(`${BACKEND_URL}/evaluate`, {
       method: 'POST',
       body: formData,
+      headers: cvToken ? { 'X-CV-Session-Token': cvToken } : {},
     });
 
     if (!response.ok) {
       let detail = `Error ${response.status}`;
       try {
         const errData = await response.json();
-        detail = errData.detail || detail;
+        if (typeof errData.detail === 'string') {
+          detail = errData.detail;
+        } else if (Array.isArray(errData.detail)) {
+          detail = errData.detail.map(e => e.msg || 'Validation error').join(', ');
+        }
       } catch (_) { /* non-JSON error body */ }
       throw new Error(detail);
     }
@@ -130,12 +214,12 @@ analyzeBtn.addEventListener('click', async () => {
 
 function setLoading(active) {
   if (active) {
-    uploadSection.classList.add('hidden');
+    evaluatorLayout.classList.add('hidden');
     loadingSection.classList.remove('hidden');
     setLoadingMessage('Analyzing your resume, this may take a few seconds...');
   } else {
     loadingSection.classList.add('hidden');
-    uploadSection.classList.remove('hidden');
+    evaluatorLayout.classList.remove('hidden');
   }
 }
 
@@ -145,6 +229,7 @@ function setLoadingMessage(msg) {
 
 function showResults() {
   loadingSection.classList.add('hidden');
+  evaluatorLayout.classList.add('hidden');
   resultsSection.classList.remove('hidden');
 }
 
@@ -158,10 +243,6 @@ function hideError() {
 }
 
 // ── Render results ────────────────────────────────────────────────────────────
-
-function escHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
 
 function renderResults(data) {
   // Panel 1 — Score + Verdict
@@ -214,6 +295,26 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
   });
 });
 
+// ── Session chip change ───────────────────────────────────────────────────────
+
+sessionChipChange.addEventListener('click', async () => {
+  const token = localStorage.getItem('cv_session_token');
+  if (token) {
+    try {
+      await fetch(`${BACKEND_URL}/session/${encodeURIComponent(token)}`, { method: 'DELETE' });
+    } catch { /* ignore network errors */ }
+    localStorage.removeItem('cv_session_token');
+  }
+  sessionPreloaded = false;
+  sessionChip.classList.add('hidden');
+  dropZone.classList.remove('hidden');
+  analyzeBtn.classList.add('hidden');
+  selectedFile    = null;
+  fileInput.value = '';
+  fileNameEl.classList.add('hidden');
+  hideError();
+});
+
 // ── Reset ─────────────────────────────────────────────────────────────────────
 
 resetBtn.addEventListener('click', () => {
@@ -223,5 +324,5 @@ resetBtn.addEventListener('click', () => {
   analyzeBtn.classList.add('hidden');
   hideError();
   resultsSection.classList.add('hidden');
-  uploadSection.classList.remove('hidden');
+  evaluatorLayout.classList.remove('hidden');
 });

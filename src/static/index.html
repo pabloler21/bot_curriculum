@@ -6,49 +6,98 @@
   <title>CV Evaluator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anta&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anta&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <header class="header">
-    <h1>CV Evaluator</h1>
-    <p>Analyze your CV with AI</p>
+    <div class="header-inner">
+      <div>
+        <h1>CV Evaluator</h1>
+        <p>ATS Resume Analysis</p>
+      </div>
+    </div>
+    <div class="tab-strip" role="tablist" aria-label="App sections">
+      <a href="index.html" class="tab-strip-item active" role="tab" aria-selected="true">ATS Evaluator</a>
+      <a href="jobs.html" class="tab-strip-item" role="tab" aria-selected="false">Job Board</a>
+    </div>
   </header>
 
   <main class="container">
 
-    <!-- Upload section -->
-    <div id="upload-section">
-      <div id="drop-zone" class="drop-zone">
-        <div class="drop-zone-content">
-          <div class="drop-icon" aria-hidden="true">📄</div>
-          <p>Drop your CV here</p>
-          <p class="secondary-text">PDF or DOCX</p>
-          <button id="select-btn" class="btn-primary">Select file</button>
-          <p id="file-name" class="file-name hidden" aria-live="polite"></p>
+    <!-- Job context panel (shown when ?job_id= in URL) -->
+    <div id="job-context-badge" class="job-context-panel hidden"></div>
+
+    <!-- Two-column layout — upload state only -->
+    <div class="evaluator-layout">
+
+      <!-- Left: What you get -->
+      <div class="evaluator-left">
+        <div class="evaluator-left-header">What you get</div>
+        <div class="evaluator-left-body">
+          <ul class="evaluator-left-list">
+            <li class="evaluator-left-item">
+              <span class="evaluator-left-item-icon" aria-hidden="true">🎯</span>
+              ATS compatibility score from 0 to 100
+            </li>
+            <li class="evaluator-left-item">
+              <span class="evaluator-left-item-icon" aria-hidden="true">🔑</span>
+              Keywords found and missing vs the role
+            </li>
+            <li class="evaluator-left-item">
+              <span class="evaluator-left-item-icon" aria-hidden="true">⚠️</span>
+              Formatting issues that hurt your ranking
+            </li>
+            <li class="evaluator-left-item">
+              <span class="evaluator-left-item-icon" aria-hidden="true">✅</span>
+              Actionable recommendations to improve
+            </li>
+          </ul>
+          <div class="evaluator-left-footer">Powered by Claude AI · PDF and DOCX</div>
         </div>
-        <input type="file" id="file-input" accept=".pdf,.docx" hidden aria-label="Select CV file">
       </div>
-      <p id="error-msg" class="error-msg hidden" aria-live="assertive"></p>
-      <button id="analyze-btn" class="btn-primary btn-large hidden">Analyze CV</button>
+
+      <!-- Right: Upload form -->
+      <div class="evaluator-right">
+        <div id="upload-section">
+          <!-- Session chip: shown when CV already uploaded in job board -->
+          <div id="session-chip" class="session-chip hidden" aria-live="polite">
+            <span class="session-chip-icon" aria-hidden="true">📄</span>
+            <span id="session-chip-name" class="session-chip-name"></span>
+            <button id="session-chip-change" class="session-chip-change">Change file</button>
+          </div>
+
+          <div id="drop-zone" class="drop-zone">
+            <div class="drop-zone-content">
+              <div class="drop-icon" aria-hidden="true">📄</div>
+              <p>Drop your CV here</p>
+              <p class="secondary-text">PDF or DOCX</p>
+              <button id="select-btn" class="btn-primary">Select file</button>
+              <p id="file-name" class="file-name hidden" aria-live="polite"></p>
+            </div>
+            <input type="file" id="file-input" accept=".pdf,.docx" hidden aria-label="Select CV file">
+          </div>
+          <p id="error-msg" class="error-msg hidden" aria-live="assertive"></p>
+          <button id="analyze-btn" class="btn-primary btn-large hidden">Analyze CV</button>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Loading section -->
+    <!-- Loading (full width) -->
     <div id="loading-section" class="hidden">
       <div class="spinner"></div>
       <p class="loading-text">Analyzing your resume, this may take a few seconds...</p>
     </div>
 
-    <!-- Results dashboard -->
+    <!-- Results dashboard (full width) -->
     <div id="results-section" class="hidden">
 
-      <!-- Top bar with reset button -->
       <div class="results-header">
         <button id="reset-btn" class="btn-reset">← Analyze another CV</button>
       </div>
 
-      <!-- Panel 1: Score + Verdict -->
       <div class="panel panel-score">
         <div class="score-left">
           <div id="score-circle" class="score-circle">
@@ -61,34 +110,35 @@
         </div>
       </div>
 
-      <!-- Panel 2: Summary -->
       <div class="panel">
         <h3>Summary <button class="copy-btn" data-copy-target="summary-text" aria-label="Copy summary">copy</button></h3>
         <p id="summary-text"></p>
       </div>
 
-      <!-- Panel 3: Found Keywords -->
       <div class="panel">
         <h3>Found Keywords <button class="copy-btn" data-copy-target="keywords-found" aria-label="Copy found keywords">copy</button></h3>
         <div id="keywords-found" class="tag-cloud"></div>
       </div>
 
-      <!-- Panel 4: Missing Keywords -->
       <div class="panel">
         <h3>Missing Keywords <button class="copy-btn" data-copy-target="keywords-missing" aria-label="Copy missing keywords">copy</button></h3>
         <div id="keywords-missing" class="tag-cloud"></div>
       </div>
 
-      <!-- Panel 5: Formatting Issues -->
       <div class="panel">
         <h3>Formatting Issues <button class="copy-btn" data-copy-target="formatting-issues" aria-label="Copy formatting issues">copy</button></h3>
         <ul id="formatting-issues" class="issue-list"></ul>
       </div>
 
-      <!-- Panel 6: Recommendations -->
       <div class="panel">
         <h3>Recommendations <button class="copy-btn" data-copy-target="recommendations" aria-label="Copy recommendations">copy</button></h3>
         <ol id="recommendations" class="recommendations-list"></ol>
+      </div>
+
+      <!-- CTA: back to job board -->
+      <div class="results-cta">
+        <p class="results-cta-text">Ready to apply? Browse roles that match your profile.</p>
+        <a href="jobs.html" class="btn-browse-jobs">Browse matching jobs →</a>
       </div>
 
     </div>
