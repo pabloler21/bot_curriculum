@@ -72,6 +72,7 @@ const resultsSection = document.getElementById('results-section');
 const resetBtn       = document.getElementById('reset-btn');
 const loadingText    = document.querySelector('#loading-section .loading-text');
 const evaluatorLayout = document.querySelector('.evaluator-layout');
+const heroSection       = document.getElementById('hero-section');
 const sessionChip       = document.getElementById('session-chip');
 const sessionChipName   = document.getElementById('session-chip-name');
 const sessionChipChange = document.getElementById('session-chip-change');
@@ -215,11 +216,13 @@ analyzeBtn.addEventListener('click', async () => {
 function setLoading(active) {
   if (active) {
     evaluatorLayout.classList.add('hidden');
+    if (heroSection) heroSection.classList.add('hidden');
     loadingSection.classList.remove('hidden');
     setLoadingMessage('Analyzing your resume, this may take a few seconds...');
   } else {
     loadingSection.classList.add('hidden');
     evaluatorLayout.classList.remove('hidden');
+    if (heroSection) heroSection.classList.remove('hidden');
   }
 }
 
@@ -230,6 +233,7 @@ function setLoadingMessage(msg) {
 function showResults() {
   loadingSection.classList.add('hidden');
   evaluatorLayout.classList.add('hidden');
+  if (heroSection) heroSection.classList.add('hidden');
   resultsSection.classList.remove('hidden');
 }
 
@@ -244,17 +248,54 @@ function hideError() {
 
 // ── Render results ────────────────────────────────────────────────────────────
 
+function animateScoreRing(score) {
+  const circumference = 534.07;
+  const progress = document.getElementById('score-ring-progress');
+  const valueEl  = document.getElementById('score-value');
+  const labelEl  = document.getElementById('score-ring-label');
+  const svgEl    = document.getElementById('score-circle');
+  if (!progress) return;
+
+  const gradId = score >= 70 ? 'score-grad-high' : score >= 40 ? 'score-grad-mid' : 'score-grad-low';
+  progress.setAttribute('stroke', `url(#${gradId})`);
+
+  const glowColor = score >= 70
+    ? 'rgba(255,122,92,0.40)'
+    : score >= 40
+      ? 'rgba(251,191,36,0.35)'
+      : 'rgba(251,113,133,0.35)';
+  if (svgEl) svgEl.style.filter = `drop-shadow(0 0 16px ${glowColor})`;
+
+  const offset = circumference - (score / 100) * circumference;
+  // Double rAF so transition fires after paint
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    progress.style.transition = 'stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1)';
+    progress.style.strokeDashoffset = offset;
+  }));
+
+  // Count-up
+  const duration = 700, steps = 60;
+  let current = 0;
+  const increment = score / steps;
+  const timer = setInterval(() => {
+    current += increment;
+    if (current >= score) { valueEl.textContent = score; clearInterval(timer); }
+    else { valueEl.textContent = Math.floor(current); }
+  }, duration / steps);
+
+  if (labelEl) {
+    labelEl.textContent = score >= 80 ? 'Excellent' : score >= 70 ? 'Strong' : score >= 50 ? 'Decent' : 'Needs work';
+  }
+}
+
 function renderResults(data) {
   // Panel 1 — Score + Verdict
-  const scoreCircle = document.getElementById('score-circle');
-  document.getElementById('score-value').textContent = data.overall_score;
-  scoreCircle.classList.remove('score-high', 'score-low');
-  scoreCircle.classList.add(data.approved ? 'score-high' : 'score-low');
+  animateScoreRing(data.overall_score);
 
   document.getElementById('candidate-name').textContent = data.candidate_name;
 
   const badge = document.getElementById('verdict-badge');
-  badge.textContent = data.approved ? 'APPROVED' : 'REJECTED';
+  badge.textContent = data.approved ? 'ATS Approved' : 'Needs Work';
   badge.className   = 'badge ' + (data.approved ? 'approved' : 'rejected');
 
   // Panel 2 — Resumen
@@ -325,4 +366,8 @@ resetBtn.addEventListener('click', () => {
   hideError();
   resultsSection.classList.add('hidden');
   evaluatorLayout.classList.remove('hidden');
+  if (heroSection) heroSection.classList.remove('hidden');
+  // Reset score ring
+  const progress = document.getElementById('score-ring-progress');
+  if (progress) progress.style.strokeDashoffset = '534.07';
 });

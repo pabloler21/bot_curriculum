@@ -59,22 +59,29 @@ async function loadJobDetail() {
       .map(t => `<span class="tag found">${escHtml(t)}</span>`)
       .join('');
 
+    const ctaClass = cvToken ? 'btn-match detail-cta' : 'btn-match-ghost';
     detailEl.innerHTML = `
-      <article class="job-detail-card">
-        <h2 class="job-title" style="font-size:20px">${escHtml(job.title)}</h2>
-        <div class="job-meta" style="margin-bottom:8px">
-          <span class="job-company">${escHtml(job.company)}</span>
-          <span class="job-meta-sep" aria-hidden="true">·</span>
-          <span class="job-location">${escHtml(job.location)}</span>
+      <div class="detail-card">
+        <div class="detail-header">
+          <h1 class="detail-title">${escHtml(job.title)}</h1>
+          <div class="job-meta">
+            <span class="job-company">${escHtml(job.company)}</span>
+            <span class="job-meta-sep" aria-hidden="true">·</span>
+            <span class="job-location">${escHtml(job.location)}</span>
+          </div>
+          ${tags ? `<div class="job-tags" aria-label="Skills" style="margin-top:12px">${tags}</div>` : ''}
         </div>
-        ${tags ? `<div class="job-tags" aria-label="Skills" style="margin-bottom:16px">${tags}</div>` : ''}
-        <div class="job-description" style="font-size:13px;line-height:1.6;color:var(--text-secondary);white-space:pre-line;margin-bottom:24px">${escHtml(job.description)}</div>
-        <div class="card-actions">
-          ${ctaHtml}
-          <a href="${safeUrl(job.url)}" target="_blank" rel="noopener noreferrer" class="view-original"
-             aria-label="View original posting (opens in new tab)">View original posting ↗</a>
+        <div class="detail-body">
+          <p class="detail-description">${escHtml(job.description)}</p>
+          <div class="card-actions">
+            <a href="${safeUrl(job.url)}" target="_blank" rel="noopener noreferrer" class="view-original"
+               aria-label="View original posting (opens in new tab)">View original posting ↗</a>
+          </div>
         </div>
-      </article>
+      </div>
+      <div class="detail-cta-wrap">
+        <a href="${escHtml(ctaHref)}" class="${ctaClass}">${escHtml(ctaText)}</a>
+      </div>
     `;
 
     loadingEl.classList.add('hidden');

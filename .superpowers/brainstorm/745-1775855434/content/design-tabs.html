@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design: Tab Strip</title>
+<link href="https://fonts.googleapis.com/css2?family=Anta&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-main: #1b2838;
+    --bg-deep: #0d1521;
+    --border: rgba(76,107,138,0.55);
+    --accent-blue: #66c0f4;
+    --accent-blue-hover: #4fa8d5;
+    --text-primary: #c6d4df;
+    --text-secondary: #8f98a0;
+    --bg-panel: #16202d;
+    --shadow-panel: 0 2px 12px rgba(0,0,0,0.45);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: #111a26;
+    font-family: 'Inter', Arial, sans-serif;
+    color: var(--text-primary);
+    padding: 32px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h2 {
+    font-family: 'Space Grotesk', Arial, sans-serif;
+    font-size: 18px;
+    color: var(--accent-blue);
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+  }
+
+  /* ── Page mockup shell ── */
+  .page-mock {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(76,107,138,0.4);
+    background: var(--bg-main);
+    margin-bottom: 24px;
+  }
+
+  .page-label {
+    background: rgba(0,0,0,0.4);
+    padding: 6px 14px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(76,107,138,0.3);
+  }
+
+  /* ── Actual header design ── */
+  .mock-header {
+    background: linear-gradient(180deg, #0d1521 0%, #192538 100%);
+    padding: 18px 32px 0;
+    position: relative;
+  }
+
+  .mock-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, #66c0f4 30%, #66c0f4 70%, transparent 100%);
+    opacity: 0.32;
+  }
+
+  .mock-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0;
+  }
+
+  .mock-h1 {
+    font-family: 'Space Grotesk', Arial, sans-serif;
+    font-size: 18px;
+    color: var(--accent-blue);
+    font-weight: 700;
+  }
+
+  .mock-subtitle {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    font-family: 'Inter', Arial, sans-serif;
+  }
+
+  /* ── Tab strip (the new thing) ── */
+  .mock-tab-strip {
+    display: flex;
+    gap: 0;
+    margin-top: 14px;
+    position: relative;
+  }
+
+  .mock-tab {
+    padding: 9px 20px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-family: 'Inter', Arial, sans-serif;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+    cursor: pointer;
+  }
+
+  .mock-tab.active {
+    color: var(--accent-blue);
+    border-bottom-color: var(--accent-blue);
+  }
+
+  .mock-tab.inactive {
+    color: var(--text-secondary);
+    border-bottom-color: transparent;
+  }
+
+  .mock-tab.inactive:hover {
+    color: var(--text-primary);
+  }
+
+  /* Sticky label badge */
+  .sticky-badge {
+    background: rgba(102,192,244,0.12);
+    border: 1px solid rgba(102,192,244,0.3);
+    border-radius: 10px;
+    padding: 3px 10px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+    font-family: 'Inter', Arial, sans-serif;
+  }
+
+  /* ── Page content placeholder ── */
+  .mock-content {
+    padding: 20px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mock-block {
+    height: 8px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.06);
+  }
+
+  .mock-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .mock-card {
+    height: 70px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(76,107,138,0.3);
+  }
+
+  .mock-two-col {
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+    gap: 12px;
+    margin-top: 4px;
+  }
+
+  .mock-panel {
+    height: 90px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(76,107,138,0.3);
+  }
+
+  /* ── CV banner (jobs page) ── */
+  .mock-cv-banner {
+    background: rgba(0,0,0,0.25);
+    border-bottom: 1px solid rgba(76,107,138,0.3);
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .mock-cv-chip {
+    background: rgba(102,192,244,0.12);
+    border: 1px solid rgba(102,192,244,0.3);
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 10px;
+    color: var(--accent-blue);
+    font-weight: 600;
+  }
+
+  /* ── Changes summary ── */
+  .changes {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(76,107,138,0.3);
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-top: 8px;
+  }
+
+  .changes h3 {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+
+  .change-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 9px;
+    font-size: 12px;
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  .dot-add { width: 7px; height: 7px; border-radius: 50%; background: #57cbde; flex-shrink:0; margin-top: 4px; }
+  .dot-remove { width: 7px; height: 7px; border-radius: 50%; background: #e74c3c; flex-shrink:0; margin-top: 4px; }
+  .dot-mod { width: 7px; height: 7px; border-radius: 50%; background: #f39c12; flex-shrink:0; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<h2>Diseño: Tab Strip Sticky</h2>
+<p class="subtitle">Así quedan los 3 archivos con la banda de tabs persistente. El header completo (incluyendo los tabs) es sticky.</p>
+
+<!-- Page 1: ATS Evaluator -->
+<div class="page-mock">
+  <div class="page-label">index.html — ATS Evaluator &nbsp;·&nbsp; tab "ATS Evaluator" activa</div>
+  <div class="mock-header">
+    <div class="mock-header-inner">
+      <div>
+        <div class="mock-h1">CV Evaluator</div>
+        <div class="mock-subtitle">ATS Resume Analysis</div>
+      </div>
+      <span class="sticky-badge">sticky</span>
+    </div>
+    <div class="mock-tab-strip">
+      <span class="mock-tab active">ATS Evaluator</span>
+      <span class="mock-tab inactive">Job Board</span>
+    </div>
+  </div>
+  <div class="mock-content">
+    <div class="mock-two-col">
+      <div class="mock-panel"></div>
+      <div class="mock-panel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Page 2: Job Board -->
+<div class="page-mock">
+  <div class="page-label">jobs.html — Job Board &nbsp;·&nbsp; tab "Job Board" activa</div>
+  <div class="mock-header">
+    <div class="mock-header-inner">
+      <div>
+        <div class="mock-h1">CV Evaluator</div>
+        <div class="mock-subtitle">Remote Tech Job Board</div>
+      </div>
+      <span class="sticky-badge">sticky</span>
+    </div>
+    <div class="mock-tab-strip">
+      <span class="mock-tab inactive">ATS Evaluator</span>
+      <span class="mock-tab active">Job Board</span>
+    </div>
+  </div>
+  <div class="mock-cv-banner">
+    <span>Upload your CV to rank jobs by match</span>
+    <span class="mock-cv-chip">Upload CV</span>
+  </div>
+  <div class="mock-content">
+    <div class="mock-grid">
+      <div class="mock-card"></div>
+      <div class="mock-card"></div>
+      <div class="mock-card"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Page 3: Job Detail -->
+<div class="page-mock">
+  <div class="page-label">job-detail.html — Detalle de oferta &nbsp;·&nbsp; tab "Job Board" activa (sub-página)</div>
+  <div class="mock-header">
+    <div class="mock-header-inner">
+      <div>
+        <div class="mock-h1">CV Evaluator</div>
+        <div class="mock-subtitle">Remote Tech Job Board</div>
+      </div>
+      <span class="sticky-badge">sticky</span>
+    </div>
+    <div class="mock-tab-strip">
+      <span class="mock-tab inactive">ATS Evaluator</span>
+      <span class="mock-tab active">Job Board</span>
+    </div>
+  </div>
+  <div class="mock-content">
+    <div class="mock-block" style="width:55%;height:16px;"></div>
+    <div class="mock-block" style="width:30%;height:10px;"></div>
+    <div style="height:8px"></div>
+    <div class="mock-block" style="width:100%;height:60px;border-radius:4px;"></div>
+  </div>
+</div>
+
+<!-- What changes -->
+<div class="changes">
+  <h3>Cambios en el código</h3>
+  <div class="change-row"><div class="dot-mod"></div><span><strong>style.css</strong> — <code>.header</code> pasa a <code>position: sticky; top: 0; z-index: 100</code> + nuevas clases <code>.tab-strip</code> y <code>.tab-strip-item</code></span></div>
+  <div class="change-row"><div class="dot-add"></div><span><strong>index.html</strong> — se agrega <code>&lt;div class="tab-strip"&gt;</code> dentro del header. Se elimina el botón pill "← Job Board"</span></div>
+  <div class="change-row"><div class="dot-add"></div><span><strong>jobs.html</strong> — ídem. Se elimina el link "ATS Evaluator" del nav</span></div>
+  <div class="change-row"><div class="dot-add"></div><span><strong>job-detail.html</strong> — ídem. Se eliminan los dos links actuales del nav (← Back to jobs / ATS Evaluator)</span></div>
+  <div class="change-row"><div class="dot-remove"></div><span>Se elimina la clase <code>.cv-back-btn</code> de style.css (reemplazada por los tabs)</span></div>
+</div>
+
+</body>
+</html>

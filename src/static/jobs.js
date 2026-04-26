@@ -283,9 +283,10 @@ sortScoreBtn.addEventListener('click', () => {
 // ── CV Session ─────────────────────────────────────────────────────────────
 
 function showCvChip(filename) {
-  cvChipName.textContent = filename;   // textContent is safe, no escHtml needed
+  cvChipName.textContent = filename;
   cvUploadArea.classList.add('hidden');
   cvActiveArea.classList.remove('hidden');
+  cvUploadBtn.classList.add('hidden');
   cvError.classList.add('hidden');
   cvError.textContent = '';
   if (cvBannerCopy) cvBannerCopy.classList.add('hidden');
@@ -294,6 +295,9 @@ function showCvChip(filename) {
 function showCvButton() {
   cvActiveArea.classList.add('hidden');
   cvUploadArea.classList.remove('hidden');
+  cvUploadBtn.classList.remove('hidden');
+  cvUploadBtn.disabled = false;
+  cvUploadBtn.textContent = '↑ Upload CV';
   cvError.classList.add('hidden');
   cvError.textContent = '';
   if (cvBannerCopy) cvBannerCopy.classList.remove('hidden');

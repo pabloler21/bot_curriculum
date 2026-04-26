@@ -3,38 +3,164 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Job Detail — CV Evaluator</title>
+  <title>Job Detail — Aurea</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anta&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="jobs.css">
+  <style>
+    /* ── Job detail page styles ── */
+    .detail-container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 16px 80px;
+    }
+
+    .detail-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-decoration: none;
+      margin-bottom: 24px;
+      transition: color 0.15s;
+    }
+    .detail-back:hover { color: var(--text-primary); }
+
+    .detail-card {
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(40px) saturate(200%);
+      -webkit-backdrop-filter: blur(40px) saturate(200%);
+      border: 1px solid var(--glass-border-strong);
+      box-shadow: var(--shadow-float);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      animation: slide-up 0.5s cubic-bezier(0.22,1,0.36,1) 0.05s both;
+    }
+
+    .detail-header {
+      padding: 32px 32px 24px;
+      border-bottom: 1px solid var(--separator);
+    }
+
+    .detail-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .detail-body { padding: 24px 32px; }
+
+    .detail-description {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      white-space: pre-line;
+      margin-bottom: 28px;
+    }
+
+    .detail-cta-wrap {
+      background: linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0.08) 100%);
+      backdrop-filter: blur(32px) saturate(180%);
+      -webkit-backdrop-filter: blur(32px) saturate(180%);
+      border: 1px solid var(--glass-border-strong);
+      box-shadow: var(--shadow-float);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      text-align: center;
+      margin-top: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .detail-cta-wrap::before {
+      content:''; position:absolute; inset:0;
+      background: radial-gradient(ellipse at top, rgba(255,122,92,0.15), transparent 60%);
+      pointer-events:none;
+    }
+
+    .btn-match.detail-cta {
+      display: inline-flex;
+      width: auto;
+      padding: 12px 28px;
+      font-size: 13px;
+      position: relative;
+    }
+
+    .btn-match-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 28px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      border-radius: var(--radius-pill);
+      text-decoration: none;
+      background: transparent;
+      border: 1px solid var(--accent-border);
+      color: var(--accent-light);
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-match-ghost:hover {
+      background: var(--accent-subtle);
+      border-color: var(--accent);
+    }
+  </style>
 </head>
 <body>
 
+  <!-- Ambient background -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-orb ambient-orb-coral"></div>
+    <div class="ambient-orb ambient-orb-aqua"></div>
+    <div class="ambient-orb ambient-orb-amber"></div>
+    <div class="ambient-orb ambient-orb-magenta"></div>
+    <div class="ambient-grid"></div>
+  </div>
+
+  <!-- Header -->
   <header class="header">
     <div class="header-inner">
-      <div>
-        <h1>CV Evaluator</h1>
-        <p>Remote Tech Job Board</p>
+      <div class="header-pill">
+        <a href="index.html" class="brand">
+          <div class="brand-mark">✦</div>
+          <span class="brand-name">Aurea</span>
+          <span class="beta-badge">Beta</span>
+        </a>
+        <nav class="tab-nav" role="tablist" aria-label="App sections">
+          <a href="index.html" class="tab-nav-item" role="tab" aria-selected="false">Evaluator</a>
+          <a href="jobs.html" class="tab-nav-item active" role="tab" aria-selected="true">Job Board</a>
+        </nav>
       </div>
-    </div>
-    <div class="tab-strip" role="tablist" aria-label="App sections">
-      <a href="index.html" class="tab-strip-item" role="tab" aria-selected="false">ATS Evaluator</a>
-      <a href="jobs.html" class="tab-strip-item active" role="tab" aria-selected="true">Job Board</a>
     </div>
   </header>
 
-  <main class="container">
+  <div class="detail-container">
+
+    <a href="jobs.html" class="detail-back">← Back to Job Board</a>
+
     <div id="loading-detail" class="loading-state" aria-live="polite">
-      <div class="spinner"></div>
+      <div class="spinner lg"></div>
       <p class="loading-text">Loading job details...</p>
     </div>
+
     <p id="error-detail" class="error-msg hidden" role="alert"></p>
+
     <div id="job-detail" class="hidden">
       <!-- populated by job-detail.js -->
     </div>
-  </main>
+
+  </div>
 
   <script src="job-detail.js"></script>
 </body>

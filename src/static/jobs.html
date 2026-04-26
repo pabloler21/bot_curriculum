@@ -3,50 +3,75 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CV Evaluator — Job Board</title>
+  <title>Aurea — Job Board</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anta&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="jobs.css">
 </head>
 <body>
 
+  <!-- Ambient background -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-orb ambient-orb-coral"></div>
+    <div class="ambient-orb ambient-orb-aqua"></div>
+    <div class="ambient-orb ambient-orb-amber"></div>
+    <div class="ambient-orb ambient-orb-magenta"></div>
+    <div class="ambient-grid"></div>
+  </div>
+
+  <!-- Header -->
   <header class="header">
     <div class="header-inner">
-      <div>
-        <h1>CV Evaluator</h1>
-        <p>Remote Tech Job Board</p>
+      <div class="header-pill">
+        <a href="index.html" class="brand">
+          <div class="brand-mark">✦</div>
+          <span class="brand-name">Aurea</span>
+          <span class="beta-badge">Beta</span>
+        </a>
+        <nav class="tab-nav" role="tablist" aria-label="App sections">
+          <a href="index.html" class="tab-nav-item" role="tab" aria-selected="false">Evaluator</a>
+          <a href="jobs.html" class="tab-nav-item active" role="tab" aria-selected="true">Job Board</a>
+        </nav>
       </div>
-    </div>
-    <div class="tab-strip" role="tablist" aria-label="App sections">
-      <a href="index.html" class="tab-strip-item" role="tab" aria-selected="false">ATS Evaluator</a>
-      <a href="jobs.html" class="tab-strip-item active" role="tab" aria-selected="true">Job Board</a>
     </div>
   </header>
 
-  <!-- CV banner (below header, scrolls with page) -->
-  <div id="cv-banner" class="cv-banner" role="complementary" aria-label="CV upload status">
-    <div class="cv-banner-inner">
+  <!-- CV Banner (pill) -->
+  <div class="cv-banner-container">
+    <div id="cv-banner" class="cv-banner" role="complementary" aria-label="CV upload status">
+
+      <!-- No-CV state -->
       <div id="cv-upload-area">
-        <button id="cv-upload-btn" class="cv-banner-btn" aria-label="Upload your CV to see match scores">
-          ↑ Upload CV
-        </button>
-        <input type="file" id="cv-file-input" accept=".pdf,.docx" hidden aria-label="Select CV file">
+        <span class="cv-banner-sparkle">✦</span>
+        <p id="cv-banner-copy" class="cv-banner-copy">
+          <strong>Upload your CV</strong> to score every role and re-rank by match.
+        </p>
       </div>
+
+      <!-- CV active state -->
       <div id="cv-active-area" class="hidden">
         <div class="cv-chip" role="status" aria-live="polite">
-          <span class="cv-chip-icon" aria-hidden="true">📄</span>
+          <div class="cv-chip-icon" aria-hidden="true">📄</div>
           <span id="cv-chip-name" class="cv-chip-name"></span>
-          <button id="cv-remove-btn" class="cv-chip-remove" aria-label="Remove uploaded CV">×</button>
+          <span id="cv-scoring-status" class="cv-scoring-status hidden" aria-live="polite">
+            <span class="spinner-small" aria-hidden="true"></span>
+            Scoring jobs against your CV…
+          </span>
         </div>
-        <span id="cv-scoring-status" class="cv-scoring-status hidden" aria-live="polite">
-          <span class="spinner-small" aria-hidden="true"></span>
-          Scoring jobs against your CV…
-        </span>
+        <button id="cv-remove-btn" class="cv-chip-remove" aria-label="Remove uploaded CV">×</button>
       </div>
+
       <p id="cv-error" class="cv-error hidden" role="alert"></p>
-      <p id="cv-banner-copy" class="cv-banner-copy"><strong>Upload your CV</strong> to see how well you match each role</p>
+
+      <!-- Upload button (always in banner, hidden when active) -->
+      <button id="cv-upload-btn" class="cv-banner-btn" aria-label="Upload your CV to see match scores">
+        ↑ Upload CV
+      </button>
+      <input type="file" id="cv-file-input" accept=".pdf,.docx" hidden aria-label="Select CV file">
+
     </div>
   </div>
 
@@ -54,14 +79,19 @@
 
     <!-- Sort toolbar -->
     <div class="toolbar" role="toolbar" aria-label="Sort options">
-      <span class="toolbar-label">Sort by:</span>
-      <button id="sort-date" class="sort-btn active" aria-pressed="true">Date posted</button>
-      <button id="sort-score" class="sort-btn" aria-pressed="false" disabled title="Upload your CV to sort by match score">Match score</button>
+      <div class="toolbar-heading">
+        <span class="toolbar-title" id="jobs-count-label">Open roles</span>
+        <span class="toolbar-subtitle" id="jobs-subtitle">Curated remote tech opportunities</span>
+      </div>
+      <div class="sort-group">
+        <button id="sort-date" class="sort-btn active" aria-pressed="true">📅 Newest</button>
+        <button id="sort-score" class="sort-btn" aria-pressed="false" disabled title="Upload your CV to sort by match score">✦ Match</button>
+      </div>
     </div>
 
     <!-- Loading -->
     <div id="loading-jobs" class="loading-state" aria-live="polite">
-      <div class="spinner"></div>
+      <div class="spinner lg"></div>
       <p class="loading-text">Loading job listings...</p>
     </div>
 

@@ -16,7 +16,18 @@
       "Read(//c/Users/pablo/.claude/**)",
       "Read(//c/Users/pablo/.config/claude/**)",
       "Bash(curl -s -u lerner.pb@gmail.com:ATATT3xFfGF0yndBdQTjJYb57a4WkcKR7hpGg7mROZsLvfFaI5UoxfFvJBzB0yPL3nMmtDZRoPtGb033VYh5peL026CXG_PuYrsy7JMTOyfNvqbN9R2-z9E2swS-tBpo207HvzDFDHo3cojZoAbiuULZf68WTCfGw5Qs2BkT31dMQ2exjo-4oAA=04A2CFAB -H 'Accept: application/json' https://lernerpb.atlassian.net/rest/api/3/project/search)",
-      "Bash(curl -s -u lerner.pb@gmail.com:ATATT3xFfGF0yndBdQTjJYb57a4WkcKR7hpGg7mROZsLvfFaI5UoxfFvJBzB0yPL3nMmtDZRoPtGb033VYh5peL026CXG_PuYrsy7JMTOyfNvqbN9R2-z9E2swS-tBpo207HvzDFDHo3cojZoAbiuULZf68WTCfGw5Qs2BkT31dMQ2exjo-4oAA=04A2CFAB -H 'Accept: application/json' 'https://lernerpb.atlassian.net/rest/api/3/issue/createmeta?projectKeys=KAN&expand=projects.issuetypes')"
+      "Bash(curl -s -u lerner.pb@gmail.com:ATATT3xFfGF0yndBdQTjJYb57a4WkcKR7hpGg7mROZsLvfFaI5UoxfFvJBzB0yPL3nMmtDZRoPtGb033VYh5peL026CXG_PuYrsy7JMTOyfNvqbN9R2-z9E2swS-tBpo207HvzDFDHo3cojZoAbiuULZf68WTCfGw5Qs2BkT31dMQ2exjo-4oAA=04A2CFAB -H 'Accept: application/json' 'https://lernerpb.atlassian.net/rest/api/3/issue/createmeta?projectKeys=KAN&expand=projects.issuetypes')",
+      "Bash(.venv/Scripts/pip.exe install:*)",
+      "Bash(/c/Users/pablo/Desktop/bot_curriculum/.venv/Scripts/python.exe -m pip install \"fastembed>=0.4.0\")",
+      "Bash(/c/Users/pablo/Desktop/bot_curriculum/.venv/Scripts/python.exe -m ensurepip)",
+      "Bash(obsidian read:*)",
+      "Bash(C:/Users/pablo/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh:*)",
+      "Bash(curl -s -u lerner.pb@gmail.com:ATATT3xFfGF0yndBdQTjJYb57a4WkcKR7hpGg7mROZsLvfFaI5UoxfFvJBzB0yPL3nMmtDZRoPtGb033VYh5peL026CXG_PuYrsy7JMTOyfNvqbN9R2-z9E2swS-tBpo207HvzDFDHo3cojZoAbiuULZf68WTCfGw5Qs2BkT31dMQ2exjo-4oAA=04A2CFAB -H 'Accept: application/json' 'https://lernerpb.atlassian.net/rest/api/3/search?jql=project=KAN+ORDER+BY+created+DESC&maxResults=20&fields=summary,issuetype,status')",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(bash:*)",
+      "Bash(cat \"C:/Users/pablo/Desktop/bot_curriculum/.superpowers/brainstorm/\"*/state/server-info)",
+      "WebSearch"
     ]
   }
 }
