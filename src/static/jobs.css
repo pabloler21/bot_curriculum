@@ -555,3 +555,49 @@
 
 /* ── Loading text ─────────────────────────── */
 .loading-text { font-size: 13px; color: var(--text-secondary); }
+
+/* ── Skeleton cards ───────────────────────── */
+@keyframes sk-shimmer {
+  from { transform: translateX(-150%); }
+  to   { transform: translateX(250%); }
+}
+
+.job-card-skeleton {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: slide-up 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  overflow: hidden;
+}
+
+.sk-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sk-meta   { display: flex; gap: 8px; align-items: center; }
+.sk-tags   { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.sk-line, .sk-tag, .sk-btn {
+  background: rgba(255,255,255,0.06);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sk-line::after, .sk-tag::after, .sk-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 60%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.09), transparent);
+  animation: sk-shimmer 1.8s ease-in-out infinite;
+}
+
+.sk-title { height: 18px; width: 70%; }
+.sk-badge { height: 22px; width: 36px; border-radius: 100px; }
+.sk-sm    { height: 13px; width: 42%; }
+.sk-xs    { height: 11px; width: 28%; }
+.sk-tag   { height: 22px; width: 60px; border-radius: 100px; }
+.sk-btn   { height: 36px; border-radius: 100px; width: 100%; margin-top: 4px; }

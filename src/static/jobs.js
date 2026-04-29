@@ -69,6 +69,33 @@ function scoreBadgeClass() {
 
 // ── Render ─────────────────────────────────────────────────────────────────
 
+function renderSkeletons(count = 9) {
+  jobsGrid.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const sk = document.createElement('article');
+    sk.className = 'job-card-skeleton';
+    sk.style.animationDelay = `${Math.min(i * 0.04, 0.32)}s`;
+    sk.innerHTML = `
+      <div class="sk-header">
+        <div class="sk-line sk-title"></div>
+        <div class="sk-line sk-badge"></div>
+      </div>
+      <div class="sk-meta">
+        <div class="sk-line sk-sm"></div>
+        <div class="sk-line sk-sm" style="width:32%"></div>
+      </div>
+      <div class="sk-tags">
+        <div class="sk-tag"></div>
+        <div class="sk-tag" style="width:52px"></div>
+        <div class="sk-tag" style="width:76px"></div>
+      </div>
+      <div class="sk-line sk-xs"></div>
+      <div class="sk-btn"></div>
+    `;
+    jobsGrid.appendChild(sk);
+  }
+}
+
 function renderJobCard(job, index, cvActive = false) {
   const article = document.createElement('article');
   article.className = 'job-card';
@@ -383,18 +410,22 @@ cvRemoveBtn.addEventListener('click', async () => {
   sortDateBtn.classList.add('active');
   sortDateBtn.setAttribute('aria-pressed', 'true');
   showCvButton();
+  // Fade out existing cards before reloading
+  const existingToFade = [...jobsGrid.querySelectorAll('.job-card')];
+  if (existingToFade.length > 0) {
+    existingToFade.forEach(c => { c.style.transition = 'opacity 0.15s ease'; c.style.opacity = '0'; });
+    await new Promise(r => setTimeout(r, 160));
+  }
   loadJobs();
 });
 
-async function restoreCvSession() {
+async function init() {
+  renderSkeletons(9);
   const token = localStorage.getItem('cv_session_token');
-  if (!token) return;
+  if (!token) { loadJobs(); return; }
   try {
     const res = await fetch(`${BACKEND_URL}/session/${encodeURIComponent(token)}`);
-    if (!res.ok) {
-      localStorage.removeItem('cv_session_token');
-      return;
-    }
+    if (!res.ok) { localStorage.removeItem('cv_session_token'); loadJobs(); return; }
     const data = await res.json();
     cvSessionToken = token;
     showCvChip(data.filename);
@@ -403,6 +434,7 @@ async function restoreCvSession() {
     loadRankedJobs(token);
   } catch {
     localStorage.removeItem('cv_session_token');
+    loadJobs();
   }
 }
 
@@ -425,10 +457,10 @@ function hideRankingBanner() {
 // ── Fetch ──────────────────────────────────────────────────────────────────
 
 async function loadJobs() {
-  loadingEl.classList.remove('hidden');
+  loadingEl.classList.add('hidden');
   errorEl.classList.add('hidden');
-  jobsGrid.innerHTML = '';
   hideRankingBanner();
+  renderSkeletons(9);
 
   try {
     const res = await fetch(`${BACKEND_URL}/jobs`);
@@ -437,10 +469,9 @@ async function loadJobs() {
       throw new Error(body.detail || `Error ${res.status}`);
     }
     allJobs = await res.json();
-    loadingEl.classList.add('hidden');
     renderJobs(sortedJobs());
   } catch (err) {
-    loadingEl.classList.add('hidden');
+    jobsGrid.innerHTML = '';
     errorEl.textContent = err instanceof TypeError
       ? 'Could not connect to the server. Check your connection.'
       : err.message;
@@ -449,10 +480,20 @@ async function loadJobs() {
 }
 
 async function loadRankedJobs(token) {
-  loadingEl.classList.remove('hidden');
+  loadingEl.classList.add('hidden');
   errorEl.classList.add('hidden');
-  jobsGrid.innerHTML = '';
   hideRankingBanner();
+
+  // Fade out existing cards before showing skeletons
+  const existingCards = [...jobsGrid.querySelectorAll('.job-card')];
+  if (existingCards.length > 0) {
+    existingCards.forEach(card => {
+      card.style.transition = 'opacity 0.15s ease';
+      card.style.opacity = '0';
+    });
+    await new Promise(r => setTimeout(r, 160));
+  }
+  renderSkeletons(9);
 
   try {
     const res = await fetch(`${BACKEND_URL}/jobs/ranked?token=${encodeURIComponent(token)}`);
@@ -461,14 +502,12 @@ async function loadRankedJobs(token) {
       throw new Error(body.detail || `Error ${res.status}`);
     }
     allJobs = await res.json();
-    loadingEl.classList.add('hidden');
     const rankedCount = allJobs.filter(j => j.similarity_score != null).length;
     if (rankedCount > 0) showRankingBanner(rankedCount);
     renderJobs(allJobs);
-    // Start background LLM scoring — do not await, progressive enhancement
     startBackgroundScoring(token);
   } catch (err) {
-    loadingEl.classList.add('hidden');
+    jobsGrid.innerHTML = '';
     errorEl.textContent = err instanceof TypeError
       ? 'Could not connect to the server. Check your connection.'
       : err.message;
@@ -518,5 +557,4 @@ async function startBackgroundScoring(token) {
 }
 
 
-restoreCvSession();
-loadJobs();
+init();
