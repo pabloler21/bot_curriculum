@@ -2,6 +2,27 @@ const BACKEND_URL = window.location.hostname === 'bot-curriculum-1.onrender.com'
   ? 'https://bot-curriculum.onrender.com'
   : '';
 
+function sanitizeText(text) {
+  return String(text)
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function descriptionToHtml(text) {
+  const clean = sanitizeText(text);
+  const paragraphs = clean
+    .split(/\n{2,}/)
+    .map(p => p.trim().replace(/\n/g, ' '))
+    .filter(p => p.length > 0);
+  return paragraphs.length
+    ? paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('')
+    : `<p>${escHtml(clean)}</p>`;
+}
+
 function escHtml(s) {
   return String(s)
     .replace(/&/g, '&amp;')
@@ -59,26 +80,76 @@ async function loadJobDetail() {
       .map(t => `<span class="tag found">${escHtml(t)}</span>`)
       .join('');
 
+    const ctaClass = cvToken ? 'btn-match detail-cta' : 'btn-match-ghost';
     detailEl.innerHTML = `
-      <article class="job-detail-card">
-        <h2 class="job-title" style="font-size:20px">${escHtml(job.title)}</h2>
-        <div class="job-meta" style="margin-bottom:8px">
-          <span class="job-company">${escHtml(job.company)}</span>
-          <span class="job-meta-sep" aria-hidden="true">·</span>
-          <span class="job-location">${escHtml(job.location)}</span>
+      <div class="detail-card">
+        <div class="detail-header">
+          <h1 class="detail-title">${escHtml(job.title)}</h1>
+          <div class="job-meta">
+            <span class="job-company">${escHtml(job.company)}</span>
+            <span class="job-meta-sep" aria-hidden="true">·</span>
+            <span class="job-location">${escHtml(job.location)}</span>
+          </div>
+          ${tags ? `<div class="job-tags" aria-label="Skills" style="margin-top:12px">${tags}</div>` : ''}
         </div>
-        ${tags ? `<div class="job-tags" aria-label="Skills" style="margin-bottom:16px">${tags}</div>` : ''}
-        <div class="job-description" style="font-size:13px;line-height:1.6;color:var(--text-secondary);white-space:pre-line;margin-bottom:24px">${escHtml(job.description)}</div>
-        <div class="card-actions">
-          ${ctaHtml}
-          <a href="${safeUrl(job.url)}" target="_blank" rel="noopener noreferrer" class="view-original"
-             aria-label="View original posting (opens in new tab)">View original posting ↗</a>
+        <div class="detail-body">
+          <div class="detail-desc-wrap">
+            <div class="detail-description">${descriptionToHtml(job.description)}</div>
+            <button class="desc-toggle" aria-expanded="false">See more ↓</button>
+          </div>
+          <div class="card-actions">
+            <a href="${safeUrl(job.url)}" target="_blank" rel="noopener noreferrer" class="view-original"
+               aria-label="View original posting (opens in new tab)">View original posting ↗</a>
+          </div>
         </div>
-      </article>
+      </div>
+      <div class="detail-cta-wrap">
+        <a href="${escHtml(ctaHref)}" class="${ctaClass}">${escHtml(ctaText)}</a>
+      </div>
     `;
 
+    // Reveal element FIRST so scrollHeight is measurable
     loadingEl.classList.add('hidden');
     detailEl.classList.remove('hidden');
+
+    // Description collapse/expand
+    const descEl    = detailEl.querySelector('.detail-description');
+    const toggleBtn = detailEl.querySelector('.desc-toggle');
+    const COLLAPSED = 150;
+
+    if (descEl && toggleBtn) {
+      const naturalH = descEl.scrollHeight;
+      if (naturalH <= COLLAPSED + 24) {
+        toggleBtn.hidden = true;
+      } else {
+        // Collapse instantly (transition not yet active)
+        descEl.style.maxHeight       = COLLAPSED + 'px';
+        descEl.style.webkitMaskImage = 'linear-gradient(to bottom, black 50%, transparent 100%)';
+        descEl.style.maskImage       = 'linear-gradient(to bottom, black 50%, transparent 100%)';
+
+        // Enable transition after first paint so initial collapse is instant
+        requestAnimationFrame(() => {
+          descEl.style.transition = 'max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1)';
+        });
+
+        toggleBtn.addEventListener('click', () => {
+          const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+          if (expanded) {
+            descEl.style.maxHeight       = COLLAPSED + 'px';
+            descEl.style.webkitMaskImage = 'linear-gradient(to bottom, black 50%, transparent 100%)';
+            descEl.style.maskImage       = 'linear-gradient(to bottom, black 50%, transparent 100%)';
+            toggleBtn.setAttribute('aria-expanded', 'false');
+            toggleBtn.textContent = 'See more ↓';
+          } else {
+            descEl.style.maxHeight       = naturalH + 'px';
+            descEl.style.webkitMaskImage = 'none';
+            descEl.style.maskImage       = 'none';
+            toggleBtn.setAttribute('aria-expanded', 'true');
+            toggleBtn.textContent = 'See less ↑';
+          }
+        });
+      }
+    }
   } catch (err) {
     loadingEl.classList.add('hidden');
     errorEl.textContent = err instanceof TypeError
