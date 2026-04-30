@@ -16,6 +16,8 @@
 
 ## What It Does
 
+**Navigation** — A persistent tab strip sits below the header on every page (ATS Evaluator, Job Board, and Job Detail). `position: sticky; top: 0` keeps it always visible while scrolling.
+
 **ATS Evaluator** (`/`) — Upload a PDF or DOCX resume and get a structured compatibility report from Claude: ATS score, found/missing keywords, formatting issues, and actionable recommendations. The page is designed around a clear user flow:
 - **Two-column layout** — "What you get" panel on the left, upload zone on the right
 - **Session preloading** — if you already uploaded your CV on the Job Board, the evaluator detects the active session and lets you analyze without re-uploading
@@ -87,7 +89,7 @@ bot_curriculum/
 │   ├── job-detail.html          # Job detail page
 │   └── job-detail.js
 │
-├── tests/                       # 55 tests
+├── tests/                       # 57 tests
 │   ├── test_jobs.py
 │   ├── test_sessions.py
 │   ├── test_ranker.py
@@ -183,7 +185,7 @@ Returns `{ "status": "ok" }`. Used by the frontend to detect Render free-tier wa
 ### `POST /evaluate`
 Analyzes a CV and returns a structured ATS report. Rate limited: 3/min per IP.
 
-**Request:** `multipart/form-data` with `file` (PDF or DOCX). Optionally send `X-CV-Session-Token` header to use an existing session's CV text instead of re-uploading.
+**Request:** `multipart/form-data`. `file` (PDF or DOCX) is **optional** — if omitted, send an `X-CV-Session-Token` header to use an existing session's CV text instead of re-uploading. Sending neither returns `400 No CV provided`.
 
 **Response `200`:**
 ```json
@@ -281,12 +283,13 @@ The app uses a **glassmorphism** aesthetic with the Steam color palette:
 
 **ATS Evaluator:**
 - Two-column layout: left panel explains the tool, right panel has the upload zone
-- Prominent pill back button ("← Job Board") in the header — same style as score badges
+- Glassmorphism: drop zone, panels, buttons, and chips all use `rgba` + `backdrop-filter: blur` + `border-radius: 12–20px` — matching the Job Board aesthetic
 - Job context panel with left blue border when arriving from a job detail (`?job_id=`)
 - Session chip: if a CV session is active from the Job Board, shows filename + "Change file" — no re-upload needed
 - Results CTA at the bottom: "Browse matching jobs →" returns the user to the Job Board
 
 **Shared:**
+- Persistent tab strip in the sticky header on all pages (ATS Evaluator, Job Board, Job Detail) — always shows both navigation options regardless of where the user is
 - All API data is XSS-sanitized via `escHtml()` and `safeUrl()` before being injected into the DOM
 
 ---
