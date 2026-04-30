@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from fastapi import APIRouter
 
+from src.routes.adapt import router as adapt_router
 from src.routes.evaluate import router as evaluate_router
 from src.routes.health import router as health_router
 from src.routes.jobs import router as jobs_router
@@ -10,7 +11,9 @@ load_dotenv()
 
 router = APIRouter()
 
+router.include_router(adapt_router)
 router.include_router(evaluate_router)
 router.include_router(health_router)
 router.include_router(jobs_router)
 router.include_router(session_router)
+

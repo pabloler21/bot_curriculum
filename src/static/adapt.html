@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurea — CV Adapter</title>
+  <meta name="description" content="Adapt your CV to any job description in seconds. Aurea tailors your experience to each role with AI, guaranteed hallucination-free.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-orb ambient-orb-amber" style="width:600px;height:600px;top:-100px;left:-200px;"></div>
+    <div class="ambient-orb ambient-orb-coral" style="width:500px;height:500px;bottom:-150px;right:-100px;"></div>
+    <div class="ambient-orb ambient-orb-aqua" style="width:300px;height:300px;top:40%;left:60%;"></div>
+    <div class="ambient-grid"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-pill">
+        <a href="index.html" class="brand">
+          <div class="brand-mark">✦</div>
+          <span class="brand-name">Aurea</span>
+          <span class="beta-badge">Beta</span>
+        </a>
+        <nav class="tab-nav" role="tablist" aria-label="App sections">
+          <a href="index.html" class="tab-nav-item" role="tab" aria-selected="false">Evaluator</a>
+          <a href="adapt.html" class="tab-nav-item tab-nav-highlight active" role="tab" aria-selected="true">✦ Adapter</a>
+          <a href="jobs.html" class="tab-nav-item" role="tab" aria-selected="false">Job Board</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ── INPUT STATE ──────────────────────────────────────────────── -->
+    <div id="adapt-input-section">
+
+      <!-- Hero -->
+      <section id="adapt-hero" aria-label="Hero">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          <span class="hero-badge-text">Anti-hallucination pipeline · Claude-powered</span>
+        </div>
+        <h1 class="hero-title">
+          Your CV, tailored to<br>
+          <span class="hero-title-gradient">every role you want</span>
+        </h1>
+        <p class="hero-subtitle">
+          Paste a job description. Get a custom CV + cover letter that highlights exactly what the role asks for — only from what's actually in your CV. No invented experience, ever.
+        </p>
+        <div class="hero-trust">
+          <span class="trust-pill"><span>🛡</span> Whitelist-enforced</span>
+          <span class="trust-pill"><span>✦</span> Similarity-validated</span>
+          <span class="trust-pill"><span>📄</span> ATS-ready PDF</span>
+          <span class="trust-pill"><span>🌐</span> ES / EN output</span>
+        </div>
+      </section>
+
+      <!-- Two-column layout: upload + JD -->
+      <div class="adapt-layout">
+
+        <!-- Left: CV upload -->
+        <div class="adapt-col-left">
+          <div class="adapt-card">
+            <h2 class="adapt-card-title">
+              <span class="adapt-step-badge">1</span>
+              Your CV
+            </h2>
+
+            <!-- Session chip -->
+            <div id="adapt-session-chip" class="session-chip hidden" aria-live="polite">
+              <div class="session-chip-icon" aria-hidden="true">📄</div>
+              <span id="adapt-session-name" class="session-chip-name"></span>
+              <button id="adapt-session-change" class="session-chip-change">Change file</button>
+            </div>
+
+            <!-- Drop zone -->
+            <div id="adapt-upload-section">
+              <div id="adapt-drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="Drop CV file or click to browse">
+                <div class="drop-zone-content">
+                  <div class="drop-icon-wrap">
+                    <div class="drop-icon-glow"></div>
+                    <div class="drop-icon-box" aria-hidden="true">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-light)">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <h3>Drop your CV here</h3>
+                  <p class="secondary-text">PDF or DOCX · up to 5 MB</p>
+                  <button id="adapt-select-btn" class="btn-primary">Browse files</button>
+                  <p id="adapt-file-name" class="file-name hidden" aria-live="polite"></p>
+                </div>
+                <input type="file" id="adapt-file-input" accept=".pdf,.docx" hidden aria-label="Select CV file">
+              </div>
+              <p id="adapt-upload-error" class="error-msg hidden" role="alert"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: JD + options -->
+        <div class="adapt-col-right">
+          <div class="adapt-card">
+            <h2 class="adapt-card-title">
+              <span class="adapt-step-badge">2</span>
+              Job Description
+            </h2>
+            <textarea
+              id="adapt-jd-input"
+              class="adapt-jd-textarea"
+              placeholder="Paste the full job description here...&#10;&#10;Include the requirements, responsibilities, and tech stack. The more complete, the better the adaptation."
+              rows="10"
+              aria-label="Job description"
+            ></textarea>
+            <p id="adapt-jd-error" class="error-msg hidden" role="alert"></p>
+          </div>
+
+          <div class="adapt-card adapt-options-card">
+            <h2 class="adapt-card-title">
+              <span class="adapt-step-badge">3</span>
+              Output Language
+            </h2>
+            <div class="lang-toggle" role="group" aria-label="Output language">
+              <button id="lang-en" class="lang-btn active" data-lang="en" aria-pressed="true">🇺🇸 English</button>
+              <button id="lang-es" class="lang-btn" data-lang="es" aria-pressed="false">🇦🇷 Español</button>
+            </div>
+            <p class="adapt-options-note">Your CV and cover letter will be generated in this language, regardless of the original.</p>
+          </div>
+
+          <button id="adapt-btn" class="btn-adapt" disabled aria-label="Adapt my CV">
+            <span class="adapt-btn-icon">✦</span>
+            Adapt my CV
+          </button>
+          <p id="adapt-global-error" class="error-msg hidden" role="alert"></p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── LOADING STATE ─────────────────────────────────────────────── -->
+    <div id="adapt-loading-section" class="hidden" aria-live="polite" aria-label="Pipeline progress">
+      <div class="adapt-loading-card">
+        <div class="loading-spinner-wrap">
+          <div class="loading-spinner-glow"></div>
+          <div class="spinner lg"></div>
+        </div>
+        <p class="loading-title" id="adapt-loading-title">Extracting your CV</p>
+        <p class="loading-text">Aurea's 3-stage pipeline is running — this takes 10–30 seconds.</p>
+
+        <div class="pipeline-steps" aria-label="Pipeline stages">
+          <div class="pipeline-step active" id="pstep-extract">
+            <div class="pipeline-step-dot"></div>
+            <span>Extracting structure</span>
+          </div>
+          <div class="pipeline-step-connector"></div>
+          <div class="pipeline-step" id="pstep-adapt">
+            <div class="pipeline-step-dot"></div>
+            <span>Adapting to role</span>
+          </div>
+          <div class="pipeline-step-connector"></div>
+          <div class="pipeline-step" id="pstep-validate">
+            <div class="pipeline-step-dot"></div>
+            <span>Validating output</span>
+          </div>
+          <div class="pipeline-step-connector"></div>
+          <div class="pipeline-step" id="pstep-letter">
+            <div class="pipeline-step-dot"></div>
+            <span>Writing cover letter</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RESULTS STATE ─────────────────────────────────────────────── -->
+    <div id="adapt-results-section" class="hidden">
+
+      <div class="results-header">
+        <button id="adapt-reset-btn" class="btn-reset">← Adapt another role</button>
+        <button id="adapt-download-btn" class="btn-download hidden" aria-label="Download PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PDF
+        </button>
+      </div>
+
+      <!-- PARTIAL warning banner -->
+      <div id="adapt-partial-banner" class="partial-banner hidden" role="alert">
+        <span class="partial-banner-icon">⚠️</span>
+        <div>
+          <strong>Some bullets were flagged</strong> — they might not closely match your original CV.
+          Review the highlighted items before using this CV.
+        </div>
+      </div>
+
+      <!-- Results grid -->
+      <div class="adapt-results-grid">
+
+        <!-- CV Preview -->
+        <div class="panel adapt-cv-preview-panel">
+          <div class="panel-header">
+            <h2>Adapted CV</h2>
+            <span id="adapt-status-badge" class="badge"></span>
+          </div>
+          <div id="adapt-cv-preview" class="adapt-cv-preview"></div>
+        </div>
+
+        <!-- Right column: gaps + cover letter -->
+        <div class="adapt-results-right">
+
+          <!-- Gaps -->
+          <div class="panel" id="adapt-gaps-panel">
+            <div class="panel-header">
+              <h3>Skill Gaps</h3>
+              <span class="gaps-count" id="adapt-gaps-count"></span>
+            </div>
+            <div id="adapt-gaps-list" class="adapt-gaps-list"></div>
+            <p id="adapt-no-gaps" class="adapt-no-gaps hidden">
+              ✅ Your CV covers all requirements in the JD.
+            </p>
+          </div>
+
+          <!-- Cover letter -->
+          <div class="panel" id="adapt-cover-letter-panel">
+            <div class="panel-header">
+              <h3>Cover Letter</h3>
+              <button id="adapt-copy-cover-btn" class="btn-copy" aria-label="Copy cover letter">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy
+              </button>
+            </div>
+            <p id="adapt-cover-letter-text" class="adapt-cover-letter-text"></p>
+            <p id="adapt-no-cover" class="hidden secondary-text" style="font-size:0.85rem">Cover letter generation failed — re-run the adapter to try again.</p>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /#adapt-results-section -->
+
+  </main>
+
+  <script src="adapt.js"></script>
+</body>
+</html>
