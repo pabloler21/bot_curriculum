@@ -47,11 +47,11 @@ def test_delete_nonexistent_session_does_not_raise():
 
 
 def test_cleanup_removes_expired_sessions():
-    token = store_session("text", "file.pdf").token
-    # Manually backdate the session
-    cv_sessions[token].uploaded_at = datetime.now(timezone.utc) - timedelta(minutes=61)
-    cleanup_sessions()
-    assert get_session(token) is None
+    with patch("backend.sessions._USE_SUPABASE", False):
+        token = store_session("text", "file.pdf").token
+        cv_sessions[token].uploaded_at = datetime.now(timezone.utc) - timedelta(minutes=61)
+        cleanup_sessions()
+        assert get_session(token) is None
 
 
 def test_cleanup_keeps_fresh_sessions():
