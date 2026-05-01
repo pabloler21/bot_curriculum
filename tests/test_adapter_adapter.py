@@ -1,9 +1,10 @@
 # tests/test_adapter_adapter.py
 """Tests for backend/adapter/adapter.py — Stage 2 adaptation."""
-import pytest
 from unittest.mock import AsyncMock, patch
 
-from backend.adapter.adapter import adapt_cv, _AdaptationOutput
+import pytest
+
+from backend.adapter.adapter import _AdaptationOutput, adapt_cv
 from backend.schemas import CVSchema, Gap, WorkExperience
 
 

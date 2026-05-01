@@ -82,7 +82,9 @@ def store_session(cv_text: str, filename: str) -> CVSession:
         logger.info("[sessions][supabase] Stored session %s (%d chars)", token[:8], len(cv_text))
     else:
         cv_sessions[token] = session
-        logger.info("[sessions] Stored session %s (%d chars, %s)", token[:8], len(cv_text), filename)
+        logger.info(
+            "[sessions] Stored session %s (%d chars, %s)", token[:8], len(cv_text), filename
+        )
 
     return session
 

@@ -22,7 +22,9 @@ class WorkExperience(BaseModel):
     role: str
     start_date: str
     end_date: str | None = None
-    bullets: list[str] = Field(description="Achievement/responsibility bullets exactly as in the CV")
+    bullets: list[str] = Field(
+        description="Achievement/responsibility bullets exactly as in the CV"
+    )
     technologies: list[str] = Field(
         default_factory=list,
         description="Technologies explicitly mentioned in this role",

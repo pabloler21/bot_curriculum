@@ -2,8 +2,6 @@
 """Tests for backend/adapter/validator.py — similarity-based validation."""
 from unittest.mock import patch
 
-import pytest
-
 from backend.adapter.validator import validate_adaptation
 from backend.schemas import CVSchema, WorkExperience
 

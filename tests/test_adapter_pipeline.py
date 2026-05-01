@@ -1,12 +1,11 @@
 # tests/test_adapter_pipeline.py
 """Tests for backend/adapter/pipeline.py — orchestrator integration."""
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from backend.schemas import (
-    AdaptationResult,
     CVSchema,
-    Gap,
     PipelineStatus,
     WorkExperience,
 )

@@ -13,6 +13,12 @@ from src.routes.adapt import limiter as adapt_limiter
 
 client = TestClient(app)
 
+# Reusable CV text ≥100 chars to pass the length validation in /adapt
+_CV_TEXT = (
+    "Jane Doe Senior Python Engineer. 5 years FastAPI PostgreSQL Docker AWS "
+    "microservices backend development. Buenos Aires Argentina."
+)
+
 
 @pytest.fixture(autouse=True)
 def reset_limiters():
@@ -106,8 +112,7 @@ class TestPostAdapt:
         jd = "We are looking for a Python developer with 3+ years FastAPI and PostgreSQL experience."
         result = make_adaptation_result()
         pdf_bytes = b"%PDF-1.4 fake pdf content"
-        # CV text must be ≥100 chars to pass length validation
-        cv_text = "Jane Doe Senior Python Engineer. 5 years FastAPI PostgreSQL Docker AWS microservices backend development expert. Buenos Aires Argentina." 
+        cv_text = _CV_TEXT
 
         with patch("src.routes.adapt.extract_text", return_value=cv_text), \
              patch("src.routes.adapt.run_pipeline", new_callable=AsyncMock, return_value=(result, pdf_bytes)):
@@ -131,7 +136,7 @@ class TestPostAdapt:
             status=PipelineStatus.FAILED_EXTRACT,
             error_message="PDF is image-only",
         )
-        cv_text = "Jane Doe Python Dev 5 years experience FastAPI PostgreSQL Docker AWS microservices backend Buenos Aires Argentina Senior Engineer."
+        cv_text = _CV_TEXT
 
         with patch("src.routes.adapt.extract_text", return_value=cv_text), \
              patch("src.routes.adapt.run_pipeline", new_callable=AsyncMock, return_value=(result, None)):
@@ -147,10 +152,13 @@ class TestPostAdapt:
     def test_language_es_is_accepted(self):
         jd = "Buscamos desarrollador Python con experiencia en FastAPI y microservicios backend."
         result = make_adaptation_result()
-        cv_text = "Jane Doe Desarrolladora Python Senior 5 años experiencia FastAPI PostgreSQL Docker AWS microservicios backend Buenos Aires Argentina." 
+        cv_text = _CV_TEXT
 
+        mock_pipeline_patch = patch(
+            "src.routes.adapt.run_pipeline", new_callable=AsyncMock, return_value=(result, None)
+        )
         with patch("src.routes.adapt.extract_text", return_value=cv_text), \
-             patch("src.routes.adapt.run_pipeline", new_callable=AsyncMock, return_value=(result, None)) as mock_pipeline:
+             mock_pipeline_patch as mock_pipeline:
             response = client.post(
                 "/adapt",
                 data={"job_description": jd, "output_language": "es"},
@@ -176,7 +184,7 @@ class TestDownloadPdf:
         jd = "Senior Python developer with FastAPI, PostgreSQL, and Docker experience needed."
         pdf_bytes = b"%PDF-1.4 real content here"
         result = make_adaptation_result()
-        cv_text = "Jane Doe Senior Software Engineer 5 years FastAPI PostgreSQL AWS Docker microservices Buenos Aires Argentina Python expert backend."
+        cv_text = _CV_TEXT
 
         with patch("src.routes.adapt.extract_text", return_value=cv_text), \
              patch("src.routes.adapt.run_pipeline", new_callable=AsyncMock, return_value=(result, pdf_bytes)):
@@ -197,7 +205,7 @@ class TestDownloadPdf:
         """If pipeline returned no pdf_bytes, 404 on download."""
         jd = "Senior Python developer needed with FastAPI and PostgreSQL and AWS experience."
         result = make_adaptation_result()
-        cv_text = "Jane Doe Python Senior Engineer Buenos Aires Argentina. FastAPI PostgreSQL Docker AWS 5 years microservices backend development expert senior."
+        cv_text = _CV_TEXT
 
         with patch("src.routes.adapt.extract_text", return_value=cv_text), \
              patch("src.routes.adapt.run_pipeline", new_callable=AsyncMock, return_value=(result, None)):

@@ -1,10 +1,11 @@
 # tests/test_adapter_extractor.py
 """Tests for backend/adapter/extractor.py — Stage 1 extraction."""
-import pytest
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from backend.adapter.extractor import extract_schema
-from backend.schemas import CVSchema, WorkExperience, Education
+from backend.schemas import CVSchema, Education, WorkExperience
 
 
 def make_mock_schema() -> CVSchema:

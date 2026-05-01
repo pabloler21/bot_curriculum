@@ -73,7 +73,8 @@ async def adapt_cv(
             f"\n\n### ⚠️ RETRY FEEDBACK — Fix these bullets\n"
             f"The following bullets from your previous attempt were flagged as potentially "
             f"hallucinated (low similarity to original). Rewrite them to stay closer to "
-            f"the original wording while still being relevant to the JD:\n{bullets_str}"
+            f"the original wording while still being relevant to the JD:\n"
+            f"{bullets_str}"
         )
 
     logger.info(
@@ -85,7 +86,9 @@ async def adapt_cv(
     result: _AdaptationOutput = await _chain.ainvoke(
         {
             "output_language": output_language,
-            "original_schema": json.dumps(schema.model_dump(), ensure_ascii=False, indent=2),
+            "original_schema": json.dumps(
+                schema.model_dump(), ensure_ascii=False, indent=2
+            ),
             "job_description": job_description,
             "retry_section": retry_section,
         }
