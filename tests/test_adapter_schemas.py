@@ -6,7 +6,6 @@ from pydantic import ValidationError
 from backend.schemas import (
     AdaptationResult,
     CVSchema,
-    Education,
     Gap,
     Metric,
     PipelineStatus,

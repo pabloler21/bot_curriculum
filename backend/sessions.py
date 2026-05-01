@@ -82,7 +82,9 @@ def store_session(cv_text: str, filename: str) -> CVSession:
         logger.info("[sessions][supabase] Stored session %s (%d chars)", token[:8], len(cv_text))
     else:
         cv_sessions[token] = session
-        logger.info("[sessions] Stored session %s (%d chars, %s)", token[:8], len(cv_text), filename)
+        logger.info(
+            "[sessions] Stored session %s (%d chars, %s)", token[:8], len(cv_text), filename
+        )
 
     return session
 
@@ -90,6 +92,10 @@ def store_session(cv_text: str, filename: str) -> CVSession:
 def get_session(token: str) -> CVSession | None:
     """Return session if it exists and hasn't expired, else None."""
     if _USE_SUPABASE:
+        try:
+            uuid.UUID(token)
+        except ValueError:
+            return None
         return _get_session_supabase(token)
 
     session = cv_sessions.get(token)
@@ -105,6 +111,10 @@ def get_session(token: str) -> CVSession | None:
 def delete_session(token: str) -> bool:
     """Explicitly remove a session. Returns True if it existed."""
     if _USE_SUPABASE:
+        try:
+            uuid.UUID(token)
+        except ValueError:
+            return False
         result = _supabase.table("cv_sessions").delete().eq("token", token).execute()
         return bool(result.data)
     return cv_sessions.pop(token, None) is not None

@@ -27,7 +27,9 @@
       "Bash(python3:*)",
       "Bash(bash:*)",
       "Bash(cat \"C:/Users/pablo/Desktop/bot_curriculum/.superpowers/brainstorm/\"*/state/server-info)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(gh pr *)",
+      "Bash(uv sync *)"
     ]
   }
 }

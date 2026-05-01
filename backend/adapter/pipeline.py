@@ -24,15 +24,14 @@ import time
 import uuid
 from typing import Literal
 
+# Import here to allow easy mocking in tests
+from backend.adapter.adapter import adapt_cv
 from backend.adapter.cover_letter import generate_cover_letter
 from backend.adapter.extractor import extract_schema
 from backend.adapter.logger import PipelineLogger
 from backend.adapter.renderer import render_pdf
 from backend.adapter.validator import SIMILARITY_THRESHOLD, validate_adaptation
 from backend.schemas import AdaptationResult, CVSchema, PipelineStatus
-
-# Import here to allow easy mocking in tests
-from backend.adapter.adapter import adapt_cv
 
 logger = logging.getLogger(__name__)
 
