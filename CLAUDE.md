@@ -60,21 +60,30 @@ tests/
 ## Estrategia de ramas (Git workflow)
 
 - **`main`**: producción. Solo recibe merges cuando una feature está probada y lista para deploy.
-- **`develop`**: rama de integración. Todo el trabajo del meta-prompt de job board se integra aquí.
-- **Feature branches**: se crean desde `develop` y se mergean de vuelta a `develop`.
-  - Nombrado: `feature/phase-N-descripcion` (ej: `feature/phase-2-sessions`)
+- **`develop`**: rama de integración. Todo el trabajo se integra aquí vía PR.
+- **Feature branches**: se crean desde `develop` y se mergean de vuelta a `develop` vía Pull Request.
+  - Nombrado: `feature/task-N-descripcion` (ej: `feature/task-3-1-supabase-auth`)
   - Nunca trabajar directo en `develop` ni en `main`.
 
 **No usamos worktrees.** Se trabaja directamente en el repo clonado, cambiando de rama con `git checkout`.
 
+### Flujo obligatorio por tarea
+
+1. Crear rama desde `develop` antes de tocar cualquier archivo
+2. Implementar la tarea en esa rama (commits atómicos)
+3. Al terminar: abrir PR hacia `develop` con `gh pr create`
+4. Revisar la PR — Claude corre los tests y verifica antes de declararla lista
+5. El merge lo hace el usuario (nunca Claude)
+
 ```bash
-# Flujo típico para una nueva fase
+# Al iniciar cada tarea
 git checkout develop
 git pull origin develop
-git checkout -b feature/phase-N-descripcion
-# ... implementar ...
-git push origin feature/phase-N-descripcion
-# mergear a develop cuando esté lista
+git checkout -b feature/task-N-descripcion
+
+# Al terminar
+git push origin feature/task-N-descripcion
+gh pr create --base develop --title "..." --body "..."
 ```
 
 ## Comandos
