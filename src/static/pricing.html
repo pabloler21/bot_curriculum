@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurea — Pricing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-orb ambient-orb-amber" style="width:600px;height:600px;top:-100px;left:-200px;"></div>
+    <div class="ambient-orb ambient-orb-coral" style="width:500px;height:500px;bottom:-150px;right:-100px;"></div>
+    <div class="ambient-orb ambient-orb-aqua" style="width:300px;height:300px;top:40%;left:60%;"></div>
+    <div class="ambient-grid"></div>
+  </div>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-pill">
+        <a href="index.html" class="brand">
+          <div class="brand-mark">✦</div>
+          <span class="brand-name">Aurea</span>
+          <span class="beta-badge">Beta</span>
+        </a>
+        <nav class="tab-nav" role="tablist" aria-label="App sections">
+          <a href="index.html" class="tab-nav-item" role="tab" aria-selected="false">Evaluator</a>
+          <a href="adapt.html" class="tab-nav-item tab-nav-highlight" role="tab" aria-selected="false">✦ Adapter</a>
+          <a href="pricing.html" class="tab-nav-item active" role="tab" aria-selected="true">Pricing</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding-bottom: 80px;">
+
+    <section class="pricing-hero">
+      <h1 class="pricing-hero-title">Simple, transparent pricing</h1>
+      <p class="pricing-hero-subtitle">Start for free. Upgrade when you need more.</p>
+    </section>
+
+    <div class="pricing-grid">
+
+      <!-- Free tier -->
+      <div class="pricing-card">
+        <div class="pricing-tier-label">Free</div>
+        <div class="pricing-amount">$0</div>
+        <p class="pricing-tagline">No credit card required</p>
+
+        <ul class="pricing-features">
+          <li class="pf-yes">2 CV adaptations</li>
+          <li class="pf-yes">Cover letter generation</li>
+          <li class="pf-yes">Skill gap analysis</li>
+          <li class="pf-yes">ES / EN output</li>
+          <li class="pf-no">PDF download</li>
+          <li class="pf-no">Unlimited adaptations</li>
+        </ul>
+
+        <a href="adapt.html" class="btn-primary pricing-cta">Get started →</a>
+      </div>
+
+      <!-- Pro tier -->
+      <div class="pricing-card pricing-card--pro">
+        <div class="pricing-pro-badge">Coming soon</div>
+        <div class="pricing-tier-label">Pro</div>
+        <div class="pricing-amount">$<span class="pricing-tbd">?</span><span class="pricing-period">/mo</span></div>
+        <p class="pricing-tagline">Everything in Free, plus:</p>
+
+        <ul class="pricing-features">
+          <li class="pf-yes">Unlimited adaptations</li>
+          <li class="pf-yes">PDF download</li>
+          <li class="pf-yes">Cover letter generation</li>
+          <li class="pf-yes">Skill gap analysis</li>
+          <li class="pf-yes">ES / EN output</li>
+          <li class="pf-yes">Priority processing</li>
+        </ul>
+
+        <button class="btn-primary pricing-cta" disabled>Coming soon</button>
+      </div>
+
+    </div>
+
+    <p class="pricing-footer-note">
+      All plans include our anti-hallucination guarantee — your CV is never modified beyond what's in your original document.
+    </p>
+
+  </main>
+
+</body>
+</html>
