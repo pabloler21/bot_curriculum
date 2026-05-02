@@ -311,6 +311,7 @@ async function runAdaptation() {
     }
 
     currentRunId = data.run_id;
+    fetchCredits();
     renderResults(data);
 
   } catch (err) {
@@ -567,6 +568,8 @@ const $authModalError  = document.getElementById('auth-modal-error');
 const $authSentEmail   = document.getElementById('auth-sent-email');
 const $authUserArea    = document.getElementById('auth-user-area');
 const $authUserEmail   = document.getElementById('auth-user-email-display');
+const $authCreditsChip = document.getElementById('auth-credits-chip');
+const $authCreditsCount= document.getElementById('auth-credits-count');
 const $authLogoutBtn   = document.getElementById('auth-logout-btn');
 const $authSigninBtn   = document.getElementById('auth-signin-btn');
 
@@ -584,14 +587,30 @@ function hideAuthModal() {
   _pendingAdaptation = false;
 }
 
+async function fetchCredits() {
+  if (!authToken) return;
+  try {
+    const res = await fetch(`${BACKEND_URL}/credits`, {
+      headers: { 'Authorization': `Bearer ${authToken}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      $authCreditsCount.textContent = data.balance;
+      show($authCreditsChip);
+    }
+  } catch (_) {}
+}
+
 function showUserArea(email) {
   $authUserEmail.textContent = email;
   show($authUserArea);
   hide($authSigninBtn);
+  fetchCredits();
 }
 
 function hideUserArea() {
   hide($authUserArea);
+  hide($authCreditsChip);
   show($authSigninBtn);
 }
 
