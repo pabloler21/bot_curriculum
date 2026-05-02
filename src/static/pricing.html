@@ -79,7 +79,20 @@
           <li class="pf-yes">Priority processing</li>
         </ul>
 
-        <button class="btn-primary pricing-cta" disabled>Coming soon</button>
+        <button id="notify-btn" class="btn-primary pricing-cta">Join the waitlist</button>
+
+        <div id="waitlist-inline" class="waitlist-inline hidden">
+          <input type="email" id="waitlist-email" class="auth-email-input"
+                 placeholder="you@example.com" autocomplete="email" aria-label="Email address">
+          <button id="waitlist-submit" class="btn-primary" style="width:100%;margin-top:0">Send →</button>
+          <p id="waitlist-error" class="error-msg hidden" role="alert"></p>
+        </div>
+
+        <div id="waitlist-confirm" class="waitlist-confirm hidden" role="status">
+          <span class="waitlist-confirm-icon">✓</span>
+          <span>We'll notify <strong id="waitlist-confirm-email"></strong> when Pro launches.</span>
+        </div>
+
       </div>
 
     </div>
@@ -90,5 +103,7 @@
 
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="pricing.js"></script>
 </body>
 </html>

@@ -1622,3 +1622,31 @@ body {
   white-space: nowrap;
 }
 .no-credits-banner a:hover { opacity: 0.8; }
+
+/* ── Waitlist (pricing page) ─────────────────────────────────────────────── */
+
+.waitlist-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.waitlist-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(110, 231, 160, 0.08);
+  border: 1px solid rgba(110, 231, 160, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-top: 8px;
+}
+.waitlist-confirm-icon {
+  color: #6ee7a0;
+  font-weight: 700;
+  flex-shrink: 0;
+}
