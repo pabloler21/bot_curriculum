@@ -51,6 +51,7 @@ const $langEs          = document.getElementById('lang-es');
 
 const $adaptBtn        = document.getElementById('adapt-btn');
 const $globalError     = document.getElementById('adapt-global-error');
+const $noCreditsBanner = document.getElementById('adapt-no-credits-banner');
 
 const $resetBtn        = document.getElementById('adapt-reset-btn');
 const $downloadBtn     = document.getElementById('adapt-download-btn');
@@ -242,6 +243,7 @@ async function runAdaptation() {
 
   clearError($jdError);
   clearError($globalError);
+  hide($noCreditsBanner);
 
   // Upload file to session if needed
   if (selectedFile && !cvSessionToken) {
@@ -290,11 +292,20 @@ async function runAdaptation() {
       return;
     }
 
+    if (res.status === 402) {
+      hide($loadingSection);
+      show($inputSection);
+      hide($globalError);
+      show($noCreditsBanner);
+      return;
+    }
+
     const data = await res.json();
 
     if (!res.ok) {
       hide($loadingSection);
       show($inputSection);
+      hide($noCreditsBanner);
       showError($globalError, data.detail || `Server error (${res.status}). Please try again.`);
       return;
     }
