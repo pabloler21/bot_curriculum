@@ -128,13 +128,13 @@ class TestAddCredits:
 # ── ensure_user ───────────────────────────────────────────────────────────────
 
 class TestEnsureUser:
-    def test_upserts_with_zero_balance(self):
+    def test_upserts_with_free_tier_balance(self):
         from backend.credits import ensure_user
         mock = _sb()
         with patch("backend.credits._supabase", mock):
             ensure_user(USER_ID)
         mock.table.return_value.upsert.assert_called_once_with(
-            {"user_id": USER_ID, "balance": 0},
+            {"user_id": USER_ID, "balance": 2},
             on_conflict="user_id",
             ignore_duplicates=True,
         )

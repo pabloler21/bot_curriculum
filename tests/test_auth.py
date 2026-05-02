@@ -132,7 +132,9 @@ class TestAdaptRouteWithAuth:
         _run_patch = patch("src.routes.adapt.run_pipeline", new_callable=AsyncMock, return_value=(result, None))
         with patch("src.routes.adapt.extract_text", return_value="x" * 150), \
              _run_patch as mock_pipeline, \
-             patch("backend.auth._supabase") as mock_sb:
+             patch("backend.auth._supabase") as mock_sb, \
+             patch("src.routes.adapt.ensure_user"), \
+             patch("src.routes.adapt.decrement"):
             mock_sb.auth.get_user.return_value = fake_auth_response
             client.post(
                 "/adapt",

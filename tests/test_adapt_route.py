@@ -35,6 +35,15 @@ def mock_auth():
         yield
 
 
+@pytest.fixture(autouse=True)
+def mock_credits():
+    """Mock credit functions so tests don't hit Supabase."""
+    with patch("src.routes.adapt.ensure_user"), \
+         patch("src.routes.adapt.decrement"), \
+         patch("src.routes.adapt.restore"):
+        yield
+
+
 def make_adapted_schema() -> CVSchema:
     return CVSchema(
         candidate_name="Jane Doe",
@@ -176,6 +185,51 @@ class TestPostAdapt:
         # Verify language was passed to pipeline
         call_kwargs = mock_pipeline.call_args.kwargs
         assert call_kwargs.get("output_language") == "es"
+
+
+class TestCredits:
+    """Credit gate on POST /adapt."""
+
+    _JD = "We need a senior Python developer with FastAPI and PostgreSQL experience."
+
+    def test_returns_402_when_no_credits(self):
+        from backend.credits import InsufficientCredits
+        with patch("src.routes.adapt.extract_text", return_value=_CV_TEXT), \
+             patch("src.routes.adapt.ensure_user"), \
+             patch("src.routes.adapt.decrement", side_effect=InsufficientCredits):
+            response = client.post(
+                "/adapt",
+                data={"job_description": self._JD},
+                files={"file": ("cv.pdf", io.BytesIO(b"fake"), "application/pdf")},
+            )
+        assert response.status_code == 402
+        assert response.json()["code"] == "no_credits"
+
+    def test_decrement_called_before_pipeline(self):
+        result = make_adaptation_result()
+        with patch("src.routes.adapt.extract_text", return_value=_CV_TEXT), \
+             patch("src.routes.adapt.ensure_user"), \
+             patch("src.routes.adapt.decrement") as mock_dec, \
+             patch("src.routes.adapt.run_pipeline", new_callable=AsyncMock, return_value=(result, None)):
+            client.post(
+                "/adapt",
+                data={"job_description": self._JD},
+                files={"file": ("cv.pdf", io.BytesIO(b"fake"), "application/pdf")},
+            )
+        mock_dec.assert_called_once()
+
+    def test_restore_called_on_pipeline_failure(self):
+        with patch("src.routes.adapt.extract_text", return_value=_CV_TEXT), \
+             patch("src.routes.adapt.ensure_user"), \
+             patch("src.routes.adapt.decrement"), \
+             patch("src.routes.adapt.restore") as mock_restore, \
+             patch("src.routes.adapt.run_pipeline", new_callable=AsyncMock, side_effect=Exception("boom")):
+            client.post(
+                "/adapt",
+                data={"job_description": self._JD},
+                files={"file": ("cv.pdf", io.BytesIO(b"fake"), "application/pdf")},
+            )
+        mock_restore.assert_called_once()
 
 
 class TestDownloadPdf:

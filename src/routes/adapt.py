@@ -21,6 +21,7 @@ from slowapi.util import get_remote_address
 
 from backend.adapter.pipeline import run_pipeline
 from backend.auth import RequiredUser
+from backend.credits import InsufficientCredits, decrement, ensure_user, restore
 from backend.extractor import extract_text
 from backend.sessions import get_session
 
@@ -101,6 +102,16 @@ async def adapt_resume(
             detail="Extracted CV text is too short. The file may be image-only or corrupted.",
         )
 
+    # ── Credit check ─────────────────────────────────────────────────────────
+    ensure_user(user_id)
+    try:
+        decrement(user_id)
+    except InsufficientCredits:
+        return JSONResponse(
+            status_code=402,
+            content={"detail": "No credits remaining", "code": "no_credits"},
+        )
+
     # ── Run pipeline ──────────────────────────────────────────────────────────
     logger.info(
         "[adapt] Starting pipeline, cv_len=%d, jd_len=%d, lang=%s",
@@ -117,6 +128,7 @@ async def adapt_resume(
             user_id=user_id,
         )
     except Exception as exc:
+        restore(user_id)
         logger.exception("[adapt] Unexpected pipeline error: %s", exc)
         raise HTTPException(status_code=500, detail=f"Pipeline error: {exc}") from exc
 
