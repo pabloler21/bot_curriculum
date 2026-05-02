@@ -10,6 +10,10 @@ const errorEl      = document.getElementById('error-jobs');
 const sortDateBtn  = document.getElementById('sort-date');
 const sortScoreBtn = document.getElementById('sort-score');
 
+const searchInput  = document.getElementById('jobs-search');
+const searchClear  = document.getElementById('jobs-search-clear');
+const jobsCountLabel = document.getElementById('jobs-count-label');
+
 const cvUploadBtn  = document.getElementById('cv-upload-btn');
 const cvFileInput  = document.getElementById('cv-file-input');
 const cvUploadArea = document.getElementById('cv-upload-area');
@@ -24,6 +28,7 @@ let currentSort = 'date';   // 'date' | 'score'
 let scoresByJobId = {};      // populated in Phase 3
 let cvSessionToken = null;
 let rankingBanner = null;
+let searchQuery = '';
 
 // ── Format helpers ─────────────────────────────────────────────────────────
 
@@ -154,6 +159,15 @@ function renderJobCard(job, index, cvActive = false) {
     </div>
   `;
 
+  // Tag clicks filter the grid
+  article.querySelectorAll('.job-tags .tag').forEach(tag => {
+    tag.style.cursor = 'pointer';
+    tag.addEventListener('click', (e) => {
+      e.stopPropagation();
+      filterByTag(tag.textContent.trim());
+    });
+  });
+
   // Keyboard: Enter/Space activates primary CTA
   article.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -169,7 +183,10 @@ function renderJobCard(job, index, cvActive = false) {
 function renderJobs(jobs) {
   jobsGrid.innerHTML = '';
   if (jobs.length === 0) {
-    jobsGrid.innerHTML = '<p class="empty-state">No job listings available right now.</p>';
+    const msg = searchQuery.trim()
+      ? `No jobs match "<strong>${escHtml(searchQuery.trim())}</strong>". Try a different keyword.`
+      : 'No job listings available right now.';
+    jobsGrid.innerHTML = `<p class="empty-state">${msg}</p>`;
     return;
   }
 
@@ -292,15 +309,63 @@ function sortedJobs() {
   return jobs;
 }
 
+function filteredJobs() {
+  const q = searchQuery.toLowerCase().trim();
+  if (!q) return sortedJobs();
+  return sortedJobs().filter(job =>
+    job.title.toLowerCase().includes(q) ||
+    job.company.toLowerCase().includes(q) ||
+    (job.location || '').toLowerCase().includes(q) ||
+    (job.tags || []).some(t => t.toLowerCase().includes(q))
+  );
+}
+
+function updateJobsCount() {
+  const count = filteredJobs().length;
+  if (searchQuery.trim()) {
+    jobsCountLabel.textContent = `${count} result${count !== 1 ? 's' : ''}`;
+  } else {
+    jobsCountLabel.textContent = 'Open roles';
+  }
+}
+
+function filterByTag(text) {
+  searchQuery = text;
+  searchInput.value = text;
+  searchClear.classList.remove('hidden');
+  renderJobs(filteredJobs());
+  applyScoresToCards();
+  updateJobsCount();
+  searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 function setSort(mode) {
   currentSort = mode;
   sortDateBtn.classList.toggle('active', mode === 'date');
   sortDateBtn.setAttribute('aria-pressed', String(mode === 'date'));
   sortScoreBtn.classList.toggle('active', mode === 'score');
   sortScoreBtn.setAttribute('aria-pressed', String(mode === 'score'));
-  renderJobs(sortedJobs());
+  renderJobs(filteredJobs());
   applyScoresToCards();
+  updateJobsCount();
 }
+
+searchInput.addEventListener('input', () => {
+  searchQuery = searchInput.value;
+  searchClear.classList.toggle('hidden', !searchQuery);
+  renderJobs(filteredJobs());
+  applyScoresToCards();
+  updateJobsCount();
+});
+
+searchClear.addEventListener('click', () => {
+  searchQuery = '';
+  searchInput.value = '';
+  searchClear.classList.add('hidden');
+  renderJobs(filteredJobs());
+  applyScoresToCards();
+  updateJobsCount();
+});
 
 sortDateBtn.addEventListener('click', () => setSort('date'));
 sortScoreBtn.addEventListener('click', () => {
@@ -469,7 +534,9 @@ async function loadJobs() {
       throw new Error(body.detail || `Error ${res.status}`);
     }
     allJobs = await res.json();
-    renderJobs(sortedJobs());
+    renderJobs(filteredJobs());
+    applyScoresToCards();
+    updateJobsCount();
   } catch (err) {
     jobsGrid.innerHTML = '';
     errorEl.textContent = err instanceof TypeError
@@ -504,7 +571,9 @@ async function loadRankedJobs(token) {
     allJobs = await res.json();
     const rankedCount = allJobs.filter(j => j.similarity_score != null).length;
     if (rankedCount > 0) showRankingBanner(rankedCount);
-    renderJobs(allJobs);
+    renderJobs(filteredJobs());
+    applyScoresToCards();
+    updateJobsCount();
     startBackgroundScoring(token);
   } catch (err) {
     jobsGrid.innerHTML = '';
