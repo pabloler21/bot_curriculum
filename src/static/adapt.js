@@ -20,6 +20,7 @@ const MIN_JD_CHARS = 50;
 let authToken = null;
 let _supabaseClient = null;
 let _pendingAdaptation = false;
+let userCredits = null;   // null = unknown (not fetched yet), number = fetched balance
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let cvSessionToken = null;
@@ -180,7 +181,8 @@ $sessionChange.addEventListener('click', clearSession);
 function updateAdaptBtn() {
   const hasCV = cvSessionToken || selectedFile;
   const hasJD = $jdInput.value.trim().length >= MIN_JD_CHARS;
-  $adaptBtn.disabled = !(hasCV && hasJD);
+  const hasCredits = userCredits === null || userCredits > 0;  // null = not fetched yet, allow
+  $adaptBtn.disabled = !(hasCV && hasJD && hasCredits);
 }
 
 $jdInput.addEventListener('input', () => {
@@ -595,8 +597,15 @@ async function fetchCredits() {
     });
     if (res.ok) {
       const data = await res.json();
-      $authCreditsCount.textContent = data.balance;
+      userCredits = data.balance;
+      $authCreditsCount.textContent = userCredits;
       show($authCreditsChip);
+      if (userCredits === 0) {
+        show($noCreditsBanner);
+      } else {
+        hide($noCreditsBanner);
+      }
+      updateAdaptBtn();
     }
   } catch (_) {}
 }
@@ -609,9 +618,12 @@ function showUserArea(email) {
 }
 
 function hideUserArea() {
+  userCredits = null;
   hide($authUserArea);
   hide($authCreditsChip);
+  hide($noCreditsBanner);
   show($authSigninBtn);
+  updateAdaptBtn();
 }
 
 async function initAuth() {
