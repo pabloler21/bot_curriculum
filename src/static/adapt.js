@@ -302,6 +302,13 @@ async function runAdaptation() {
       return;
     }
 
+    if (res.status === 429) {
+      hide($loadingSection);
+      show($inputSection);
+      showError($globalError, 'Too many requests — please wait a minute before trying again.');
+      return;
+    }
+
     const data = await res.json();
 
     if (!res.ok) {
@@ -703,6 +710,7 @@ $authLogoutBtn.addEventListener('click', async () => {
   if (_supabaseClient) await _supabaseClient.auth.signOut();
   authToken = null;
   hideUserArea();
+  await clearSession();
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
