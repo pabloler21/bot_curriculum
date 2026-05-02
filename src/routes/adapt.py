@@ -20,7 +20,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from backend.adapter.pipeline import run_pipeline
-from backend.auth import OptionalUser
+from backend.auth import RequiredUser
 from backend.extractor import extract_text
 from backend.sessions import get_session
 
@@ -48,7 +48,7 @@ def _store_pdf(run_id: str, pdf_bytes: bytes) -> None:
 @limiter.limit("3/minute")
 async def adapt_resume(
     request: Request,
-    user_id: OptionalUser,
+    user_id: RequiredUser,
     job_description: str = Form(..., min_length=50, description="Full job description text"),
     output_language: str = Form("en", pattern="^(es|en)$", description="Output language: 'es' or 'en'"),
     file: Optional[UploadFile] = File(None),

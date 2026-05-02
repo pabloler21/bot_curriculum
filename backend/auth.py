@@ -16,7 +16,7 @@ import logging
 import os
 from typing import Annotated
 
-from fastapi import Depends, Request
+from fastapi import Depends, HTTPException, Request
 
 logger = logging.getLogger(__name__)
 
@@ -62,5 +62,16 @@ def get_current_user(request: Request) -> str | None:
         return None
 
 
-# FastAPI dependency alias — use this in route signatures
+# FastAPI dependency aliases — use these in route signatures
 OptionalUser = Annotated[str | None, Depends(get_current_user)]
+
+
+def get_required_user(request: Request) -> str:
+    """Like get_current_user but raises 401 if not authenticated."""
+    user_id = get_current_user(request)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    return user_id
+
+
+RequiredUser = Annotated[str, Depends(get_required_user)]

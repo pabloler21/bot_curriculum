@@ -28,6 +28,13 @@ def reset_limiters():
     yield
 
 
+@pytest.fixture(autouse=True)
+def mock_auth():
+    """Provide a default authenticated user so /adapt tests don't hit 401."""
+    with patch("backend.auth.get_current_user", return_value="test-user-id"):
+        yield
+
+
 def make_adapted_schema() -> CVSchema:
     return CVSchema(
         candidate_name="Jane Doe",

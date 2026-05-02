@@ -89,42 +89,22 @@ class TestGetCurrentUser:
 
 
 class TestAdaptRouteWithAuth:
-    """/adapt accepts requests with and without Authorization header."""
+    """/adapt requires a valid JWT — returns 401 otherwise."""
 
     def setup_method(self):
         app.state.limiter.reset()
         adapt_limiter.reset()
 
-    def test_adapt_works_without_auth_header(self):
-        from unittest.mock import AsyncMock
-
-        from backend.schemas import AdaptationResult, PipelineStatus
-
-        result = AdaptationResult(
-            run_id="aaaaaaaa-0000-0000-0000-000000000000",
-            status=PipelineStatus.COMPLETED,
+    def test_adapt_without_auth_header_returns_401(self):
+        response = client.post(
+            "/adapt",
+            data={"job_description": _JD},
+            files={"file": ("cv.pdf", b"fake", "application/pdf")},
         )
-        with patch("src.routes.adapt.extract_text", return_value="x" * 150), \
-             patch("src.routes.adapt.run_pipeline", new_callable=AsyncMock, return_value=(result, None)):
-            response = client.post(
-                "/adapt",
-                data={"job_description": _JD},
-                files={"file": ("cv.pdf", b"fake", "application/pdf")},
-            )
-        assert response.status_code == 200
+        assert response.status_code == 401
 
-    def test_adapt_works_with_invalid_auth_header(self):
-        from unittest.mock import AsyncMock
-
-        from backend.schemas import AdaptationResult, PipelineStatus
-
-        result = AdaptationResult(
-            run_id="aaaaaaaa-0000-0000-0000-000000000000",
-            status=PipelineStatus.COMPLETED,
-        )
-        with patch("src.routes.adapt.extract_text", return_value="x" * 150), \
-             patch("src.routes.adapt.run_pipeline", new_callable=AsyncMock, return_value=(result, None)), \
-             patch("backend.auth._supabase") as mock_sb:
+    def test_adapt_with_invalid_jwt_returns_401(self):
+        with patch("backend.auth._supabase") as mock_sb:
             mock_sb.auth.get_user.side_effect = Exception("bad token")
             response = client.post(
                 "/adapt",
@@ -132,7 +112,7 @@ class TestAdaptRouteWithAuth:
                 data={"job_description": _JD},
                 files={"file": ("cv.pdf", b"fake", "application/pdf")},
             )
-        assert response.status_code == 200
+        assert response.status_code == 401
 
     def test_adapt_passes_user_id_to_pipeline(self):
         from unittest.mock import AsyncMock
