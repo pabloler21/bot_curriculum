@@ -1623,6 +1623,50 @@ body {
 }
 .no-credits-banner a:hover { opacity: 0.8; }
 
+/* ── Resume banner (saved result) ───────────────────────────────────────────── */
+
+.resume-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(99, 179, 237, 0.08);
+  border: 1px solid rgba(99, 179, 237, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 28px;
+}
+.resume-banner-icon { font-size: 1.1rem; flex-shrink: 0; color: var(--accent-light); }
+.resume-banner-copy { flex: 1; margin: 0; line-height: 1.4; }
+.resume-banner-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.btn-resume {
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  color: var(--accent-light);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.btn-resume:hover { background: rgba(99, 179, 237, 0.15); }
+.btn-dismiss {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+}
+.btn-dismiss:hover { color: var(--text-primary); }
+
 /* ── Waitlist (pricing page) ─────────────────────────────────────────────── */
 
 .waitlist-inline {

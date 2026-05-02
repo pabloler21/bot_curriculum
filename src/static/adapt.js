@@ -13,6 +13,7 @@ const BACKEND_URL = (() => {
 })();
 
 const SESSION_KEY = 'cv_session_token';
+const RESULT_KEY  = 'aurea_last_result';
 const MAX_JD_CHARS = 8000;
 const MIN_JD_CHARS = 50;
 
@@ -67,6 +68,10 @@ const $coverLetterText = document.getElementById('adapt-cover-letter-text');
 const $noCover         = document.getElementById('adapt-no-cover');
 const $copyCoverBtn    = document.getElementById('adapt-copy-cover-btn');
 
+const $resumeBanner    = document.getElementById('adapt-resume-banner');
+const $resumeBtn       = document.getElementById('adapt-resume-btn');
+const $dismissBtn      = document.getElementById('adapt-dismiss-btn');
+
 const $pstepExtract    = document.getElementById('pstep-extract');
 const $pstepAdapt      = document.getElementById('pstep-adapt');
 const $pstepValidate   = document.getElementById('pstep-validate');
@@ -87,6 +92,35 @@ function show(el) { el.classList.remove('hidden'); }
 function hide(el) { el.classList.add('hidden'); }
 function showError(el, msg) { el.textContent = msg; show(el); }
 function clearError(el) { el.textContent = ''; hide(el); }
+
+// ── Saved result helpers ──────────────────────────────────────────────────────
+function saveResult(data) {
+  try { localStorage.setItem(RESULT_KEY, JSON.stringify(data)); } catch (_) {}
+}
+
+function loadSavedResult() {
+  try { return JSON.parse(localStorage.getItem(RESULT_KEY)); } catch (_) { return null; }
+}
+
+function clearSavedResult() {
+  localStorage.removeItem(RESULT_KEY);
+  hide($resumeBanner);
+}
+
+function checkSavedResult() {
+  if (loadSavedResult()) show($resumeBanner);
+}
+
+$resumeBtn.addEventListener('click', () => {
+  const saved = loadSavedResult();
+  if (!saved) return;
+  hide($resumeBanner);
+  hide($inputSection);
+  currentRunId = saved.run_id || null;
+  renderResults(saved);
+});
+
+$dismissBtn.addEventListener('click', clearSavedResult);
 
 // ── Session management ────────────────────────────────────────────────────────
 async function checkExistingSession() {
@@ -320,6 +354,7 @@ async function runAdaptation() {
     }
 
     currentRunId = data.run_id;
+    saveResult(data);
     fetchCredits();
     renderResults(data);
 
@@ -717,5 +752,6 @@ $authLogoutBtn.addEventListener('click', async () => {
 (async () => {
   await initAuth();
   await checkExistingSession();
+  checkSavedResult();
   updateAdaptBtn();
 })();
