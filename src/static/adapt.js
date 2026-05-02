@@ -626,6 +626,10 @@ $authEmailInput.addEventListener('keydown', (e) => {
 });
 
 $authSendBtn.addEventListener('click', async () => {
+  if (!_supabaseClient) {
+    showError($authModalError, 'Auth service unavailable — restart the server and reload the page.');
+    return;
+  }
   const email = $authEmailInput.value.trim();
   if (!email || !/\S+@\S+\.\S+/.test(email)) {
     showError($authModalError, 'Please enter a valid email address.');

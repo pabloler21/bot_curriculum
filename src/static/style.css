@@ -202,8 +202,6 @@ body {
   max-width: 1152px;
   margin: 0 auto;
   padding: 0 16px;
-  display: flex;
-  align-items: center;
 }
 .header-pill {
   height: 56px;
@@ -1281,12 +1279,13 @@ body {
    Auth — header chip + login modal
    ══════════════════════════════════════════ */
 
-/* Header auth area */
+/* Header auth area — flex child inside .header-pill */
 .header-auth {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-left: auto;
+  margin-left: auto;   /* pushes it to the right within the pill's flex row */
+  padding-left: 12px;
 }
 
 .auth-user-area {
