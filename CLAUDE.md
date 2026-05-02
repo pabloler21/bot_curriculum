@@ -4,7 +4,7 @@
 
 **Aurea** — SaaS de adaptación de CVs con IA. El usuario sube su CV + pega una descripción de trabajo → la app adapta el CV al rol, detecta skill gaps y genera una cover letter personalizada. Modelo freemium: 2 adaptaciones gratis, luego Pro (coming soon).
 
-El proyecto también incluye un **job board** (herramienta secundaria, pre-existente) con scoring de CV contra ofertas de Remotive.
+El proyecto también incluye un **job board** (herramienta secundaria, pre-existente) con scoring de CV contra ofertas de Remotive, búsqueda client-side e integración directa con el adapter.
 
 ## Stack
 
@@ -84,7 +84,9 @@ src/
     waitlist.py     # POST /waitlist — registra interés en plan Pro
   static/
     adapt.html      # ★ PRINCIPAL — CV Adapter UI con auth modal + credit chip
-    adapt.js        # Lógica: auth Supabase, upload CV, pipeline, results rendering
+    adapt.js        # Lógica: auth Supabase, upload CV, pipeline, results rendering,
+                    # localStorage: SESSION_KEY (cv session), RESULT_KEY (último resultado),
+                    # PENDING_JD_KEY (JD pre-cargado desde job board)
     pricing.html    # Pricing page: Free ($0) y Pro (coming soon)
     pricing.js      # Waitlist logic: detecta auth, botón "Notify me"
     index.html      # ATS Evaluator (producto secundario)
@@ -93,9 +95,11 @@ src/
                     # pricing cards, auth modal, credit chip, waitlist confirm
     jobs.html       # Job Board (producto secundario)
     jobs.css        # Estilos del job board
-    jobs.js         # Lógica del job board
+    jobs.js         # Lógica del job board: búsqueda client-side (filteredJobs, filterByTag),
+                    # CV upload, ranking, scoring background
     job-detail.html # Detalle de oferta laboral
-    job-detail.js   # Lógica del detalle
+    job-detail.js   # Lógica del detalle: carga job, CTA "Adapt my CV to this role"
+                    # guarda JD en localStorage (aurea_pending_jd) y redirige a adapt.html
 
 supabase/
   migrations/
@@ -161,9 +165,15 @@ Todas las funciones son **no-op seguros** cuando `_supabase is None` (dev sin cr
 adapt.html → Sign in (magic link) → Ver "✦ 2" créditos en header
 → Subir CV + pegar JD → POST /adapt → Pipeline 3 etapas + cover letter
 → Ver CV adaptado + gaps + cover letter + PDF download
+→ Resultado guardado en localStorage (RESULT_KEY)
 → Crédito baja a 1 → Segunda adaptación → Crédito a 0
 → Banner "You've used all your free adaptations" → adapt btn deshabilitado
 → pricing.html → "Notify me when Pro launches" → Confirmación
+
+Flujo alternativo (desde job board):
+jobs.html → buscar oferta → job-detail.html → "Adapt my CV to this role"
+→ JD guardado en localStorage (PENDING_JD_KEY) → redirige a adapt.html
+→ textarea pre-cargado con el JD → usuario sube CV → POST /adapt
 ```
 
 ## Estrategia de ramas (Git workflow)
@@ -244,3 +254,7 @@ ruff check backend/ src/routes/ tests/
 | 3.11 | Waitlist — `POST /waitlist` + botón "Notify me" en pricing | ✅ mergeada |
 | 3.12 | UX polish: 429 feedback, sign-out limpia sesión, Pricing tab nav | ✅ mergeada |
 | 3.13 | Actualizar CLAUDE.md | ✅ mergeada |
+| 3.14 | Persist resultado en localStorage + banner "View result" | ✅ mergeada |
+| 3.15 | Job board → adapter handoff ("Adapt my CV to this role") | ✅ mergeada |
+| 3.16 | Job board: búsqueda client-side + filtro por tags | ✅ mergeada |
+| 3.17 | Actualizar CLAUDE.md | ✅ mergeada |
