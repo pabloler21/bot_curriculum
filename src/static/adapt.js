@@ -16,6 +16,11 @@ const SESSION_KEY = 'cv_session_token';
 const MAX_JD_CHARS = 8000;
 const MIN_JD_CHARS = 50;
 
+// ── Auth state ────────────────────────────────────────────────────────────────
+let authToken = null;
+let _supabaseClient = null;
+let _pendingAdaptation = false;
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let cvSessionToken = null;
 let selectedFile = null;
@@ -216,6 +221,13 @@ function stopLoadingStages() {
 $adaptBtn.addEventListener('click', runAdaptation);
 
 async function runAdaptation() {
+  // Auth gate — show login modal if not signed in
+  if (!authToken) {
+    _pendingAdaptation = true;
+    showAuthModal();
+    return;
+  }
+
   const jd = $jdInput.value.trim();
 
   // Validate JD
@@ -254,7 +266,7 @@ async function runAdaptation() {
     fd.append('file', selectedFile);
   }
 
-  const headers = {};
+  const headers = { 'Authorization': `Bearer ${authToken}` };
   if (cvSessionToken) {
     headers['X-CV-Session-Token'] = cvSessionToken;
   }
@@ -267,6 +279,16 @@ async function runAdaptation() {
     });
 
     stopLoadingStages();
+
+    if (res.status === 401) {
+      authToken = null;
+      hideUserArea();
+      hide($loadingSection);
+      show($inputSection);
+      _pendingAdaptation = true;
+      showAuthModal();
+      return;
+    }
 
     const data = await res.json();
 
@@ -522,8 +544,124 @@ $resetBtn.addEventListener('click', () => {
   updateAdaptBtn();
 });
 
+// ── Auth ──────────────────────────────────────────────────────────────────────
+const $authModal       = document.getElementById('auth-modal');
+const $authModalBd     = document.getElementById('auth-modal-backdrop');
+const $authModalClose  = document.getElementById('auth-modal-close');
+const $authModalForm   = document.getElementById('auth-modal-form');
+const $authModalSent   = document.getElementById('auth-modal-sent');
+const $authEmailInput  = document.getElementById('auth-email-input');
+const $authSendBtn     = document.getElementById('auth-send-btn');
+const $authModalError  = document.getElementById('auth-modal-error');
+const $authSentEmail   = document.getElementById('auth-sent-email');
+const $authUserArea    = document.getElementById('auth-user-area');
+const $authUserEmail   = document.getElementById('auth-user-email-display');
+const $authLogoutBtn   = document.getElementById('auth-logout-btn');
+const $authSigninBtn   = document.getElementById('auth-signin-btn');
+
+function showAuthModal() {
+  show($authModal);
+  hide($authModalSent);
+  show($authModalForm);
+  clearError($authModalError);
+  $authEmailInput.value = '';
+  $authEmailInput.focus();
+}
+
+function hideAuthModal() {
+  hide($authModal);
+  _pendingAdaptation = false;
+}
+
+function showUserArea(email) {
+  $authUserEmail.textContent = email;
+  show($authUserArea);
+  hide($authSigninBtn);
+}
+
+function hideUserArea() {
+  hide($authUserArea);
+  show($authSigninBtn);
+}
+
+async function initAuth() {
+  let config = { supabase_url: '', supabase_anon_key: '' };
+  try {
+    const res = await fetch(`${BACKEND_URL}/config`);
+    if (res.ok) config = await res.json();
+  } catch (_) {}
+
+  if (!config.supabase_url || !config.supabase_anon_key) return;
+
+  _supabaseClient = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
+
+  _supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session) {
+      authToken = session.access_token;
+      showUserArea(session.user.email);
+      if (_pendingAdaptation) {
+        _pendingAdaptation = false;
+        hideAuthModal();
+        runAdaptation();
+      }
+    } else {
+      authToken = null;
+      hideUserArea();
+    }
+  });
+
+  const { data: { session } } = await _supabaseClient.auth.getSession();
+  if (session) {
+    authToken = session.access_token;
+    showUserArea(session.user.email);
+  }
+}
+
+$authSigninBtn.addEventListener('click', showAuthModal);
+$authModalClose.addEventListener('click', hideAuthModal);
+$authModalBd.addEventListener('click', hideAuthModal);
+
+$authEmailInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') $authSendBtn.click();
+});
+
+$authSendBtn.addEventListener('click', async () => {
+  const email = $authEmailInput.value.trim();
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    showError($authModalError, 'Please enter a valid email address.');
+    return;
+  }
+  clearError($authModalError);
+  $authSendBtn.disabled = true;
+  $authSendBtn.textContent = 'Sending…';
+
+  try {
+    const redirectTo = window.location.href.split('#')[0];
+    const { error } = await _supabaseClient.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: redirectTo },
+    });
+    if (error) throw error;
+    $authSentEmail.textContent = email;
+    hide($authModalForm);
+    show($authModalSent);
+  } catch (err) {
+    showError($authModalError, err.message || 'Failed to send magic link. Please try again.');
+  } finally {
+    $authSendBtn.disabled = false;
+    $authSendBtn.textContent = 'Send magic link';
+  }
+});
+
+$authLogoutBtn.addEventListener('click', async () => {
+  if (_supabaseClient) await _supabaseClient.auth.signOut();
+  authToken = null;
+  hideUserArea();
+});
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 (async () => {
+  await initAuth();
   await checkExistingSession();
   updateAdaptBtn();
 })();

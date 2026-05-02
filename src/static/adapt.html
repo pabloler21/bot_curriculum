@@ -21,6 +21,37 @@
     <div class="ambient-grid"></div>
   </div>
 
+  <!-- Auth modal -->
+  <div id="auth-modal" class="auth-modal hidden" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <div id="auth-modal-backdrop" class="auth-modal-backdrop"></div>
+    <div class="auth-modal-content">
+      <button id="auth-modal-close" class="auth-modal-close" aria-label="Close">✕</button>
+      <div class="auth-modal-brand">
+        <div class="brand-mark">✦</div>
+        <span class="brand-name">Aurea</span>
+      </div>
+      <h2 id="auth-modal-title" class="auth-modal-title">Sign in to adapt your CV</h2>
+      <p class="auth-modal-subtitle">Enter your email — we'll send you a magic link, no password needed.</p>
+
+      <div id="auth-modal-form">
+        <input type="email" id="auth-email-input" class="auth-email-input"
+               placeholder="you@example.com" autocomplete="email" aria-label="Email address">
+        <button id="auth-send-btn" class="btn-primary auth-send-btn">Send magic link</button>
+        <p id="auth-modal-error" class="error-msg hidden" role="alert"></p>
+      </div>
+
+      <div id="auth-modal-sent" class="auth-modal-sent hidden">
+        <div class="auth-modal-sent-icon">✉️</div>
+        <p class="auth-modal-sent-text">
+          Check your inbox! Magic link sent to <strong id="auth-sent-email"></strong>.
+        </p>
+        <p class="secondary-text" style="font-size:0.85rem;margin-top:0.5rem">
+          Click the link to sign in, then come back here.
+        </p>
+      </div>
+    </div>
+  </div>
+
   <!-- Header -->
   <header class="header">
     <div class="header-inner">
@@ -34,6 +65,13 @@
           <a href="index.html" class="tab-nav-item" role="tab" aria-selected="false">Evaluator</a>
           <a href="adapt.html" class="tab-nav-item tab-nav-highlight active" role="tab" aria-selected="true">✦ Adapter</a>
         </nav>
+      </div>
+      <div class="header-auth">
+        <div id="auth-user-area" class="auth-user-area hidden">
+          <span id="auth-user-email-display" class="auth-user-email"></span>
+          <button id="auth-logout-btn" class="btn-auth-secondary">Sign out</button>
+        </div>
+        <button id="auth-signin-btn" class="btn-auth-primary">Sign in</button>
       </div>
     </div>
   </header>
@@ -248,6 +286,7 @@
 
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="adapt.js"></script>
 </body>
 </html>
