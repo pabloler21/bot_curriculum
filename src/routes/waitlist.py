@@ -2,12 +2,15 @@
 """POST /waitlist — register interest in the Pro plan."""
 import logging
 import os
+import re
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 from backend.auth import OptionalUser
+
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -23,7 +26,7 @@ except Exception as exc:
 
 
 class WaitlistRequest(BaseModel):
-    email: EmailStr
+    email: str
 
 
 @router.post("/waitlist", status_code=201)
@@ -32,7 +35,9 @@ def join_waitlist(body: WaitlistRequest, user_id: OptionalUser):
     Register an email address on the Pro waitlist.
     Idempotent — re-joining the same email is a no-op (returns 201 either way).
     """
-    email = body.email.lower()
+    email = body.email.strip().lower()
+    if not _EMAIL_RE.match(email):
+        raise HTTPException(status_code=422, detail="Invalid email address")
 
     if _supabase is None:
         logger.warning("[waitlist] Supabase unavailable — not persisting %s", email)
