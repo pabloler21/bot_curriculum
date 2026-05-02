@@ -1,260 +1,246 @@
-# CLAUDE.md — bot-curriculum
+# CLAUDE.md — Aurea
 
 ## Proyecto
-CV Evaluator: app web que analiza CVs y evalúa su compatibilidad ATS usando Claude AI.
-**En expansión**: se está convirtiendo en un job board con scoring de CV contra ofertas laborales reales.
+
+**Aurea** — SaaS de adaptación de CVs con IA. El usuario sube su CV + pega una descripción de trabajo → la app adapta el CV al rol, detecta skill gaps y genera una cover letter personalizada. Modelo freemium: 2 adaptaciones gratis, luego Pro (coming soon).
+
+El proyecto también incluye un **job board** (herramienta secundaria, pre-existente) con scoring de CV contra ofertas de Remotive.
 
 ## Stack
-- **Runtime**: Python 3.13, `uv` como package manager
-- **Backend**: FastAPI + uvicorn, rate limiting con slowapi (3/min por IP)
-- **AI**: LangChain + `claude-haiku-4-5` con structured output (`ResumeEvaluation` pydantic model)
-- **Extracción de texto**: liteparse (PDF/DOCX)
-- **HTTP async**: httpx (para llamadas a APIs externas)
-- **Frontend**: HTML/JS/CSS estático servido por FastAPI desde `src/static/`
-- **Linter**: ruff
-- **Tests**: pytest + pytest-asyncio + respx
-- **Deploy**: Render.com (`render.yaml`)
 
-## Estructura actual (post Fase 6)
-```
-src/
-  main.py             # FastAPI app, CORS, static files, rate limiter
-  router.py           # agrega routers (evaluate + health + jobs + session)
-  routes/
-    evaluate.py       # POST /evaluate — recibe archivo, extrae texto, llama evaluate_cv()
-    health.py         # GET /health
-    jobs.py           # GET /jobs, GET /jobs/ranked, POST /jobs/score
-    session.py        # POST /session, GET /session/{token}, DELETE /session/{token}
-    view/public/      # sirve job-detail.html como página estática
-  static/
-    index.html        # CV Evaluator — layout two-column, header con botón back prominente
-    app.js            # lógica del evaluador: session preload, escHtml top-level, visibility management
-    style.css         # estilos globales + evaluator redesign (.evaluator-layout, .cv-back-btn, .session-chip, .job-context-panel, .results-cta)
-    jobs.html         # job board con CV bar, similarity bars, score badges
-    jobs.css          # estilos del job board
-    jobs.js           # fetch /jobs/ranked, score badges, CV upload bar, keyboard nav
-    job-detail.html   # ★ NUEVA — página de detalle de oferta laboral
-    job-detail.js     # lógica: carga job_id, muestra scoring vs CV de sesión
-backend/
-  evaluator.py        # chain LangChain → Claude (structured output ResumeEvaluation)
-  extractor.py        # extract_text() via liteparse
-  jobs.py             # Job model, strip_html(), fetch_jobs(), caché 15 min
-  sessions.py         # ★ NUEVO — CVSession model, cv_sessions dict, store/get/delete/cleanup
-  ranker.py           # embed_text(), cosine_similarity(), get_jobs_collection(), upsert_job() — Zvec index at ./zvec_jobs
-  scorer.py           # ★ NUEVO — JobMatch model, score_job() con claude-haiku-4-5
-  prompts/
-    ats_skill.md      # prompt de evaluación ATS
-tests/
-  conftest.py         # fixture client (TestClient de FastAPI)
-  test_jobs.py        # 13 tests: strip_html, Job model, fetch_jobs, GET /jobs
-  test_sessions.py    # ★ NUEVO — tests de CVSession store/get/delete/cleanup/TTL
-  test_ranker.py      # ★ NUEVO — tests de embed_text, cosine_similarity, get_jobs_collection, upsert_job
-  test_scorer.py      # ★ NUEVO — tests de score_job (mocked LLM)
-  test_evaluate.py    # ★ NUEVO — tests de POST /evaluate con session CV header
-```
+### Backend
+- **Python 3.13**, `uv` como package manager
+- **FastAPI** + uvicorn, rate limiting con slowapi (3/min por IP en `/adapt`)
+- **AI**: `claude-haiku-4-5` vía LangChain con structured output (Pydantic)
+- **Auth**: Supabase magic link → JWT validado en cada request con `supabase.auth.get_user(token)`
+- **DB**: Supabase (PostgreSQL) — tablas `credits` y `waitlist`
+- **Extracción de texto**: liteparse (PDF/DOCX)
+- **HTTP async**: httpx
+
+### Frontend
+- HTML/JS/CSS vanilla, sin frameworks, sin build steps
+- Fuente Inter (Google Fonts)
+- Supabase JS CDN en `adapt.html` y `pricing.html` para auth client-side
+
+### Testing y calidad
+- pytest + pytest-asyncio, mocks con `unittest.mock`
+- ruff (linter)
+- GitHub Actions corre `pytest` en cada PR
+
+### Deploy
+- Render.com (`render.yaml`) — pendiente de configurar para Aurea
+- Variables de entorno requeridas (ver abajo)
 
 ## Variables de entorno
-- `ANTHROPIC_API_KEY` — requerida
-- `FRONTEND_BASE_URL` — para CORS (default: `http://localhost:3000`)
+
+```
+ANTHROPIC_API_KEY          # requerida — Claude AI
+SUPABASE_URL               # requerida — URL del proyecto Supabase
+SUPABASE_ANON_KEY          # requerida — clave pública de Supabase
+SUPABASE_SERVICE_ROLE_KEY  # opcional — usada en waitlist si está disponible
+FRONTEND_BASE_URL          # para CORS (default: http://localhost:3000)
+```
+
+## Estructura de archivos
+
+```
+backend/
+  auth.py           # get_current_user(), get_required_user(), OptionalUser, RequiredUser
+  credits.py        # get_balance(), ensure_user(), decrement(), restore(), add_credits()
+                    # InsufficientCredits exception
+  schemas.py        # AdaptationResult, CVSchema, WorkExperience, PipelineStatus, etc.
+  adapter/
+    pipeline.py     # run_pipeline() — orquesta las 3 etapas + cover letter
+    extractor.py    # Etapa 1: extrae CVSchema estructurado del texto del CV
+    adapter.py      # Etapa 2: adapta el CVSchema al job description
+    validator.py    # Etapa 3: valida que no haya alucinaciones (anti-hallucination)
+    cover_letter.py # Etapa 4: genera la cover letter
+    renderer.py     # Genera PDF del CV adaptado
+    logger.py       # Logging compartido del pipeline
+  evaluator.py      # ATS evaluator (producto secundario)
+  extractor.py      # extract_text() vía liteparse — usado en /adapt y /evaluate
+  jobs.py           # Job model, fetch_jobs(), caché 15 min (job board)
+  sessions.py       # CVSession model, store/get/delete/cleanup con TTL 60 min
+  ranker.py         # Embeddings + Zvec vector DB para ranking de jobs
+  scorer.py         # LLM scoring CV vs job (job board)
+  prompts/
+    adapt_cv.md         # Prompt etapa 2 (adapter)
+    extract_schema.md   # Prompt etapa 1 (extractor)
+    cover_letter.md     # Prompt cover letter
+    ats_skill.md        # Prompt ATS evaluator
+
+src/
+  main.py           # FastAPI app: CORS, static files, rate limiter global
+  router.py         # Registra todos los routers
+  routes/
+    adapt.py        # POST /adapt — pipeline principal; GET /adapt/{run_id}/pdf
+    auth.py         # (no existe como ruta — auth es dependency injection)
+    config.py       # GET /config — devuelve SUPABASE_URL y SUPABASE_ANON_KEY al frontend
+    credits.py      # GET /credits — devuelve balance del usuario autenticado
+    evaluate.py     # POST /evaluate — ATS evaluator (producto secundario)
+    health.py       # GET /health
+    jobs.py         # GET /jobs, GET /jobs/ranked, POST /jobs/score (job board)
+    session.py      # POST/GET/DELETE /session — CV sessions del job board
+    waitlist.py     # POST /waitlist — registra interés en plan Pro
+  static/
+    adapt.html      # ★ PRINCIPAL — CV Adapter UI con auth modal + credit chip
+    adapt.js        # Lógica: auth Supabase, upload CV, pipeline, results rendering
+    pricing.html    # Pricing page: Free ($0) y Pro (coming soon)
+    pricing.js      # Waitlist logic: detecta auth, botón "Notify me"
+    index.html      # ATS Evaluator (producto secundario)
+    app.js          # Lógica del ATS evaluator
+    style.css       # Estilos globales: design system, componentes compartidos,
+                    # pricing cards, auth modal, credit chip, waitlist confirm
+    jobs.html       # Job Board (producto secundario)
+    jobs.css        # Estilos del job board
+    jobs.js         # Lógica del job board
+    job-detail.html # Detalle de oferta laboral
+    job-detail.js   # Lógica del detalle
+
+supabase/
+  migrations/
+    20260502000000_credits.sql          # Tabla credits + RLS + funciones SQL atómicas
+    20260502000001_credits_default_2.sql # DEFAULT balance = 2
+    20260502000002_waitlist.sql         # Tabla waitlist + RLS
+
+tests/
+  conftest.py              # fixture client (TestClient de FastAPI)
+  test_adapt_route.py      # POST /adapt y GET /adapt/{run_id}/pdf
+  test_adapter_adapter.py  # backend/adapter/adapter.py
+  test_adapter_extractor.py
+  test_adapter_pipeline.py
+  test_adapter_schemas.py
+  test_adapter_validator.py
+  test_auth.py             # get_current_user() dependency + /adapt auth gate
+  test_credits.py          # backend/credits.py — todas las funciones
+  test_credits_route.py    # GET /credits
+  test_evaluate.py         # POST /evaluate con session token
+  test_jobs.py             # Job board backend
+  test_ranker.py
+  test_scorer.py
+  test_sessions.py
+  test_waitlist.py         # POST /waitlist
+```
+
+## Supabase — tablas y patrones
+
+### Tablas
+| Tabla | PK | Campos clave |
+|---|---|---|
+| `credits` | `user_id TEXT` | `balance INT DEFAULT 2` |
+| `waitlist` | `email TEXT` | `user_id TEXT`, `created_at` |
+
+### Funciones SQL atómicas
+- `decrement_credits(p_user_id, p_amount)` — UPDATE atómico, lanza excepción si `balance < amount`
+- `increment_credits(p_user_id, p_amount)` — UPDATE atómico para restore/add
+
+### Patrones de auth en backend
+```python
+# backend/auth.py
+OptionalUser = Annotated[str | None, Depends(get_current_user)]  # None si no autenticado
+RequiredUser = Annotated[str, Depends(get_required_user)]        # 401 si no autenticado
+
+# Uso en routes:
+async def adapt_resume(user_id: RequiredUser, ...):   # requiere JWT
+def get_credits(user_id: RequiredUser):               # requiere JWT
+def join_waitlist(user_id: OptionalUser, ...):        # opcional
+```
+
+### Patrones de créditos
+```python
+ensure_user(user_id)   # upsert idempotente — crea fila con balance=2 si no existe
+decrement(user_id)     # lanza InsufficientCredits si balance = 0
+restore(user_id)       # llamar en except si el pipeline falla post-decrement
+get_balance(user_id)   # retorna int (0 si no hay fila o Supabase no disponible)
+```
+Todas las funciones son **no-op seguros** cuando `_supabase is None` (dev sin credenciales).
+
+## Flujo del usuario (happy path)
+
+```
+adapt.html → Sign in (magic link) → Ver "✦ 2" créditos en header
+→ Subir CV + pegar JD → POST /adapt → Pipeline 3 etapas + cover letter
+→ Ver CV adaptado + gaps + cover letter + PDF download
+→ Crédito baja a 1 → Segunda adaptación → Crédito a 0
+→ Banner "You've used all your free adaptations" → adapt btn deshabilitado
+→ pricing.html → "Notify me when Pro launches" → Confirmación
+```
 
 ## Estrategia de ramas (Git workflow)
 
-- **`main`**: producción. Solo recibe merges cuando una feature está probada y lista para deploy.
+- **`main`**: producción. Solo recibe merges cuando el usuario decide hacer un release explícito.
 - **`develop`**: rama de integración. Todo el trabajo se integra aquí vía PR.
-- **Feature branches**: se crean desde `develop` y se mergean de vuelta a `develop` vía Pull Request.
-  - Nombrado: `feature/task-N-descripcion` (ej: `feature/task-3-1-supabase-auth`)
-  - Nunca trabajar directo en `develop` ni en `main`.
+- **Feature branches**: se crean desde `develop`, se mergean a `develop` vía PR, y se eliminan después del merge.
+  - Nombrado: `feature/task-N-N-descripcion` (ej: `feature/task-3-1-supabase-auth`)
 
-**No usamos worktrees.** Se trabaja directamente en el repo clonado, cambiando de rama con `git checkout`.
+**Claude nunca mergea ni pushea a `main`.** El merge siempre lo hace el usuario en GitHub.
 
-### Flujo obligatorio por tarea
-
-1. Crear rama desde `develop` antes de tocar cualquier archivo
-2. Implementar la tarea en esa rama (commits atómicos)
-3. Al terminar: abrir PR hacia `develop` con `gh pr create`
-4. Revisar la PR — Claude corre los tests y verifica antes de declararla lista
-5. El merge lo hace el usuario (nunca Claude)
+### Flujo por tarea
 
 ```bash
-# Al iniciar cada tarea
+# 1. Iniciar tarea
 git checkout develop
 git pull origin develop
-git checkout -b feature/task-N-descripcion
+git checkout -b feature/task-N-N-descripcion
 
-# Al terminar
-git push origin feature/task-N-descripcion
+# 2. Implementar (commits atómicos)
+# 3. Abrir PR
+git push origin feature/task-N-N-descripcion
 gh pr create --base develop --title "..." --body "..."
+
+# 4. CI corre los tests automáticamente en GitHub Actions
+# 5. Si pasan → el usuario mergea en GitHub y elimina la rama
+# 6. Al iniciar la siguiente tarea → volver al paso 1
 ```
 
+**Nunca trabajar directo en `develop` ni en `main`.**
+**No usamos worktrees.** Se trabaja directamente en el repo clonado.
+
 ## Comandos
+
 ```bash
 # Instalar dependencias
-pip install -e .
+uv sync   # o: pip install -e .
 
 # Correr localmente
 uvicorn src.main:app --reload
+# → http://localhost:8000/adapt.html
 
 # Tests
 pytest tests/ -v
+pytest tests/ -q   # resumen
 
-# Lint (solo archivos del proyecto, no pre-existing issues en main.py/evaluator.py)
-ruff check backend/jobs.py src/routes/jobs.py src/router.py tests/
+# Lint
+ruff check backend/ src/routes/ tests/
 ```
 
 ## Convenciones
-- Imports absolutos desde `src.*` y `backend.*`
-- Logging con `logging.getLogger(__name__)` en cada módulo
-- Errores HTTP: `HTTPException` para errores internos; `JSONResponse` cuando se necesita shape `{"detail": "...", "code": "..."}` (e.g. upstream errors)
-- El modelo pydantic `ResumeEvaluation` define el contrato de respuesta de `/evaluate`
-- Tests: TDD estricto — tests primero, luego implementación
+
+- Imports absolutos: `from backend.X import ...`, `from src.routes.X import ...`
+- Logging: `logging.getLogger(__name__)` en cada módulo
+- Errores HTTP: `HTTPException` para errores del servidor; `JSONResponse` cuando se necesita `{"detail": "...", "code": "..."}` (ej: `no_credits`)
+- Tests: **TDD estricto** — tests primero, luego implementación
 - Frontend: vanilla JS, sin frameworks, sin build steps
-- Accesibilidad: cards con `tabindex="0"`, `aria-label`, navegación con Enter/Space
-- Seguridad JS: todo dato de API pasa por `escHtml()`, URLs por `safeUrl()`
+- Seguridad JS: todo dato de API pasa por `escHtml()` antes de tocar el DOM
+- **Patch location en tests**: siempre parchear en el lugar de importación, no en la definición:
+  - ✅ `patch("src.routes.adapt.ensure_user")`
+  - ❌ `patch("backend.credits.ensure_user")`
+- **Patch de `OptionalUser`**: como `Depends(get_current_user)` guarda la referencia directa, parchear `backend.auth._supabase`, no `backend.auth.get_current_user`
 
----
+## Estado actual de tareas
 
-## Meta-prompt activo: Job Board con CV-Aware Scoring
-
-Plan completo en: `docs/superpowers/plans/2026-04-03-job-board-cv-scoring.md`
-
-### Estado de las fases
-
-| Fase | Estado | Rama |
-|------|--------|------|
-| **Fase 1** — Job listings desde API pública | ✅ Completa | mergeada a `develop` |
-| **Fase 2** — Session management + CV upload | ✅ Completa | mergeada a `develop` |
-| **Fase 2.5** — Embedding-based job ranking | ✅ Completa | mergeada a `develop` |
-| **Fase 3** — LLM scoring CV vs jobs (per-job) | ✅ Completa | mergeada a `develop` |
-| **Fase 4** — Job detail + integración evaluate | ✅ Completa | mergeada a `develop` |
-| **Fase 5** — Polish + rate limiting | ✅ Completa | mergeada a `develop` |
-| **Fase 6** — Zvec vector DB, glassmorphism, UX redesign | ✅ Completa | mergeada a `develop` |
-| **Fase 7** — CV Evaluator UX redesign + user flow fixes | ✅ Completa | mergeada a `develop` |
-
-### Fase 1 — Qué se implementó
-
-**Backend:**
-- `backend/jobs.py`: modelo `Job` (Pydantic), `strip_html()` (limpia HTML de Remotive), `fetch_jobs()` async con caché de 15 min en memoria (`_cache` dict a nivel de módulo)
-- `src/routes/jobs.py`: `GET /jobs` → llama `fetch_jobs()`, devuelve `list[Job]` como JSON. 502 si Remotive falla, 500 si error interno
-- `src/router.py`: registra el nuevo router de jobs
-
-**Frontend (`src/static/`):**
-- `jobs.html`: página de job board con sticky CV bar (placeholder para Fase 2), header con nav, toolbar de sort, grid de cards
-- `jobs.css`: estilos específicos — grid 1/2/3 col responsive (768px / 1200px), job cards con hover glow, score badge oculto (Fase 3), `.empty-state`
-- `jobs.js`: `loadJobs()` → `fetch('/jobs')`, `renderJobCard()` con escaping XSS + `safeUrl()`, sort por fecha (default) y score (stub Fase 3), keyboard nav
-
-**Tests (13 en total):**
-- `strip_html` (4 tests), `Job model` (2), `fetch_jobs` con mocks respx (4), `GET /jobs` route (3)
-
-### Fase 2 — Qué se implementó
-
-**Backend:**
-- `backend/sessions.py`: modelo `CVSession` (Pydantic), dict `cv_sessions`, `store_session()`, `get_session()`, `delete_session()`, `cleanup_sessions()` con TTL 60 min (lazy cleanup al crear sesión)
-- `src/routes/session.py`: `POST /session` (recibe archivo, extrae texto, guarda sesión, devuelve `{token, filename, char_count}`), `GET /session/{token}`, `DELETE /session/{token}`. Validación UUID en GET/DELETE. Límite 5 MB por archivo.
-
-**Frontend:**
-- CV bar activada en `jobs.html`: botón "Upload your CV" → chip con nombre + X para remover. Token guardado en `localStorage["cv_session_token"]`. Reutiliza el token si ya existe.
-
-**Decisiones de diseño:**
-- Solo texto extraído en memoria del servidor (no localStorage base64, no cloud storage)
-- Token = UUID generado en servidor
-- Para prod >100 usuarios: migrar a Redis (no implementado)
-
-### Fase 2.5 — Qué se implementó
-
-**Backend:**
-- `backend/ranker.py`: carga `SentenceTransformer("all-MiniLM-L6-v2")` (lazy), `embed_text()`, `cosine_similarity()` — ordenamiento en memoria por similitud coseno contra el embedding del CV (luego reemplazado por Zvec en Fase 6)
-- `CVSession` extendida con campo `cv_embedding: list[float]` — se calcula al hacer `store_session()`
-- `GET /jobs/ranked`: acepta `?token=` query param, devuelve jobs ordenados por `similarity_score` (0–1). Fallback graceful si no hay sesión o embedding.
-
-**Frontend:**
-- Similarity bars visuales por job card
-- Banner mostrando que los resultados están ordenados por compatibilidad
-- Collapse de trabajos con similitud muy baja
-
-### Fase 3 — Qué se implementó
-
-**Backend:**
-- `backend/scorer.py`: modelo `JobMatch` (score 0–100, match_level, matched_skills, missing_skills, one_line_summary), `score_job(cv_text, job)` async usando `claude-haiku-4-5` con structured output
-- `POST /jobs/score`: acepta `{token, job_ids?, limit?}`, toma el CV de la sesión, rankea jobs por embedding, hace scoring LLM en paralelo con `asyncio.gather()` sobre los top-N. Cachea resultados en `session.scored_jobs`. Rate limit: 3/min por IP.
-
-**Frontend:**
-- Score badges animados en cards (strong/good/partial/weak con colores)
-- Lista de matched skills visible en cada card
-- Botón "Score more" para pedir scoring de más jobs
-
-**Tests:** `test_scorer.py` (LLM mockeado), `test_ranker.py`
-
-### Fase 4 — Qué se implementó
-
-**Backend:**
-- `src/routes/view/public/`: sirve `job-detail.html` como ruta estática (`GET /jobs/{id}`)
-- `POST /evaluate` extendido: acepta header `X-CV-Session-Token` para usar el CV de la sesión en lugar de subir archivo nuevamente
-
-**Frontend:**
-- `src/static/job-detail.html` + `job-detail.js`: página de detalle de oferta
-  - Lee `job_id` de la URL (`?id=...`)
-  - Carga datos del job desde `/jobs` (filtra por id)
-  - Si hay sesión activa, muestra el scoring LLM (o lo solicita)
-  - Renderiza descripción completa, matched/missing skills, summary
-
-### Fase 5 — Qué se implementó
-
-- Rate limiting aplicado a `POST /session` (3/min por IP) con `slowapi`
-- Rate limiting aplicado a `POST /jobs/score` (3/min por IP)
-- `docs/TESTING.md`: guía de testing manual y escenarios de prueba documentados
-
-### Fase 6 — Qué se implementó
-
-**Backend — Zvec persistent vector DB:**
-- `backend/ranker.py` refactorizado: se elimina `rank_jobs()` (ranking en memoria). Se agrega `get_jobs_collection()` (abre o crea colección Zvec en `./zvec_jobs`, singleton lazy) y `upsert_job()` (idempotente — skipea si ya está en `_inserted_ids` o si Zvec rechaza el insert)
-- `backend/jobs.py`: límite de jobs elevado de 20 a 100; se elimina `Job.embedding` (ahora el embedding vive solo en Zvec)
-- `src/routes/jobs.py`: `GET /jobs/ranked` usa `col.query(VectorQuery(...), topk=20)` en lugar de coseno en memoria; `POST /jobs/score` usa Zvec `topk=limit` para seleccionar top-N jobs a scorear
-- Guard anti-crash en sesiones con `cv_embedding` vacío
-
-**Frontend — Glassmorphism + UX:**
-- `jobs.html`: se reemplaza el sticky `#cv-bar` por `#cv-banner` posicionado debajo del header (scrolls con la página)
-- `jobs.css`: rediseño glassmorphism completo — cards con `background: rgba(255,255,255,0.04)`, `border-radius: 12px`, `backdrop-filter`; botones pill (`border-radius: 20px`); `.score-badge` pill; `.btn-match` glass (sin gradiente); `.cv-banner-btn` pill; similarity bars más gruesas y redondeadas
-- `style.css`: `.tag` `border-radius: 2px → 20px`
-- `jobs.js` (4 fixes):
-  - `applyScoresToCards()`: helper que re-aplica badges/skills/summary tras re-render; `setSort()` lo llama después de `renderJobs()` para que los scores persistan al cambiar de sort
-  - `cvActive` param en `renderJobCard()`: el botón "See full analysis" solo aparece si hay CV subido
-  - Sort habilitado inmediatamente al subir CV (antes esperaba al scoring LLM)
-  - Auto-switch a "Match score" sort cuando el scoring LLM completa
-- `jobs.js` (fixes adicionales):
-  - Scoring automático de todos los ranked jobs al subir CV (se elimina botón "Score more")
-  - Límite de scoring elevado a 30
-  - Fallback badge de similitud para jobs rankeados pero aún no scoreados
-  - Badge del mejor score en verde, los demás en rojo
-  - Fuente Space Grotesk para el header
-
-### Fase 7 — Qué se implementó
-
-**Frontend — CV Evaluator UX redesign (solo frontend, cero backend):**
-
-- `src/static/index.html`: rediseño completo de la página
-  - Header con `header-inner` + botón pill azul prominente "← Job Board" (`.cv-back-btn`)
-  - Layout two-column: izquierda panel "What you get" (features list + "Powered by Claude AI"), derecha dropzone
-  - `#job-context-badge` movido dentro del container, clase `job-context-panel` — panel prominente con border-left azul que muestra título y empresa al llegar desde un job detail (`?job_id=`)
-  - `#session-chip` dentro de `#upload-section`: chip con nombre del CV y botón "Change file" cuando hay sesión activa del job board
-  - `.results-cta` al pie de los resultados: "Ready to apply? Browse matching jobs →" cierra el loop hacia el job board
-
-- `src/static/style.css`: nuevas clases
-  - `.header-inner` + `.header-nav` — layout del header (antes solo en jobs.css)
-  - `.cv-back-btn` — botón pill con gradiente azul
-  - `.evaluator-layout` — CSS Grid 2fr/3fr, colapsa a 1 col en ≤640px
-  - `.evaluator-left-*` — panel izquierdo con header strip + accent bar (mismo patrón que `.panel h3`)
-  - `.job-context-panel` + `.job-context-label/title/company` — panel de contexto de job
-  - `.session-chip` + `.session-chip-*` — chip de sesión preloaded
-  - `.results-cta` + `.btn-browse-jobs` — CTA al final de resultados
-
-- `src/static/app.js`: tres cambios de comportamiento
-  - `escHtml()` movida al top del archivo (antes estaba dentro de `renderResults`, lo que impedía usarla en `loadJobContext`)
-  - `loadJobContext()`: usa `innerHTML` con estructura HTML en lugar de `textContent` plano
-  - `checkExistingSession()`: al cargar la página, llama `GET /session/{token}` — si la sesión sigue viva muestra el chip con el filename y habilita "Analyze CV" sin re-subir el archivo. Si el token es inválido/expirado, lo elimina de localStorage
-  - `setLoading()` / `showResults()` / `resetBtn`: manejan visibilidad de `.evaluator-layout` (se oculta durante loading y results, se muestra al resetear)
-  - Analyze handler: soporta `sessionPreloaded` — si hay sesión activa sin nuevo archivo, envía el request sin file (backend usa `X-CV-Session-Token`)
-
-**UX fixes (los 3 problemas que resolvió esta fase):**
-1. Re-upload innecesario: si el usuario ya subió CV en el job board, no tiene que subirlo de nuevo en el evaluador
-2. Job context invisible: el badge de 12px se reemplazó por un panel con jerarquía visual clara
-3. Dead end en resultados: se agregó CTA "Browse matching jobs →" al pie de los resultados
+| Task | Descripción | Estado |
+|------|-------------|--------|
+| 3.1 | Supabase Auth — `get_current_user`, magic link modal | ✅ mergeada |
+| 3.2 | `RequiredUser` en `/adapt` — 401 sin JWT | ✅ mergeada |
+| 3.3 | Login modal en `adapt.html` + `adapt.js` | ✅ mergeada |
+| 3.4 | Tabla `credits` + funciones SQL atómicas | ✅ mergeada |
+| 3.5 | Lemon Squeezy payments | ⏸ requiere dinero |
+| 3.6 | `pricing.html` — página de pricing Free/Pro | ✅ mergeada |
+| 3.7 | Free tier: `ensure_user` + `decrement` + `restore` en `/adapt` | ✅ mergeada |
+| 3.8 | Railway deploy | ⏸ requiere dinero |
+| 3.9 | `GET /credits` + credit chip `✦ N` en header | ✅ mergeada |
+| 3.10 | Proactive credit gate — deshabilita botón si balance = 0 | ✅ mergeada |
+| 3.11 | Waitlist — `POST /waitlist` + botón "Notify me" en pricing | ✅ mergeada |
+| 3.12 | UX polish: 429 feedback, sign-out limpia sesión, Pricing tab nav | ✅ mergeada |
+| 3.13 | Actualizar CLAUDE.md | ✅ mergeada |
