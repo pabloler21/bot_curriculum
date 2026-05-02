@@ -1303,6 +1303,21 @@ body {
   white-space: nowrap;
 }
 
+.auth-credits-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fbbf24;
+  white-space: nowrap;
+  cursor: default;
+}
+
 .btn-auth-primary {
   background: var(--accent);
   color: #fff;
