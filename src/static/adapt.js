@@ -12,8 +12,9 @@ const BACKEND_URL = (() => {
   return '';
 })();
 
-const SESSION_KEY = 'cv_session_token';
-const RESULT_KEY  = 'aurea_last_result';
+const SESSION_KEY  = 'cv_session_token';
+const RESULT_KEY   = 'aurea_last_result';
+const PENDING_JD_KEY = 'aurea_pending_jd';
 const MAX_JD_CHARS = 8000;
 const MIN_JD_CHARS = 50;
 
@@ -753,5 +754,14 @@ $authLogoutBtn.addEventListener('click', async () => {
   await initAuth();
   await checkExistingSession();
   checkSavedResult();
+
+  // Pre-fill JD from job board handoff
+  const pendingJd = localStorage.getItem(PENDING_JD_KEY);
+  if (pendingJd) {
+    $jdInput.value = pendingJd;
+    localStorage.removeItem(PENDING_JD_KEY);
+    $jdInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
   updateAdaptBtn();
 })();
