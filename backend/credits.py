@@ -33,7 +33,7 @@ def ensure_user(user_id: str) -> None:
     if _supabase is None:
         return
     _supabase.table("credits").upsert(
-        {"user_id": user_id, "balance": 0},
+        {"user_id": user_id, "balance": 2},
         on_conflict="user_id",
         ignore_duplicates=True,
     ).execute()
