@@ -1275,6 +1275,39 @@ body {
   .adapt-card { padding: 18px; }
 }
 
+/* ── Mobile (≤ 640px) ────────────────────── */
+@media (max-width: 640px) {
+  /* Container */
+  .container { padding-top: 24px; }
+
+  /* Header — shrink pill contents to fit */
+  .beta-badge { display: none; }
+  .tab-nav-item { padding: 6px 10px; font-size: 12px; }
+  .auth-user-email { display: none; }
+
+  /* Adapt hero */
+  #adapt-hero { margin-bottom: 28px; padding-top: 8px; }
+  .hero-subtitle { font-size: 15px; }
+  .trust-pill { font-size: 10px; padding: 5px 10px; }
+
+  /* Resume banner: stack icon+text above actions */
+  .resume-banner { flex-wrap: wrap; }
+  .resume-banner-copy { flex-basis: 100%; }
+  .resume-banner-actions { width: 100%; justify-content: flex-end; }
+
+  /* Results: keep ← button and download on same line, allow wrap */
+  .results-header { flex-wrap: wrap; gap: 10px; }
+
+  /* CV preview: shorter so gaps + cover letter stay visible */
+  .adapt-cv-preview { max-height: 380px; }
+}
+
+/* ── Very small phones (≤ 480px) ─────────── */
+@media (max-width: 480px) {
+  /* Drop secondary "Evaluator" tab to prevent pill overflow */
+  .tab-nav > a:first-child { display: none; }
+}
+
 /* ══════════════════════════════════════════
    Auth — header chip + login modal
    ══════════════════════════════════════════ */
