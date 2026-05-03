@@ -258,3 +258,5 @@ ruff check backend/ src/routes/ tests/
 | 3.15 | Job board → adapter handoff ("Adapt my CV to this role") | ✅ mergeada |
 | 3.16 | Job board: búsqueda client-side + filtro por tags | ✅ mergeada |
 | 3.17 | Actualizar CLAUDE.md | ✅ mergeada |
+| 3.18 | Job cards clickeables con el mouse | ✅ mergeada |
+| 3.19 | Mobile responsive layout (`adapt.html`, header, hero) | ✅ mergeada |
