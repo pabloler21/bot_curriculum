@@ -168,10 +168,16 @@ function renderJobCard(job, index, cvActive = false) {
     });
   });
 
+  // Click navigates to detail (ignore clicks on interactive children)
+  article.addEventListener('click', (e) => {
+    if (e.target.closest('a, button')) return;
+    window.location.href = `job-detail.html?id=${encodeURIComponent(job.id)}`;
+  });
+
   // Keyboard: Enter/Space activates primary CTA
   article.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
-      if (e.target !== article) return; // let child links/buttons handle their own events
+      if (e.target !== article) return;
       e.preventDefault();
       window.location.href = `job-detail.html?id=${encodeURIComponent(job.id)}`;
     }
