@@ -846,17 +846,7 @@ body {
    Adapter page styles
    ══════════════════════════════════════════ */
 
-/* ── Nav highlight (Adapter tab) ─────────── */
-.tab-nav-highlight {
-  background: linear-gradient(135deg, rgba(251,191,36,0.18), rgba(255,122,92,0.14)) !important;
-  border: 1px solid rgba(251,191,36,0.30) !important;
-  color: #FBBF24 !important;
-}
-.tab-nav-highlight:hover { color: #FCD34D !important; }
-.tab-nav-highlight.active {
-  background: linear-gradient(135deg, rgba(251,191,36,0.28), rgba(255,122,92,0.22)) !important;
-  color: #FCD34D !important;
-}
+/* ── Nav highlight (Adapter tab) — removed; active state handles highlighting ── */
 
 /* ── Adapter hero ─────────────────────────── */
 #adapt-hero {
@@ -1352,17 +1342,21 @@ body {
 }
 
 .btn-auth-primary {
-  background: var(--accent);
-  color: #fff;
-  border: none;
+  background: var(--accent-subtle);
+  color: var(--accent-light);
+  border: 1px solid var(--accent-border);
   border-radius: var(--radius-pill);
   padding: 7px 18px;
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.btn-auth-primary:hover { opacity: 0.85; }
+.btn-auth-primary:hover {
+  background: rgba(255,122,92,0.22);
+  color: #fff;
+  border-color: var(--accent);
+}
 
 .btn-auth-secondary {
   background: var(--glass-bg);
