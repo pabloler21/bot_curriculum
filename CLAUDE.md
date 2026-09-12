@@ -39,12 +39,19 @@ SUPABASE_URL               # requerida — URL del proyecto Supabase
 SUPABASE_ANON_KEY          # requerida — clave pública de Supabase
 SUPABASE_SERVICE_ROLE_KEY  # opcional — usada en waitlist si está disponible
 FRONTEND_BASE_URL          # para CORS (default: http://localhost:3000)
+
+AUREA_EXTRACT_MODEL        # opcional — modelo etapa 1 (default: claude-haiku-4-5)
+AUREA_ADAPT_MODEL          # opcional — modelo etapa 2 (default: claude-haiku-4-5)
+AUREA_COVER_MODEL          # opcional — modelo cover letter (default: claude-haiku-4-5)
 ```
+
+El mapeo stage → modelo vive en `backend/models.py` (`model_for(stage)`).
 
 ## Estructura de archivos
 
 ```
 backend/
+  models.py         # model_for(stage) — modelo por etapa, configurable por env var
   auth.py           # get_current_user(), get_required_user(), OptionalUser, RequiredUser
   credits.py        # get_balance(), ensure_user(), decrement(), restore(), add_credits()
                     # InsufficientCredits exception
@@ -260,3 +267,5 @@ ruff check backend/ src/routes/ tests/
 | 3.17 | Actualizar CLAUDE.md | ✅ mergeada |
 | 3.18 | Job cards clickeables con el mouse | ✅ mergeada |
 | 3.19 | Mobile responsive layout (`adapt.html`, header, hero) | ✅ mergeada |
+| 3.20 | UX fixes: sin highlight persistente en tab Adapter, botón Sign in glass | ✅ mergeada |
+| 3.22 | Model config por etapa — `backend/models.py` + env vars `AUREA_*_MODEL` | ✅ mergeada |

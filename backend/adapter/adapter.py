@@ -12,10 +12,10 @@ import pathlib
 from typing import Literal
 
 from dotenv import load_dotenv
-from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
+from backend.models import model_for
 from backend.schemas import CVSchema, Gap
 
 load_dotenv()
@@ -32,7 +32,7 @@ class _AdaptationOutput(BaseModel):
     gaps: list[Gap] = Field(default_factory=list)
 
 
-_model = ChatAnthropic(model="claude-haiku-4-5")
+_model = model_for("adapt")
 _structured_model = _model.with_structured_output(_AdaptationOutput)
 
 _prompt = ChatPromptTemplate.from_messages(
