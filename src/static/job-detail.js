@@ -2,6 +2,9 @@ const BACKEND_URL = window.location.hostname === 'bot-curriculum-1.onrender.com'
   ? 'https://bot-curriculum.onrender.com'
   : '';
 
+const PENDING_JD_KEY = 'aurea_pending_jd';
+const MAX_JD_CHARS   = 8000;
+
 function sanitizeText(text) {
   return String(text)
     .replace(/\r\n/g, '\n')
@@ -66,21 +69,10 @@ async function loadJobDetail() {
       return;
     }
 
-    const cvToken = localStorage.getItem('cv_session_token');
-    // Use relative URLs directly — safeUrl() rejects relative paths (no protocol)
-    const ctaHref = cvToken
-      ? `index.html?job_id=${encodeURIComponent(job.id)}`
-      : 'index.html';
-    const ctaText = cvToken
-      ? 'See how to improve your match →'
-      : 'Upload your CV to see your match score';
-    const ctaHtml = `<a href="${escHtml(ctaHref)}" class="btn-match detail-cta">${escHtml(ctaText)}</a>`;
-
     const tags = (job.tags || [])
       .map(t => `<span class="tag found">${escHtml(t)}</span>`)
       .join('');
 
-    const ctaClass = cvToken ? 'btn-match detail-cta' : 'btn-match-ghost';
     detailEl.innerHTML = `
       <div class="detail-card">
         <div class="detail-header">
@@ -104,13 +96,25 @@ async function loadJobDetail() {
         </div>
       </div>
       <div class="detail-cta-wrap">
-        <a href="${escHtml(ctaHref)}" class="${ctaClass}">${escHtml(ctaText)}</a>
+        <button id="adapt-from-job-btn" class="btn-match detail-cta">
+          <span aria-hidden="true">✦</span> Adapt my CV to this role
+        </button>
       </div>
     `;
 
     // Reveal element FIRST so scrollHeight is measurable
     loadingEl.classList.add('hidden');
     detailEl.classList.remove('hidden');
+
+    // Wire adapt CTA — saves JD to localStorage and navigates to adapter
+    const adaptBtn = detailEl.querySelector('#adapt-from-job-btn');
+    if (adaptBtn) {
+      adaptBtn.addEventListener('click', () => {
+        const jd = sanitizeText(job.description).slice(0, MAX_JD_CHARS);
+        localStorage.setItem(PENDING_JD_KEY, jd);
+        window.location.href = 'adapt.html';
+      });
+    }
 
     // Description collapse/expand
     const descEl    = detailEl.querySelector('.detail-description');

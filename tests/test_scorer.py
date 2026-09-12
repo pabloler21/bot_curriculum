@@ -140,15 +140,20 @@ def test_post_jobs_score_with_valid_session_returns_results():
 
 
 def test_post_jobs_score_caches_results():
+    from datetime import datetime, timezone
     from unittest.mock import MagicMock
 
-    cv_sessions.clear()
-    with patch("src.routes.session.extract_text", return_value="Python developer"):
-        post_res = scorer_client.post(
-            "/session",
-            files={"file": ("cv.pdf", io.BytesIO(b"data"), "application/pdf")},
-        )
-    token = post_res.json()["token"]
+    from backend.sessions import CVSession
+
+    token = "aaaaaaaa-0000-0000-0000-000000000000"
+    # Shared mutable session — simulates the in-memory cache behaviour
+    shared_session = CVSession(
+        token=token,
+        cv_text="Python developer",
+        cv_embedding=[0.1] * 384,
+        filename="cv.pdf",
+        uploaded_at=datetime.now(timezone.utc),
+    )
 
     test_jobs = [make_job("1")]
     mock_match = JobMatch(**make_job_match())
@@ -156,6 +161,7 @@ def test_post_jobs_score_caches_results():
     mock_col = MagicMock()
     mock_col.query.return_value = [MagicMock(id="1")]
 
+    patch_session = patch("src.routes.jobs.get_session", return_value=shared_session)
     patch_fetch = patch(
         "src.routes.jobs.fetch_jobs", new_callable=AsyncMock, return_value=test_jobs
     )
@@ -163,10 +169,10 @@ def test_post_jobs_score_caches_results():
         "src.routes.jobs.score_job", new_callable=AsyncMock, return_value=mock_match
     )
     patch_col = patch("src.routes.jobs.get_jobs_collection", return_value=mock_col)
-    with patch_fetch, patch_score as mock_score, patch_col:
-        # First call
+    with patch_session, patch_fetch, patch_score as mock_score, patch_col:
+        # First call — scores and caches on the shared_session object
         scorer_client.post("/jobs/score", json={"token": token, "limit": 1})
-        # Second call — should use cache, score_job not called again
+        # Second call — same object returned, scored_jobs already populated
         scorer_client.post("/jobs/score", json={"token": token, "limit": 1})
     assert mock_score.call_count == 1  # only called once due to caching
 
@@ -256,9 +262,8 @@ def test_score_jobs_returns_400_when_no_embedding(client):
     import uuid
     from datetime import datetime, timezone
 
-    from backend.sessions import CVSession, cv_sessions
+    from backend.sessions import CVSession
 
-    # Create a session with no embedding
     token = str(uuid.uuid4())
     session = CVSession(
         token=token,
@@ -267,14 +272,11 @@ def test_score_jobs_returns_400_when_no_embedding(client):
         uploaded_at=datetime.now(timezone.utc),
         cv_embedding=[],
     )
-    cv_sessions[token] = session
 
-    try:
+    with patch("src.routes.jobs.get_session", return_value=session):
         response = client.post("/jobs/score", json={"token": token, "limit": 1})
-        assert response.status_code == 400
-        assert response.json()["code"] == "no_embedding"
-    finally:
-        cv_sessions.pop(token, None)
+    assert response.status_code == 400
+    assert response.json()["code"] == "no_embedding"
 
 
 def test_post_jobs_score_handles_partial_failure():
