@@ -25,7 +25,9 @@ El proyecto también incluye un **job board** (herramienta secundaria, pre-exist
 ### Testing y calidad
 - pytest + pytest-asyncio, mocks con `unittest.mock`
 - ruff (linter)
-- GitHub Actions corre `pytest` en cada PR
+- GitHub Actions (`ci.yml`) corre ruff + pytest en cada PR. Es el único gate real.
+- `main` además tiene `claude-code-review.yml` y `claude.yml` (Claude Actions), que **hoy fallan**:
+  el secret `CLAUDE_CODE_OAUTH_TOKEN` está vencido. Hay que renovarlo o borrar esos workflows.
 
 ### Deploy
 Producción: **VPS Vultr `64.176.23.59`** (`aurea.pablolerner.dev`, respaldo `aurea-cv.duckdns.org`).
@@ -58,6 +60,9 @@ ANTHROPIC_API_KEY          # requerida — Claude AI
 SUPABASE_URL               # requerida — URL del proyecto Supabase
 SUPABASE_ANON_KEY          # requerida — clave pública de Supabase
 SUPABASE_SERVICE_ROLE_KEY  # opcional — usada en waitlist si está disponible
+SUPABASE_KEY               # opcional — SI se setea, sessions.py persiste los CVs en la tabla
+                           #   cv_sessions en vez de usar memoria. Hoy NO se setea en prod
+                           #   a propósito: esa tabla tiene RLS deshabilitada.
 FRONTEND_BASE_URL          # para CORS (default: http://localhost:3000)
 
 AUREA_EXTRACT_MODEL        # opcional — modelo etapa 1 (default: claude-haiku-4-5)
@@ -89,6 +94,7 @@ backend/
                     # + caracteres zero-width); usado en /adapt, /evaluate y /session
   jobs.py           # Job model, fetch_jobs(), caché 15 min (job board)
   sessions.py       # CVSession model, store/get/delete/cleanup con TTL 60 min
+                    # Backend dual: Postgres si hay SUPABASE_KEY, si no dict en memoria
   ranker.py         # Embeddings + Zvec vector DB para ranking de jobs
   scorer.py         # LLM scoring CV vs job (job board)
   prompts/
@@ -136,7 +142,9 @@ supabase/
     20260502000002_waitlist.sql         # Tabla waitlist + RLS
 
 tests/
-  conftest.py              # fixture client (TestClient de FastAPI)
+  conftest.py              # fixture client (TestClient de FastAPI) + fixture autouse que
+                           # fuerza sesiones en memoria — sin eso la suite pega contra la
+                           # Supabase real cuando hay SUPABASE_URL + SUPABASE_KEY en el env
   test_adapt_route.py      # POST /adapt y GET /adapt/{run_id}/pdf
   test_adapter_adapter.py  # backend/adapter/adapter.py
   test_adapter_extractor.py
@@ -147,7 +155,9 @@ tests/
   test_credits.py          # backend/credits.py — todas las funciones
   test_credits_route.py    # GET /credits
   test_evaluate.py         # POST /evaluate con session token
+  test_extractor.py        # backend/extractor.py — filtrado de texto oculto e invisible
   test_jobs.py             # Job board backend
+  test_models.py           # backend/models.py — model_for(stage) y defaults
   test_ranker.py
   test_scorer.py
   test_sessions.py
@@ -157,10 +167,16 @@ tests/
 ## Supabase — tablas y patrones
 
 ### Tablas
-| Tabla | PK | Campos clave |
-|---|---|---|
-| `credits` | `user_id TEXT` | `balance INT DEFAULT 2` |
-| `waitlist` | `email TEXT` | `user_id TEXT`, `created_at` |
+| Tabla | PK | Campos clave | RLS |
+|---|---|---|---|
+| `credits` | `user_id TEXT` | `balance INT DEFAULT 2` | ✅ |
+| `waitlist` | `email TEXT` | `user_id TEXT`, `created_at` | ✅ |
+| `cv_sessions` | `token` | CV persistido del job board | ❌ |
+| `pipeline_runs` | — | runs del pipeline | ❌ |
+
+⚠️ `cv_sessions` y `pipeline_runs` tienen **RLS deshabilitada**: con la anon key (que es pública,
+la sirve `GET /config`) cualquiera lee y escribe todas sus filas. Por eso prod corre sin
+`SUPABASE_KEY`. Antes de activar RLS hay que escribir las políticas, o se bloquea todo acceso.
 
 ### Funciones SQL atómicas
 - `decrement_credits(p_user_id, p_amount)` — UPDATE atómico, lanza excepción si `balance < amount`
@@ -211,7 +227,9 @@ jobs.html → buscar oferta → job-detail.html → "Adapt my CV to this role"
 - **Feature branches**: se crean desde `develop`, se mergean a `develop` vía PR, y se eliminan después del merge.
   - Nombrado: `feature/task-N-N-descripcion` (ej: `feature/task-3-1-supabase-auth`)
 
-**Claude nunca mergea ni pushea a `main`.** El merge siempre lo hace el usuario en GitHub.
+**Claude abre el PR; no mergea por iniciativa propia.** Mergea únicamente cuando el usuario
+se lo pide de forma explícita en esa conversación — incluido `main`. La autorización no se
+arrastra a la tarea siguiente: si no lo pidió, el merge lo hace el usuario en GitHub.
 
 ### Flujo por tarea
 
@@ -227,7 +245,7 @@ git push origin feature/task-N-N-descripcion
 gh pr create --base develop --title "..." --body "..."
 
 # 4. CI corre los tests automáticamente en GitHub Actions
-# 5. Si pasan → el usuario mergea en GitHub y elimina la rama
+# 5. Si pasan → mergea el usuario (o Claude, si el usuario se lo pide) y se elimina la rama
 # 6. Al iniciar la siguiente tarea → volver al paso 1
 ```
 
@@ -264,6 +282,8 @@ ruff check backend/ src/routes/ tests/
   - ✅ `patch("src.routes.adapt.ensure_user")`
   - ❌ `patch("backend.credits.ensure_user")`
 - **Patch de `OptionalUser`**: como `Depends(get_current_user)` guarda la referencia directa, parchear `backend.auth._supabase`, no `backend.auth.get_current_user`
+- **`.mcp.json` no se versiona** (está en `.gitignore`): contiene el access token de Supabase.
+  Tampoco versionar `*.traineddata` ni ningún otro binario grande.
 
 ## Estado actual de tareas
 
@@ -289,6 +309,23 @@ ruff check backend/ src/routes/ tests/
 | 3.18 | Job cards clickeables con el mouse | ✅ mergeada |
 | 3.19 | Mobile responsive layout (`adapt.html`, header, hero) | ✅ mergeada |
 | 3.20 | UX fixes: sin highlight persistente en tab Adapter, botón Sign in glass | ✅ mergeada |
+| 3.21 | — (no existe: la numeración salta de 3.20 a 3.22) | — |
 | 3.22 | Model config por etapa — `backend/models.py` + env vars `AUREA_*_MODEL` | ✅ mergeada |
 | 3.23 | Hardening anti prompt-injection: descarta texto oculto del CV, CV como dato no confiable | ✅ mergeada |
 | 3.24 | Deploy de Aurea al VPS + doc de deploy | ✅ mergeada |
+| 3.25 | Actualizar CLAUDE.md | ✅ mergeada |
+
+**Sprint 3 cerrado y releaseado**: `main` está al día con `develop` (PR #29). La única tarea
+abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
+
+## Deuda abierta
+
+1. **Rotar los access tokens de Supabase**: `.mcp.json` estuvo versionado con el token `sbp_…`
+   en texto plano. Se untrackeó, pero dos tokens siguen en el historial público de GitHub.
+2. **RLS deshabilitada** en `cv_sessions` y `pipeline_runs` (ver sección Supabase).
+3. **Secret `CLAUDE_CODE_OAUTH_TOKEN` vencido** → los workflows de Claude Actions en `main` fallan.
+4. **Confirmar el redirect del magic link**: falta verificar que Supabase acepte
+   `https://aurea.pablolerner.dev` (Auth → URL Configuration). Solo se comprueba con un login real.
+5. **Límite conocido del filtro de texto oculto** (marcado con comentario `ponytail:` en
+   `backend/extractor.py`): pdfplumber no expone text render mode ni alpha, así que `3 Tr`,
+   opacidad 0 y texto tapado por una imagen todavía pasan.
