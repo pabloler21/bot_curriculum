@@ -12,9 +12,9 @@ import pathlib
 from typing import Literal
 
 from dotenv import load_dotenv
-from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
 
+from backend.models import model_for
 from backend.schemas import CVSchema
 
 load_dotenv()
@@ -26,7 +26,7 @@ with open(_PROMPT_PATH, encoding="utf-8") as f:
     _SYSTEM_TEMPLATE = f.read()
 
 # Plain text output — no structured output needed
-_model = ChatAnthropic(model="claude-haiku-4-5")
+_model = model_for("cover")
 
 _chain = ChatPromptTemplate.from_messages(
     [

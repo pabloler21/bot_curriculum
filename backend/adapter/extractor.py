@@ -3,16 +3,16 @@
 Pipeline Stage 1 — Structured extraction.
 
 Takes raw CV text → returns CVSchema (ground truth of the candidate's experience).
-Uses LangChain + claude-haiku-4-5 with structured output.
+Uses LangChain with structured output (model configured in backend/models.py).
 Nothing is invented — only what is in the text is extracted.
 """
 import logging
 import pathlib
 
 from dotenv import load_dotenv
-from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
 
+from backend.models import model_for
 from backend.schemas import CVSchema, compute_hash
 
 load_dotenv()
@@ -23,7 +23,7 @@ _PROMPT_PATH = pathlib.Path(__file__).parent.parent / "prompts" / "extract_schem
 with open(_PROMPT_PATH, encoding="utf-8") as f:
     _SYSTEM_PROMPT = f.read()
 
-_model = ChatAnthropic(model="claude-haiku-4-5")
+_model = model_for("extract")
 _structured_model = _model.with_structured_output(CVSchema)
 
 _chain = ChatPromptTemplate.from_messages(

@@ -29,7 +29,14 @@
       "Bash(cat \"C:/Users/pablo/Desktop/bot_curriculum/.superpowers/brainstorm/\"*/state/server-info)",
       "WebSearch",
       "Bash(gh pr *)",
-      "Bash(uv sync *)"
+      "Bash(uv sync *)",
+      "Bash(uv run *)",
+      "Bash(gh run *)",
+      "mcp__supabase__list_projects"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
 }

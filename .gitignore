@@ -18,3 +18,8 @@ wheels/
 # Zvec vector DB
 zvec_jobs/
 zvec_test_*/
+# Config local con secretos (token Supabase)
+.mcp.json
+
+# Tesseract OCR data (5MB, no versionar)
+*.traineddata
