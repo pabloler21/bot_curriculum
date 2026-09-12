@@ -28,8 +28,28 @@ El proyecto también incluye un **job board** (herramienta secundaria, pre-exist
 - GitHub Actions corre `pytest` en cada PR
 
 ### Deploy
-- Render.com (`render.yaml`) — pendiente de configurar para Aurea
-- Variables de entorno requeridas (ver abajo)
+Producción: **VPS Vultr `64.176.23.59`** (`aurea.pablolerner.dev`, respaldo `aurea-cv.duckdns.org`).
+
+- `botcv.service` → `uv run --frozen uvicorn src.main:app` en `127.0.0.1:8000`, usuario `deploy`,
+  working dir `/home/deploy/bot_curriculum`, env en el `.env` de ese directorio.
+- Caddy hace TLS y ruteo (`/etc/caddy/Caddyfile`). El snippet `lazy` duerme el servicio cuando
+  no hay tráfico y lo despierta con la primera navegación — que `botcv` figure `inactive`
+  es normal, no es que esté caído.
+- La rama desplegada es `develop`.
+
+```bash
+# Deploy (desde la máquina local)
+ssh linuxuser@64.176.23.59
+sudo -iu deploy
+cd /home/deploy/bot_curriculum
+git fetch origin && git reset --hard origin/develop
+/home/deploy/.local/bin/uv sync --frozen
+exit
+sudo systemctl restart botcv
+curl -s https://aurea.pablolerner.dev/health
+```
+
+Render.com (`render.yaml`) quedó sin usar.
 
 ## Variables de entorno
 
@@ -256,7 +276,7 @@ ruff check backend/ src/routes/ tests/
 | 3.5 | Lemon Squeezy payments | ⏸ requiere dinero |
 | 3.6 | `pricing.html` — página de pricing Free/Pro | ✅ mergeada |
 | 3.7 | Free tier: `ensure_user` + `decrement` + `restore` en `/adapt` | ✅ mergeada |
-| 3.8 | Railway deploy | ⏸ requiere dinero |
+| 3.8 | Deploy productivo | ✅ en VPS Vultr (Railway descartado: sin free tier) |
 | 3.9 | `GET /credits` + credit chip `✦ N` en header | ✅ mergeada |
 | 3.10 | Proactive credit gate — deshabilita botón si balance = 0 | ✅ mergeada |
 | 3.11 | Waitlist — `POST /waitlist` + botón "Notify me" en pricing | ✅ mergeada |
@@ -271,3 +291,4 @@ ruff check backend/ src/routes/ tests/
 | 3.20 | UX fixes: sin highlight persistente en tab Adapter, botón Sign in glass | ✅ mergeada |
 | 3.22 | Model config por etapa — `backend/models.py` + env vars `AUREA_*_MODEL` | ✅ mergeada |
 | 3.23 | Hardening anti prompt-injection: descarta texto oculto del CV, CV como dato no confiable | ✅ mergeada |
+| 3.24 | Deploy de Aurea al VPS + doc de deploy | ✅ mergeada |
