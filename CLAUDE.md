@@ -14,7 +14,7 @@ El proyecto también incluye un **job board** (herramienta secundaria, pre-exist
 - **AI**: `claude-haiku-4-5` vía LangChain con structured output (Pydantic)
 - **Auth**: Supabase magic link → JWT validado en cada request con `supabase.auth.get_user(token)`
 - **DB**: Supabase (PostgreSQL) — tablas `credits` y `waitlist`
-- **Extracción de texto**: liteparse (PDF/DOCX)
+- **Extracción de texto**: pdfplumber (PDFs, filtra texto oculto) + liteparse (DOCX y OCR de escaneos)
 - **HTTP async**: httpx
 
 ### Frontend
@@ -65,7 +65,8 @@ backend/
     renderer.py     # Genera PDF del CV adaptado
     logger.py       # Logging compartido del pipeline
   evaluator.py      # ATS evaluator (producto secundario)
-  extractor.py      # extract_text() vía liteparse — usado en /adapt y /evaluate
+  extractor.py      # extract_text() — descarta texto invisible (color/tamaño/posición
+                    # + caracteres zero-width); usado en /adapt, /evaluate y /session
   jobs.py           # Job model, fetch_jobs(), caché 15 min (job board)
   sessions.py       # CVSession model, store/get/delete/cleanup con TTL 60 min
   ranker.py         # Embeddings + Zvec vector DB para ranking de jobs
@@ -269,3 +270,4 @@ ruff check backend/ src/routes/ tests/
 | 3.19 | Mobile responsive layout (`adapt.html`, header, hero) | ✅ mergeada |
 | 3.20 | UX fixes: sin highlight persistente en tab Adapter, botón Sign in glass | ✅ mergeada |
 | 3.22 | Model config por etapa — `backend/models.py` + env vars `AUREA_*_MODEL` | ✅ mergeada |
+| 3.23 | Hardening anti prompt-injection: descarta texto oculto del CV, CV como dato no confiable | ✅ mergeada |
