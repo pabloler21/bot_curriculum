@@ -209,7 +209,12 @@ body {
   padding: 0 8px 0 20px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* flex-start, no space-between: con space-between el nav se reacomoda según
+     cuántos hijos tenga el pill, así que saltaba de lugar entre páginas. Anclado
+     al brand queda fijo, y el margin-left:auto de .header-auth empuja el bloque
+     de sesión a la derecha. */
+  justify-content: flex-start;
+  gap: 24px;
   background: var(--glass-bg);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
