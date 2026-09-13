@@ -209,7 +209,12 @@ body {
   padding: 0 8px 0 20px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* flex-start, no space-between: con space-between el nav se reacomoda según
+     cuántos hijos tenga el pill, así que saltaba de lugar entre páginas. Anclado
+     al brand queda fijo, y el margin-left:auto de .header-auth empuja el bloque
+     de sesión a la derecha. */
+  justify-content: flex-start;
+  gap: 24px;
   background: var(--glass-bg);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
@@ -1292,10 +1297,36 @@ body {
   .adapt-cv-preview { max-height: 380px; }
 }
 
-/* ── Very small phones (≤ 480px) ─────────── */
-@media (max-width: 480px) {
-  /* Drop secondary "Evaluator" tab to prevent pill overflow */
-  .tab-nav > a:first-child { display: none; }
+/* ── Pantallas angostas (≤ 720px) ─────────
+   En una fila el pill pide ~708px (brand + las 4 tabs + el bloque de sesión).
+   Antes esto se tapaba escondiendo la tab "Evaluator" abajo de 480px, y aun así
+   adapt.html desbordaba 78px en un teléfono y scrolleaba en horizontal.
+   En vez de recortar el menú, el pill pasa a dos filas: identidad y sesión
+   arriba, el menú completo abajo. Entran las cuatro tabs hasta 320px de ancho y
+   el nav queda en el mismo lugar en todas las páginas, que es lo que se busca.
+   El umbral es 720 y no 640 (donde el bloque de arriba achica las tabs) porque
+   entre 641 y 708 las tabs vuelven a tamaño completo y el pill desborda. */
+@media (max-width: 720px) {
+  .header-pill {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 8px 8px 10px 14px;
+    row-gap: 8px;
+    column-gap: 12px;
+  }
+  .tab-nav {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: center;
+    /* red de contención para pantallas de 320px, donde ni a lo ancho entra */
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tab-nav::-webkit-scrollbar { display: none; }
+  .header-auth { padding-left: 0; }
+  /* La fila 1 la define su hijo más alto: 32px con botón de sesión, 26px sin él.
+     Sin esto el menú de abajo quedaba 6px más arriba en las páginas sin auth. */
+  .brand { min-height: 32px; }
 }
 
 /* ══════════════════════════════════════════
