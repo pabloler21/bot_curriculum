@@ -74,6 +74,21 @@ class Gap(BaseModel):
     suggestion: str = Field(description="Concrete action the candidate could take to address this")
 
 
+class InterviewQuestion(BaseModel):
+    question: str = Field(description="The question, phrased as the interviewer would ask it")
+    kind: Literal["technical", "behavioral", "gap"] = Field(
+        description="'gap' = probes a requirement the CV does not cover"
+    )
+    why_asked: str = Field(description="Why the interviewer is likely to ask this, given the JD")
+    suggested_answer: str = Field(
+        description="Draft answer grounded only in the CV. STAR format for behavioral."
+    )
+    based_on: str | None = Field(
+        None,
+        description="Role/company in the CV the answer draws from. None for gap questions.",
+    )
+
+
 class PipelineStatus(str, Enum):
     CREATED = "created"
     EXTRACTING = "extracting"
