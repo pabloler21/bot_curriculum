@@ -68,6 +68,7 @@ FRONTEND_BASE_URL          # para CORS (default: http://localhost:3000)
 AUREA_EXTRACT_MODEL        # opcional — modelo etapa 1 (default: claude-haiku-4-5)
 AUREA_ADAPT_MODEL          # opcional — modelo etapa 2 (default: claude-haiku-4-5)
 AUREA_COVER_MODEL          # opcional — modelo cover letter (default: claude-haiku-4-5)
+AUREA_INTERVIEW_MODEL      # opcional — modelo interview prep (default: claude-haiku-4-5)
 ```
 
 El mapeo stage → modelo vive en `backend/models.py` (`model_for(stage)`).
@@ -87,6 +88,8 @@ backend/
     adapter.py      # Etapa 2: adapta el CVSchema al job description
     validator.py    # Etapa 3: valida que no haya alucinaciones (anti-hallucination)
     cover_letter.py # Etapa 4: genera la cover letter
+    interview.py    # Interview prep: preguntas + respuestas borrador
+                    # (on-demand desde POST /interview, fuera de run_pipeline)
     renderer.py     # Genera PDF del CV adaptado
     logger.py       # Logging compartido del pipeline
   evaluator.py      # ATS evaluator (producto secundario)
@@ -101,6 +104,7 @@ backend/
     adapt_cv.md         # Prompt etapa 2 (adapter)
     extract_schema.md   # Prompt etapa 1 (extractor)
     cover_letter.md     # Prompt cover letter
+    interview_prep.md   # Prompt interview prep
     ats_skill.md        # Prompt ATS evaluator
 
 src/
@@ -113,6 +117,7 @@ src/
     credits.py      # GET /credits — devuelve balance del usuario autenticado
     evaluate.py     # POST /evaluate — ATS evaluator (producto secundario)
     health.py       # GET /health
+    interview.py    # POST /interview — preguntas de entrevista para una adaptación ya hecha
     jobs.py         # GET /jobs, GET /jobs/ranked, POST /jobs/score (job board)
     session.py      # POST/GET/DELETE /session — CV sessions del job board
     waitlist.py     # POST /waitlist — registra interés en plan Pro
@@ -155,6 +160,8 @@ tests/
   test_credits.py          # backend/credits.py — todas las funciones
   test_credits_route.py    # GET /credits
   test_evaluate.py         # POST /evaluate con session token
+  test_interview.py        # backend/adapter/interview.py
+  test_interview_route.py  # POST /interview
   test_extractor.py        # backend/extractor.py — filtrado de texto oculto e invisible
   test_jobs.py             # Job board backend
   test_models.py           # backend/models.py — model_for(stage) y defaults
@@ -209,6 +216,7 @@ Todas las funciones son **no-op seguros** cuando `_supabase is None` (dev sin cr
 adapt.html → Sign in (magic link) → Ver "✦ 2" créditos en header
 → Subir CV + pegar JD → POST /adapt → Pipeline 3 etapas + cover letter
 → Ver CV adaptado + gaps + cover letter + PDF download
+→ (opcional) "Prepare for the interview" → POST /interview → preguntas + respuestas borrador
 → Resultado guardado en localStorage (RESULT_KEY)
 → Crédito baja a 1 → Segunda adaptación → Crédito a 0
 → Banner "You've used all your free adaptations" → adapt btn deshabilitado
@@ -314,6 +322,8 @@ ruff check backend/ src/routes/ tests/
 | 3.23 | Hardening anti prompt-injection: descarta texto oculto del CV, CV como dato no confiable | ✅ mergeada |
 | 3.24 | Deploy de Aurea al VPS + doc de deploy | ✅ mergeada |
 | 3.25 | Actualizar CLAUDE.md | ✅ mergeada |
+| 3.26 | Header nav: mismo set de tabs, pill de dos filas en pantallas angostas | ✅ mergeada |
+| 3.27 | Interview prep — `POST /interview` + panel en resultados | 🔀 PR abierto |
 
 **Sprint 3 cerrado y releaseado**: `main` está al día con `develop` (PR #29). La única tarea
 abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
