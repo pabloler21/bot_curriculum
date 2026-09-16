@@ -29,6 +29,7 @@ let cvSessionToken = null;
 let selectedFile = null;
 let selectedLang = 'en';
 let currentRunId = null;
+let currentResult = null;   // last rendered AdaptationResult (+ job_description)
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const $inputSection    = document.getElementById('adapt-input-section');
@@ -68,6 +69,13 @@ const $noGaps          = document.getElementById('adapt-no-gaps');
 const $coverLetterText = document.getElementById('adapt-cover-letter-text');
 const $noCover         = document.getElementById('adapt-no-cover');
 const $copyCoverBtn    = document.getElementById('adapt-copy-cover-btn');
+
+const $interviewPanel  = document.getElementById('adapt-interview-panel');
+const $interviewIntro  = document.getElementById('adapt-interview-intro');
+const $interviewBtn    = document.getElementById('adapt-interview-btn');
+const $interviewList   = document.getElementById('adapt-interview-list');
+const $interviewCount  = document.getElementById('adapt-interview-count');
+const $interviewError  = document.getElementById('adapt-interview-error');
 
 const $resumeBanner    = document.getElementById('adapt-resume-banner');
 const $resumeBtn       = document.getElementById('adapt-resume-btn');
@@ -355,6 +363,7 @@ async function runAdaptation() {
     }
 
     currentRunId = data.run_id;
+    data.job_description = jd;   // /interview needs the JD after a page reload
     saveResult(data);
     fetchCredits();
     renderResults(data);
@@ -384,6 +393,9 @@ async function uploadSession(file) {
 // ── Result rendering ──────────────────────────────────────────────────────────
 function renderResults(data) {
   hide($loadingSection);
+
+  currentResult = data;
+  resetInterviewPanel();
 
   const status = data.status;
   const schema = data.adapted_schema;
@@ -439,6 +451,17 @@ function renderResults(data) {
   } else {
     hide($coverLetterText);
     show($noCover);
+  }
+
+  // Interview prep — needs the schema and the JD to ask for questions.
+  // Results saved before this feature shipped have no JD: hide the panel.
+  if (schema && data.job_description) {
+    show($interviewPanel);
+    if (data.interview_questions?.length) {
+      renderInterview(data.interview_questions);
+    }
+  } else {
+    hide($interviewPanel);
   }
 
   show($resultsSection);
@@ -540,6 +563,106 @@ function renderGaps(gaps) {
   `).join('');
 }
 
+// ── Interview prep ────────────────────────────────────────────────────────────
+const KIND_LABEL = { technical: 'Technical', behavioral: 'Behavioral', gap: 'Gap' };
+
+function resetInterviewPanel() {
+  $interviewList.innerHTML = '';
+  hide($interviewList);
+  show($interviewIntro);
+  $interviewCount.textContent = '';
+  hide($interviewCount);
+  clearError($interviewError);
+  $interviewBtn.disabled = false;
+  $interviewBtn.textContent = 'Prepare for the interview';
+}
+
+function renderInterview(questions) {
+  hide($interviewIntro);
+  clearError($interviewError);
+
+  $interviewList.innerHTML = questions.map(q => {
+    const kind = KIND_LABEL[q.kind] ? q.kind : 'technical';
+    const source = q.based_on
+      ? `<p class="interview-source">Drawn from: ${escHtml(q.based_on)}</p>`
+      : '';
+    return `
+      <details class="interview-item">
+        <summary>
+          <span class="interview-kind interview-kind--${kind}">${escHtml(KIND_LABEL[kind])}</span>
+          <span class="interview-question">${escHtml(q.question)}</span>
+        </summary>
+        <div class="interview-body">
+          <p class="interview-why">Why they ask: ${escHtml(q.why_asked)}</p>
+          <p class="interview-answer">${escHtml(q.suggested_answer)}</p>
+          ${source}
+        </div>
+      </details>
+    `;
+  }).join('');
+
+  $interviewCount.textContent = `${questions.length} question${questions.length !== 1 ? 's' : ''}`;
+  show($interviewCount);
+  show($interviewList);
+}
+
+$interviewBtn.addEventListener('click', async () => {
+  if (!currentResult?.adapted_schema || !currentResult.job_description) return;
+
+  clearError($interviewError);
+  $interviewBtn.disabled = true;
+  $interviewBtn.innerHTML = `<span class="spinner sm"></span> Preparing…`;
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/interview`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({
+        adapted_schema: currentResult.adapted_schema,
+        job_description: currentResult.job_description,
+        gaps: currentResult.gaps || [],
+        output_language: selectedLang,
+      }),
+    });
+
+    if (res.status === 401) {
+      showError($interviewError, 'Your session expired. Please sign in again.');
+      return;
+    }
+    if (res.status === 429) {
+      showError($interviewError, 'Too many requests — please wait a minute before trying again.');
+      return;
+    }
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showError($interviewError, data.detail || `Server error (${res.status}). Please try again.`);
+      return;
+    }
+
+    const questions = data.questions || [];
+    if (!questions.length) {
+      showError($interviewError, 'No questions came back. Please try again.');
+      return;
+    }
+
+    renderInterview(questions);
+
+    // Persist so the questions survive a reload, like the rest of the result
+    currentResult.interview_questions = questions;
+    saveResult(currentResult);
+
+  } catch (err) {
+    showError($interviewError, 'Network error. Please check your connection and try again.');
+  } finally {
+    $interviewBtn.disabled = false;
+    $interviewBtn.textContent = 'Prepare for the interview';
+  }
+});
+
 // ── Download PDF ──────────────────────────────────────────────────────────────
 $downloadBtn.addEventListener('click', async () => {
   if (!currentRunId) return;
@@ -594,6 +717,8 @@ $resetBtn.addEventListener('click', () => {
   $cvPreview.innerHTML = '';
   $gapsList.innerHTML = '';
   $coverLetterText.textContent = '';
+  resetInterviewPanel();
+  currentResult = null;
   $statusBadge.textContent = '';
   $statusBadge.className = 'badge';
   clearError($globalError);
