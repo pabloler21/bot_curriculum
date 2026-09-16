@@ -1752,3 +1752,74 @@ body {
   font-weight: 700;
   flex-shrink: 0;
 }
+
+/* ── Interview prep panel ──────────────────── */
+.adapt-interview-intro { padding: 16px 20px; }
+.adapt-interview-intro .secondary-text {
+  font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;
+}
+.btn-interview {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 10px 16px; border-radius: var(--radius-sm);
+  background: var(--accent-subtle); border: 1px solid var(--accent-border);
+  color: var(--accent-light);
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.btn-interview:hover:not(:disabled) { background: rgba(255,255,255,0.08); }
+.btn-interview:disabled { opacity: 0.50; cursor: not-allowed; }
+
+.interview-count {
+  padding: 2px 8px; border-radius: var(--radius-pill);
+  background: var(--accent-subtle); border: 1px solid var(--accent-border);
+  color: var(--accent-light); font-size: 10px; font-weight: 700;
+}
+
+.adapt-interview-list {
+  display: flex; flex-direction: column; gap: 8px; padding: 0 20px 16px;
+}
+.interview-item {
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--separator);
+  overflow: hidden;
+}
+.interview-item summary {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 12px; cursor: pointer; list-style: none;
+}
+.interview-item summary::-webkit-details-marker { display: none; }
+.interview-item summary:hover { background: rgba(255,255,255,0.02); }
+.interview-kind {
+  padding: 2px 8px; border-radius: var(--radius-pill);
+  font-size: 9px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase;
+  flex-shrink: 0;
+}
+.interview-kind--technical {
+  background: var(--aqua-subtle); border: 1px solid var(--aqua-border); color: var(--aqua);
+}
+.interview-kind--behavioral {
+  background: var(--warning-subtle); border: 1px solid var(--warning-border); color: var(--warning);
+}
+.interview-kind--gap {
+  background: var(--danger-subtle); border: 1px solid var(--danger-border); color: var(--danger);
+}
+.interview-question {
+  font-size: 12px; font-weight: 600; color: var(--text-primary); line-height: 1.45;
+}
+.interview-body { padding: 0 12px 12px 12px; }
+.interview-why {
+  font-size: 11px; color: var(--text-secondary); line-height: 1.5;
+  padding: 8px 0; border-top: 1px solid var(--separator);
+}
+.interview-answer {
+  font-size: 12px; color: var(--text-secondary); line-height: 1.7;
+  white-space: pre-wrap;
+  padding: 10px 12px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.03);
+}
+.interview-source {
+  font-size: 10px; color: var(--text-secondary); opacity: 0.75;
+  margin-top: 8px; font-style: italic;
+}
