@@ -792,7 +792,31 @@ function hideUserArea() {
   updateAdaptBtn();
 }
 
+// Supabase devuelve los errores del magic link en el fragmento de la URL, por
+// ejemplo #error=access_denied&error_code=otp_expired. Sin esto el usuario vuelve
+// a una página que no le dice absolutamente nada y parece que no pasó nada.
+function showAuthErrorFromUrl() {
+  const hash = window.location.hash.slice(1);
+  if (!hash || hash.indexOf('error') === -1) return;
+
+  const params = new URLSearchParams(hash);
+  const description = params.get('error_description');
+  if (!description) return;
+
+  const hint = params.get('error_code') === 'otp_expired'
+    ? ' Request a new link and open it right away — each new link cancels the previous one.'
+    : '';
+
+  showAuthModal();
+  showError($authModalError, description + hint);
+
+  // Limpiar el fragmento para que el error no reaparezca al recargar.
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+}
+
 async function initAuth() {
+  showAuthErrorFromUrl();
+
   let config = { supabase_url: '', supabase_anon_key: '' };
   try {
     const res = await fetch(`${BACKEND_URL}/config`);
