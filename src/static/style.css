@@ -292,7 +292,7 @@ body {
 .container {
   max-width: 1152px;
   margin: 0 auto;
-  padding: 40px 16px 80px;
+  padding: 40px 16px 24px;
 }
 
 /* ── Hero ─────────────────────────────────── */
@@ -1822,4 +1822,29 @@ body {
 .interview-source {
   font-size: 10px; color: var(--text-secondary); opacity: 0.75;
   margin-top: 8px; font-style: italic;
+}
+
+/* ── Pantallas bajas: que el formulario entre sin scroll ──────────────────────
+   Las páginas de herramienta (adapter, evaluator) se abren todos los días, y el
+   hero les empujaba el formulario fuera de la ventana. En monitores altos queda
+   exactamente como estaba; por debajo de 1100px de alto se compacta.
+   Se escribe una vez: las clases del hero son compartidas por adapt, index y
+   pricing. ponytail: umbral fijo en 1100px, que es el alto que necesita el adapter
+   sin comprimir. Si hace falta más granularidad van dos escalones en vez de uno. */
+@media (max-height: 1100px) {
+  .container { padding-top: 20px; }
+
+  #hero-section,
+  #adapt-hero { margin-bottom: 16px; padding-top: 4px; }
+
+  /* La insignia es decorativa: es lo primero que sobra cuando falta alto. */
+  .hero-badge { display: none; }
+
+  .hero-title { font-size: clamp(28px, 3.4vw, 34px); margin-bottom: 10px; }
+  .hero-subtitle { font-size: 14px; margin-bottom: 14px; max-width: 620px; }
+  .hero-trust { margin-bottom: 0; }
+
+  /* El área de carga y la de texto son lo funcional: se achican, no desaparecen. */
+  .drop-zone { padding: 24px 24px; }
+  .adapt-jd-textarea { min-height: 0; height: clamp(110px, 17vh, 180px); }
 }
