@@ -23,3 +23,6 @@ zvec_test_*/
 
 # Tesseract OCR data (5MB, no versionar)
 *.traineddata
+
+# Artefactos de Playwright MCP (capturas y logs de consola, descartables)
+.playwright-mcp/
