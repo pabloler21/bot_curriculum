@@ -1,11 +1,9 @@
 'use strict';
 
-const BACKEND_URL = (() => {
-  const h = window.location.hostname;
-  return (h !== 'localhost' && h !== '127.0.0.1')
-    ? 'https://bot-curriculum.onrender.com'
-    : '';
-})();
+// El frontend lo sirve esta misma app (main.py monta StaticFiles en "/"),
+// así que siempre es el mismo origen. Apuntar a un host externo hace que el
+// browser bloquee el fetch por CORS y la página quede muerta.
+const BACKEND_URL = '';
 
 const $notifyBtn      = document.getElementById('notify-btn');
 const $waitlistInline = document.getElementById('waitlist-inline');
