@@ -334,7 +334,8 @@ ruff check backend/ src/routes/ tests/
 | 3.25 | Actualizar CLAUDE.md | ✅ mergeada |
 | 3.26 | Header nav: mismo set de tabs, pill de dos filas en pantallas angostas | ✅ mergeada |
 | 3.27 | Interview prep — `POST /interview` + panel en resultados | ✅ mergeada |
-| 3.28 | Deploy automático al VPS en cada push a `main` | 🔀 PR abierto |
+| 3.28 | Deploy automático al VPS en cada push a `main` | ✅ mergeada (falta instalar la clave en el server) |
+| 3.29 | Adapter y evaluator entran sin scroll en pantallas de laptop | ✅ mergeada |
 
 **Sprint 3 cerrado y releaseado**: `main` está al día con `develop` (PR #29). La única tarea
 abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
