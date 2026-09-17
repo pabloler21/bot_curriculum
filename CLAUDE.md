@@ -352,6 +352,12 @@ abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant
 4. ~~**Confirmar el redirect del magic link**~~: resuelto. El dominio de producción estaba
    fuera de la lista de redirects de Supabase, así que los enlaces caían en el Site URL
    (`localhost:3000`). Se agregó `https://aurea.pablolerner.dev/**` y se verificó.
-5. **Límite conocido del filtro de texto oculto** (marcado con comentario `ponytail:` en
+5. **Supabase manda solo 2 mails por hora** (servicio de correo incorporado, verificado en
+   la doc oficial el 2026-09-17). Ese techo no se puede subir mientras se use el servicio
+   interno: se levanta configurando SMTP propio o un Send Email hook, y ahí el límite lo
+   ponés vos. **Bloquea el producto**: con 2 mails por hora no se puede onboardear usuarios
+   reales, y tampoco se puede testear el login más de dos veces seguidas.
+
+6. **Límite conocido del filtro de texto oculto** (marcado con comentario `ponytail:` en
    `backend/extractor.py`): pdfplumber no expone text render mode ni alpha, así que `3 Tr`,
    opacidad 0 y texto tapado por una imagen todavía pasan.
