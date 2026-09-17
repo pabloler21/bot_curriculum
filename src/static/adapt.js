@@ -5,12 +5,10 @@
 'use strict';
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const BACKEND_URL = (() => {
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return 'https://bot-curriculum.onrender.com';
-  }
-  return '';
-})();
+// El frontend lo sirve esta misma app (main.py monta StaticFiles en "/"),
+// así que siempre es el mismo origen. Apuntar a un host externo hace que el
+// browser bloquee el fetch por CORS y la página quede muerta.
+const BACKEND_URL = '';
 
 const SESSION_KEY  = 'cv_session_token';
 const RESULT_KEY   = 'aurea_last_result';
