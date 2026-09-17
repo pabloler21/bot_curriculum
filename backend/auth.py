@@ -21,7 +21,12 @@ from fastapi import Depends, HTTPException, Request
 logger = logging.getLogger(__name__)
 
 _SUPABASE_URL = os.getenv("SUPABASE_URL")
-_SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# Validar un JWT solo necesita la anon key, que además ya se publica en /config.
+# SUPABASE_KEY se mira solo como fallback: esa variable es de sessions.py, que la
+# usa para decidir si los CVs van a Postgres, y producción la deja sin setear a
+# propósito porque cv_sessions tiene RLS deshabilitada. Cuando auth dependía de
+# ella, esa omisión deliberada apagaba la autenticación entera sin decir nada.
+_SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY") or os.getenv("SUPABASE_KEY")
 
 _supabase = None
 if _SUPABASE_URL and _SUPABASE_KEY:
