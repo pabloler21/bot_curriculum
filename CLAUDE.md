@@ -334,8 +334,11 @@ ruff check backend/ src/routes/ tests/
 | 3.25 | Actualizar CLAUDE.md | ✅ mergeada |
 | 3.26 | Header nav: mismo set de tabs, pill de dos filas en pantallas angostas | ✅ mergeada |
 | 3.27 | Interview prep — `POST /interview` + panel en resultados | ✅ mergeada |
-| 3.28 | Deploy automático al VPS en cada push a `main` | ✅ mergeada (falta instalar la clave en el server) |
+| 3.28 | Deploy automático al VPS en cada push a `main` | ✅ funcionando |
 | 3.29 | Adapter y evaluator entran sin scroll en pantallas de laptop | ✅ mergeada |
+| 3.30 | `BACKEND_URL` relativo — arregla el login roto en producción | ✅ mergeada |
+| 3.31 | Auth usa la anon key, no la variable de sessions | ✅ mergeada |
+| 3.32 | Error del magic link visible en la UI | ✅ mergeada |
 
 **Sprint 3 cerrado y releaseado**: `main` está al día con `develop` (PR #29). La única tarea
 abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
@@ -346,8 +349,9 @@ abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant
    en texto plano. Se untrackeó, pero dos tokens siguen en el historial público de GitHub.
 2. **RLS deshabilitada** en `cv_sessions` y `pipeline_runs` (ver sección Supabase).
 3. **Secret `CLAUDE_CODE_OAUTH_TOKEN` vencido** → los workflows de Claude Actions en `main` fallan.
-4. **Confirmar el redirect del magic link**: falta verificar que Supabase acepte
-   `https://aurea.pablolerner.dev` (Auth → URL Configuration). Solo se comprueba con un login real.
+4. ~~**Confirmar el redirect del magic link**~~: resuelto. El dominio de producción estaba
+   fuera de la lista de redirects de Supabase, así que los enlaces caían en el Site URL
+   (`localhost:3000`). Se agregó `https://aurea.pablolerner.dev/**` y se verificó.
 5. **Límite conocido del filtro de texto oculto** (marcado con comentario `ponytail:` en
    `backend/extractor.py`): pdfplumber no expone text render mode ni alpha, así que `3 Tr`,
    opacidad 0 y texto tapado por una imagen todavía pasan.
