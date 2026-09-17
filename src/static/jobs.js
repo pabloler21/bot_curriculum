@@ -1,8 +1,9 @@
 // src/static/jobs.js
 
-const BACKEND_URL = window.location.hostname === 'bot-curriculum-1.onrender.com'
-  ? 'https://bot-curriculum.onrender.com'
-  : '';
+// El frontend lo sirve esta misma app (main.py monta StaticFiles en "/"),
+// así que siempre es el mismo origen. Apuntar a un host externo hace que el
+// browser bloquee el fetch por CORS y la página quede muerta.
+const BACKEND_URL = '';
 
 const jobsGrid     = document.getElementById('jobs-grid');
 const loadingEl    = document.getElementById('loading-jobs');
