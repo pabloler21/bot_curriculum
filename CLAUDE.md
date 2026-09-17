@@ -37,18 +37,28 @@ Producción: **VPS Vultr `64.176.23.59`** (`aurea.pablolerner.dev`, respaldo `au
 - Caddy hace TLS y ruteo (`/etc/caddy/Caddyfile`). El snippet `lazy` duerme el servicio cuando
   no hay tráfico y lo despierta con la primera navegación — que `botcv` figure `inactive`
   es normal, no es que esté caído.
-- La rama desplegada es `develop`.
+- La rama desplegada es `main`.
+
+### Deploy automático
+
+Cada push a `main` dispara el job `deploy` de `ci.yml`, que corre después de los tests.
+Entra por SSH al VPS y ejecuta `/home/deploy/deploy.sh`, después verifica `/health` desde
+el runner con reintentos. Si no responde, el workflow falla — no hay rollback automático.
+
+- `deploy/deploy.sh` en el repo es la copia de referencia. La que se ejecuta vive en
+  `/home/deploy/deploy.sh`, **fuera del árbol de git**: si estuviera adentro, el checkout
+  la reescribiría mientras corre. Si cambia acá, hay que reinstalarla allá.
+- La clave SSH de CI está restringida con `command="/home/deploy/deploy.sh"` en el
+  `authorized_keys` del usuario `deploy`. Esto importa: ese usuario tiene `NOPASSWD:ALL`
+  en `/etc/sudoers.d/deploy`, así que sin el forced command la clave sería root.
+- Secrets del repo: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`.
+- El script nunca hace `git clean`: el `.env` vive en ese directorio y no está trackeado.
 
 ```bash
-# Deploy (desde la máquina local)
+# Deploy manual (si hace falta saltear CI)
 ssh linuxuser@64.176.23.59
 sudo -iu deploy
-cd /home/deploy/bot_curriculum
-git fetch origin && git reset --hard origin/develop
-/home/deploy/.local/bin/uv sync --frozen
-exit
-sudo systemctl restart botcv
-curl -s https://aurea.pablolerner.dev/health
+/home/deploy/deploy.sh
 ```
 
 Render.com (`render.yaml`) quedó sin usar.
@@ -323,7 +333,8 @@ ruff check backend/ src/routes/ tests/
 | 3.24 | Deploy de Aurea al VPS + doc de deploy | ✅ mergeada |
 | 3.25 | Actualizar CLAUDE.md | ✅ mergeada |
 | 3.26 | Header nav: mismo set de tabs, pill de dos filas en pantallas angostas | ✅ mergeada |
-| 3.27 | Interview prep — `POST /interview` + panel en resultados | 🔀 PR abierto |
+| 3.27 | Interview prep — `POST /interview` + panel en resultados | ✅ mergeada |
+| 3.28 | Deploy automático al VPS en cada push a `main` | 🔀 PR abierto |
 
 **Sprint 3 cerrado y releaseado**: `main` está al día con `develop` (PR #29). La única tarea
 abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
