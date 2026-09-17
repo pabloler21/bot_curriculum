@@ -145,3 +145,53 @@ class TestAdaptRouteWithAuth:
 
         call_kwargs = mock_pipeline.call_args.kwargs
         assert call_kwargs.get("user_id") == fake_user_id
+
+
+class TestQueClaveUsaElCliente:
+    """El cliente de auth no debe depender de SUPABASE_KEY.
+
+    SUPABASE_KEY está reservada para sessions.py, que la usa para decidir si los
+    CVs van a Postgres. Producción la deja sin setear a propósito porque la tabla
+    cv_sessions tiene RLS deshabilitada. Cuando auth.py dependía de esa misma
+    variable, esa omisión deliberada dejaba _supabase en None y get_current_user
+    devolvía None siempre: nadie podía autenticarse nunca.
+
+    Para validar un JWT alcanza la anon key, que además ya se publica en /config.
+    """
+
+    def _recargar_auth(self, monkeypatch, **env):
+        import importlib
+
+        from backend import auth
+
+        for nombre in ("SUPABASE_URL", "SUPABASE_KEY", "SUPABASE_ANON_KEY"):
+            monkeypatch.delenv(nombre, raising=False)
+        for nombre, valor in env.items():
+            monkeypatch.setenv(nombre, valor)
+        return importlib.reload(auth)
+
+    def test_se_inicializa_solo_con_anon_key(self, monkeypatch):
+        with patch("supabase.create_client", return_value=MagicMock()) as mock_create:
+            auth = self._recargar_auth(
+                monkeypatch,
+                SUPABASE_URL="https://proyecto.supabase.co",
+                SUPABASE_ANON_KEY="anon-123",
+            )
+        assert auth._supabase is not None, (
+            "sin SUPABASE_KEY el cliente quedó en None: nadie puede autenticarse"
+        )
+        mock_create.assert_called_once_with("https://proyecto.supabase.co", "anon-123")
+
+    def test_sigue_andando_con_la_variable_vieja(self, monkeypatch):
+        with patch("supabase.create_client", return_value=MagicMock()) as mock_create:
+            auth = self._recargar_auth(
+                monkeypatch,
+                SUPABASE_URL="https://proyecto.supabase.co",
+                SUPABASE_KEY="service-456",
+            )
+        assert auth._supabase is not None
+        mock_create.assert_called_once_with("https://proyecto.supabase.co", "service-456")
+
+    def test_sin_ninguna_clave_queda_en_none(self, monkeypatch):
+        auth = self._recargar_auth(monkeypatch, SUPABASE_URL="https://proyecto.supabase.co")
+        assert auth._supabase is None
