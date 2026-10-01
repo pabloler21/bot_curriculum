@@ -25,6 +25,7 @@ function networkError() { return t('err.network', 'Network error. Check your con
 async function errorDetail(res) {
   if (res.status === 429) return t('err.rate', 'Too many requests — please wait a minute before trying again.');
   const data = await res.json().catch(() => ({}));
+  if (Array.isArray(data.detail)) return data.detail.map((d) => d.msg || String(d)).join('; ');
   return data.detail || `${t('err.server', 'Server error')} (${res.status})`;
 }
 
@@ -169,13 +170,13 @@ async function adapt(mode, jobInput) {
     fd.append('mode', mode);
     fd.append('output_language', aurea.lang);
     const data = await paidJson(await aurea.authFetch('/adapt', { method: 'POST', body: fd }));
-    if (data) return goToResult(data, mode, jobInput);
+    if (data) { goToResult(data, mode, jobInput); return; }  // navegando: dejar las acciones deshabilitadas
+    setActionsBusy(false);
   } catch (_) {
     showError($('ev-action-error'), networkError());
-  } finally {
     setActionsBusy(false);
-    aurea.refreshCredits();
   }
+  aurea.refreshCredits();
 }
 
 async function improve(recommendations) {
@@ -187,13 +188,13 @@ async function improve(recommendations) {
       body: JSON.stringify({ recommendations }),
     });
     const data = await paidJson(res);
-    if (data) return goToResult(data, 'improve', '');
+    if (data) { goToResult(data, 'improve', ''); return; }  // navegando: dejar las acciones deshabilitadas
+    setActionsBusy(false);
   } catch (_) {
     showError($('ev-action-error'), networkError());
-  } finally {
     setActionsBusy(false);
-    aurea.refreshCredits();
   }
+  aurea.refreshCredits();
 }
 
 // ── Eventos ───────────────────────────────────────────────────────────────
@@ -241,8 +242,8 @@ aurea.onReady(async () => {
   evaluation = await initialEvaluation();
   if (evaluation) renderResults(evaluation);
 
-  const pending = aurea.takePendingAction();
-  if (pending && evaluation) {
+  const pending = evaluation ? aurea.takePendingAction() : null;
+  if (pending) {
     if (pending.payload && pending.payload.job_input) $('ev-job').value = pending.payload.job_input;
     runAction(pending.action, pending.payload || {});
   }
