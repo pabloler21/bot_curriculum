@@ -5,6 +5,7 @@ Descarga el texto visible de una oferta de trabajo a partir de su URL.
 Anti-SSRF: solo http/https, y cada host (incluido cada salto de redirect) se
 resuelve y se rechaza si alguna IP no es pública. Timeout 10 s, tope 2 MB.
 """
+import asyncio
 import ipaddress
 import logging
 import socket
@@ -31,15 +32,15 @@ def is_url(text: str) -> bool:
     return s.lower().startswith(("http://", "https://")) and not any(c.isspace() for c in s)
 
 
-def _check_url(url: str) -> None:
-    parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https") or not parsed.hostname:
-        raise JobFetchError("Unsupported URL")
-    port = parsed.port or (443 if parsed.scheme == "https" else 80)
+async def _check_url(url: str) -> None:
     try:
-        infos = socket.getaddrinfo(parsed.hostname, port)
-    except socket.gaierror as exc:
-        raise JobFetchError("Host not found") from exc
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            raise JobFetchError("Unsupported URL")
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        infos = await asyncio.to_thread(socket.getaddrinfo, parsed.hostname, port)
+    except (ValueError, UnicodeError, socket.gaierror) as exc:
+        raise JobFetchError("Invalid URL or host not found") from exc
     for info in infos:
         ip = ipaddress.ip_address(info[4][0])
         if not ip.is_global or ip.is_multicast:
@@ -80,31 +81,37 @@ async def fetch_job_text(url: str, transport: httpx.AsyncBaseTransport | None = 
     async with httpx.AsyncClient(
         timeout=TIMEOUT_S,
         follow_redirects=False,
-        headers={"User-Agent": _USER_AGENT},
+        headers={"User-Agent": _USER_AGENT, "Accept-Encoding": "identity"},
         transport=transport,
     ) as client:
-        for _ in range(MAX_REDIRECTS + 1):
-            _check_url(url)
-            try:
-                async with client.stream("GET", url) as resp:
-                    if resp.is_redirect:
-                        url = urljoin(url, resp.headers.get("location", ""))
-                        continue
-                    if resp.status_code >= 400:
-                        raise JobFetchError(f"HTTP {resp.status_code}")
-                    body = bytearray()
-                    async for chunk in resp.aiter_bytes():
-                        body.extend(chunk)
-                        if len(body) > MAX_BYTES:
-                            raise JobFetchError("Page too large")
-                    html = body.decode(resp.encoding or "utf-8", errors="replace")
-            except httpx.HTTPError as exc:
-                raise JobFetchError(f"Request failed: {exc}") from exc
+        try:
+            async with asyncio.timeout(TIMEOUT_S):
+                for _ in range(MAX_REDIRECTS + 1):
+                    await _check_url(url)
+                    try:
+                        async with client.stream("GET", url) as resp:
+                            if resp.is_redirect:
+                                url = urljoin(url, resp.headers.get("location", ""))
+                                continue
+                            if resp.headers.get("content-encoding", "identity").lower() != "identity":
+                                raise JobFetchError("Unsupported content encoding")
+                            if resp.status_code >= 400:
+                                raise JobFetchError(f"HTTP {resp.status_code}")
+                            body = bytearray()
+                            async for chunk in resp.aiter_bytes():  # sin Content-Encoding (rechazado): no descomprime
+                                body.extend(chunk)
+                                if len(body) > MAX_BYTES:
+                                    raise JobFetchError("Page too large")
+                            html = body.decode(resp.encoding or "utf-8", errors="replace")
+                    except (httpx.HTTPError, httpx.InvalidURL) as exc:
+                        raise JobFetchError(f"Request failed: {exc}") from exc
 
-            text = html_to_text(html)
-            if len(text) < MIN_CHARS:
-                raise JobFetchError("Not enough text on the page")
-            logger.info("[job_fetch] Fetched %d chars from %s", len(text), urlparse(url).hostname)
-            return text
+                    text = html_to_text(html)
+                    if len(text) < MIN_CHARS:
+                        raise JobFetchError("Not enough text on the page")
+                    logger.info("[job_fetch] Fetched %d chars from %s", len(text), urlparse(url).hostname)
+                    return text
+        except TimeoutError as exc:
+            raise JobFetchError("Timed out") from exc
 
     raise JobFetchError("Too many redirects")

@@ -1,4 +1,5 @@
 """backend/job_fetch.py — descarga de JDs por URL, con anti-SSRF."""
+import asyncio
 import socket
 from unittest.mock import patch
 
@@ -34,7 +35,9 @@ async def test_rejects_non_http_schemes(url):
         await fetch_job_text(url)
 
 
-@pytest.mark.parametrize("ip", ["127.0.0.1", "10.0.0.5", "192.168.1.1", "169.254.169.254", "::1", "0.0.0.0"])
+@pytest.mark.parametrize(
+    "ip", ["127.0.0.1", "10.0.0.5", "192.168.1.1", "169.254.169.254", "::1", "0.0.0.0", "::ffff:127.0.0.1"]
+)
 async def test_rejects_non_public_addresses(ip):
     with patch("backend.job_fetch.socket.getaddrinfo", _resolve({"evil.example": ip})):
         with pytest.raises(JobFetchError):
@@ -94,3 +97,30 @@ def test_html_to_text_drops_scripts_and_styles():
         "<body><p>Hello</p><noscript>x</noscript></body></html>"
     )
     assert html_to_text(html) == "Hello"
+
+
+@pytest.mark.parametrize("url", ["http://x.io:abc/", "http://[::1/", "http://" + "a" * 64 + ".example/"])
+async def test_malformed_urls_raise_job_fetch_error(url):
+    with pytest.raises(JobFetchError):
+        await fetch_job_text(url)
+
+
+async def test_rejects_compressed_responses():
+    transport = httpx.MockTransport(
+        lambda r: httpx.Response(200, headers={"Content-Encoding": "gzip"}, content=b"x")
+    )
+    with patch("backend.job_fetch.socket.getaddrinfo", _resolve({"jobs.example": PUBLIC_IP})):
+        with pytest.raises(JobFetchError):
+            await fetch_job_text("https://jobs.example/1", transport=transport)
+
+
+async def test_overall_deadline(monkeypatch):
+    monkeypatch.setattr("backend.job_fetch.TIMEOUT_S", 0.05)
+
+    async def slow(request):
+        await asyncio.sleep(1)
+        return httpx.Response(200, text=LONG_HTML)
+
+    with patch("backend.job_fetch.socket.getaddrinfo", _resolve({"jobs.example": PUBLIC_IP})):
+        with pytest.raises(JobFetchError):
+            await fetch_job_text("https://jobs.example/1", transport=httpx.MockTransport(slow))
