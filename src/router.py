@@ -3,6 +3,7 @@ import logging
 from dotenv import load_dotenv
 from fastapi import APIRouter
 
+from src.routes.account import router as account_router
 from src.routes.adapt import router as adapt_router
 from src.routes.config import router as config_router
 from src.routes.cv import router as cv_router
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+router.include_router(account_router)
 router.include_router(adapt_router)
 router.include_router(config_router)
 router.include_router(credits_router)
