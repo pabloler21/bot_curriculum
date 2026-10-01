@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurea — CV Evaluator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body data-page="evaluator">
+  <main class="app-main">
+
+    <!-- Estados 1 y 2: upload / analizando -->
+    <section id="ev-intake" class="ev-intake" aria-label="Upload your CV">
+      <div>
+        <div id="ev-drop" class="drop-zone ev-drop" tabindex="0" role="button" aria-describedby="ev-drop-hint">
+          <div id="ev-drop-idle">
+            <div class="drop-icon" aria-hidden="true">⇪</div>
+            <h1 class="ev-drop-title" data-i18n="ev.drop_title">Upload or drop your CV</h1>
+            <p id="ev-drop-hint" class="ev-drop-hint" data-i18n="ev.drop_hint">PDF or DOCX · up to 5 MB</p>
+            <span class="btn-primary" data-i18n="ev.browse">Search CV</span>
+          </div>
+          <div id="ev-drop-busy" class="hidden" aria-live="polite">
+            <div class="spinner lg" aria-hidden="true"></div>
+            <h1 class="ev-drop-title" data-i18n="ev.analyzing">Analyzing your CV…</h1>
+            <p class="ev-drop-hint" data-i18n="ev.analyzing_hint">This takes about 20 seconds.</p>
+          </div>
+          <input type="file" id="ev-file" accept=".pdf,.docx" hidden aria-label="Select CV file">
+        </div>
+        <p id="ev-error" class="error-msg hidden" role="alert"></p>
+      </div>
+
+      <aside class="panel ev-benefits" aria-labelledby="ev-benefits-title">
+        <h2 id="ev-benefits-title" data-i18n="ev.get_title">You will get</h2>
+        <dl>
+          <dt data-i18n="ev.get_score">ATS compatibility score</dt>
+          <dd data-i18n="ev.get_score_body">A precise 0–100 read on how parsers see your CV.</dd>
+          <dt data-i18n="ev.get_keywords">Keyword intelligence</dt>
+          <dd data-i18n="ev.get_keywords_body">See what you have, and what the role is missing.</dd>
+          <dt data-i18n="ev.get_format">Formatting flags</dt>
+          <dd data-i18n="ev.get_format_body">Spot the layout issues that quietly hurt rankings.</dd>
+          <dt data-i18n="ev.get_recs">Actionable recommendations</dt>
+          <dd data-i18n="ev.get_recs_body">Concrete edits ranked by impact on your score.</dd>
+        </dl>
+      </aside>
+    </section>
+
+    <!-- Estado 3: resultados -->
+    <section id="ev-results" class="hidden" aria-label="Results">
+      <div class="ev-grid">
+        <div class="ev-main">
+          <div class="panel ev-profile">
+            <div id="ev-avatar" class="ev-avatar" aria-hidden="true"></div>
+            <div>
+              <h1 id="ev-name" class="ev-name"></h1>
+              <p class="ev-score"><span data-i18n="ev.score">ATS score</span> <strong id="ev-score"></strong>/100</p>
+            </div>
+            <button type="button" id="ev-new" class="btn-ghost" data-i18n="ev.new_cv">Upload a new CV</button>
+          </div>
+          <div class="panel"><h2 data-i18n="ev.summary">Summary</h2><p id="ev-summary" class="secondary-text"></p></div>
+          <div class="panel"><h2 data-i18n="ev.strengths">Strengths</h2><ul id="ev-strengths" class="ev-list ev-list--good"></ul></div>
+          <div class="panel"><h2 data-i18n="ev.weaknesses">Weaknesses</h2><ul id="ev-weaknesses" class="ev-list ev-list--bad"></ul></div>
+        </div>
+        <div class="panel">
+          <div class="ev-recs-head">
+            <h2 data-i18n="ev.recommendations">Recommendations</h2>
+            <button type="button" id="ev-apply" class="btn-primary btn-sm"><span data-i18n="ev.apply">Apply to my CV</span> · 1🪙</button>
+          </div>
+          <ol id="ev-recs" class="recommendations-list"></ol>
+        </div>
+      </div>
+
+      <div class="panel ev-adapter">
+        <h2 data-i18n="ev.adapter">Adapter</h2>
+        <label for="ev-job" class="field-label" data-i18n="job.label">Job link or description</label>
+        <textarea id="ev-job" class="jd-textarea" rows="3" placeholder="https://… or paste the job description" data-i18n-placeholder="job.placeholder"></textarea>
+        <div class="ev-adapter-actions">
+          <button type="button" id="ev-cover" class="btn-secondary"><span data-i18n="ev.cover_btn">Generate Cover Letter</span> · 1🪙</button>
+          <button type="button" id="ev-tailor" class="btn-primary"><span data-i18n="ev.tailor_btn">Tailor your CV</span> · 2🪙</button>
+        </div>
+        <p class="ev-adapter-note" data-i18n="ev.tailor_note">Tailor includes the adapted CV and a cover letter.</p>
+        <p id="ev-working" class="ev-working hidden" aria-live="polite"><span class="spinner sm" aria-hidden="true"></span> <span data-i18n="ev.working">Working on it — this can take up to a minute…</span></p>
+        <p id="ev-action-error" class="error-msg hidden" role="alert"></p>
+        <div id="ev-no-credits" class="no-credits-banner hidden" role="alert">
+          <span class="no-credits-banner-icon" aria-hidden="true">⚡</span>
+          <span><span data-i18n="credits.none">You've used all your credits.</span> <a href="settings.html#add-credits" data-i18n="credits.get_more">Get more →</a></span>
+        </div>
+      </div>
+
+      <div class="panel ev-jobs-panel">
+        <h2 data-i18n="ev.jobs">Job recommendations</h2>
+        <div id="ev-jobs" class="job-row"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="shell.js"></script>
+  <script src="render.js"></script>
+  <script src="evaluator.js"></script>
+</body>
+</html>

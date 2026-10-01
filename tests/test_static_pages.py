@@ -1,7 +1,7 @@
 """Cada página de la App se sirve y carga el shell compartido."""
 import pytest
 
-APP_PAGES: list[str] = ["index.html"]  # las tareas del frontend van agregando sus páginas
+APP_PAGES: list[str] = ["index.html", "evaluator.html"]  # las tareas del frontend van agregando sus páginas
 
 
 @pytest.mark.parametrize("page", APP_PAGES)
