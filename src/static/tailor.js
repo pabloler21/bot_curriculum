@@ -67,6 +67,7 @@ function renderResult(data) {
   $('adapt-partial-banner').classList.toggle('hidden', !(data.suspicious_bullets || []).length);
   $('adapt-cv-preview').innerHTML = aureaRender.cvPreviewHtml(data.adapted_schema, data.suspicious_bullets);
   show($('adapt-download-btn'));
+  hide($('adapt-download-error'));
 
   // Gaps: no aplican a "Apply to my CV" (no hay JD)
   $('adapt-gaps-panel').classList.toggle('hidden', isImprove);
@@ -127,7 +128,7 @@ async function prepareInterview() {
       }),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(res.status === 429 ? t('err.rate', 'Too many requests — please wait a minute before trying again.') : (data.detail || t('err.server', 'Server error')));
+    if (!res.ok) throw new Error(res.status === 429 ? t('err.rate', 'Too many requests — please wait a minute before trying again.') : aureaRender.detailText(data.detail, t('err.server', 'Server error')));
     if (!(data.questions || []).length) throw new Error(t('tailor.no_questions', 'No questions came back. Please try again.'));
     renderInterview(data.questions);
     current.interview_questions = data.questions;
@@ -142,13 +143,14 @@ async function prepareInterview() {
 
 async function downloadPdf() {
   const btn = $('adapt-download-btn');
+  hide($('adapt-download-error'));
   btn.disabled = true;
   try {
     const url = current.history_id ? `/history/${current.history_id}/pdf` : `/adapt/${current.run_id}/pdf`;
     await aureaRender.downloadPdf(url, 'aurea_cv.pdf');
   } catch (e) {
-    $('adapt-interview-error').textContent = e.message;
-    show($('adapt-interview-error'));
+    $('adapt-download-error').textContent = e.message;
+    show($('adapt-download-error'));
   } finally {
     btn.disabled = false;
   }

@@ -16,12 +16,6 @@ window.initJobForm = function ({ mode, onStart, onResult, onFail }) {
   function showError(msg) { $('job-error').textContent = msg; $('job-error').classList.remove('hidden'); }
   function clearMessages() { $('job-error').classList.add('hidden'); $('job-no-credits').classList.add('hidden'); }
 
-  // FastAPI 422 puede devolver detail como array de {msg,...}
-  function detailText(detail) {
-    if (Array.isArray(detail)) return detail.map((d) => (d && d.msg) || String(d)).join('; ');
-    return typeof detail === 'string' ? detail : '';
-  }
-
   function setOutLang(lang) {
     outputLang = lang;
     [['job-out-en', 'en'], ['job-out-es', 'es']].forEach(([id, l]) => {
@@ -68,7 +62,7 @@ window.initJobForm = function ({ mode, onStart, onResult, onFail }) {
       if (res.status === 401) { aurea.openAuthModal('login'); onFail(); return; }
       if (res.status === 429) { showError(t('err.rate', 'Too many requests — please wait a minute before trying again.')); onFail(); return; }
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { showError(detailText(data.detail) || `${t('err.server', 'Server error')} (${res.status})`); onFail(); return; }
+      if (!res.ok) { showError(aureaRender.detailText(data.detail, `${t('err.server', 'Server error')} (${res.status})`)); onFail(); return; }
       data.kind = mode;
       data.job_input = jobInput;
       try { localStorage.setItem(RESULT_KEY, JSON.stringify(data)); } catch (_) {}

@@ -135,5 +135,11 @@
     saveBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), filename);
   }
 
-  window.aureaRender = { statusBadge, cvPreviewHtml, gapsHtml, interviewHtml, jobCardHtml, downloadPdf, downloadText };
+  // detail de FastAPI: string, o array de {msg,...} en un 422
+  function detailText(detail, fallback) {
+    if (Array.isArray(detail)) return detail.map((d) => (d && d.msg) || String(d)).join('; ') || fallback;
+    return typeof detail === 'string' && detail ? detail : fallback;
+  }
+
+  window.aureaRender = { detailText, statusBadge, cvPreviewHtml, gapsHtml, interviewHtml, jobCardHtml, downloadPdf, downloadText };
 })();

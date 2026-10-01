@@ -25,8 +25,7 @@ function networkError() { return t('err.network', 'Network error. Check your con
 async function errorDetail(res) {
   if (res.status === 429) return t('err.rate', 'Too many requests — please wait a minute before trying again.');
   const data = await res.json().catch(() => ({}));
-  if (Array.isArray(data.detail)) return data.detail.map((d) => d.msg || String(d)).join('; ');
-  return data.detail || `${t('err.server', 'Server error')} (${res.status})`;
+  return aureaRender.detailText(data.detail, `${t('err.server', 'Server error')} (${res.status})`);
 }
 
 // ── Estados 1 y 2 ─────────────────────────────────────────────────────────
