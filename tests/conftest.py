@@ -56,9 +56,10 @@ def as_user():
 @pytest.fixture(autouse=True)
 def _reset_rate_limits():
     """Cada módulo de rutas tiene su propio Limiter: resetear todos entre tests."""
-    from src.routes import adapt, evaluate
+    from src.routes import adapt, evaluate, improve
 
     app.state.limiter.reset()
     adapt.limiter.reset()
     evaluate.limiter.reset()
+    improve.limiter.reset()
     yield
