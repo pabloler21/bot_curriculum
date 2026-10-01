@@ -44,6 +44,7 @@ async def run_pipeline(
     output_language: Literal["es", "en"] = "en",
     user_id: str | None = None,
     similarity_threshold: float = SIMILARITY_THRESHOLD,
+    mode: Literal["cv", "cover", "both"] = "both",
 ) -> tuple[AdaptationResult, bytes | None]:
     """
     Execute the full adaptation pipeline.
@@ -54,6 +55,8 @@ async def run_pipeline(
         output_language: "es" or "en"
         user_id: placeholder for Phase 1b credit system
         similarity_threshold: cosine similarity floor for validation
+        mode: "cv" = CV adaptado sin carta · "cover" = solo carta (desde el CV original,
+              sin adapt/validate/PDF) · "both" = CV adaptado + carta
 
     Returns:
         (AdaptationResult, pdf_bytes | None)
@@ -86,6 +89,25 @@ async def run_pipeline(
                 status=PipelineStatus.FAILED_EXTRACT,
                 error_message=str(exc),
             ),
+            None,
+        )
+
+    # ── Modo cover: solo carta, escrita desde el CV original ─────────────────
+    if mode == "cover":
+        pl.stage("cover_letter")
+        try:
+            cover_letter = await generate_cover_letter(original_schema, job_description, output_language)
+        except Exception as exc:
+            duration_ms = int((time.monotonic() - wall_start) * 1000)
+            pl.end(status=PipelineStatus.FAILED_ADAPT, error=str(exc), duration_ms=duration_ms)
+            return (
+                AdaptationResult(run_id=run_id, status=PipelineStatus.FAILED_ADAPT, error_message=str(exc)),
+                None,
+            )
+        duration_ms = int((time.monotonic() - wall_start) * 1000)
+        pl.end(status=PipelineStatus.COMPLETED, retries=0, duration_ms=duration_ms, suspicious_count=0)
+        return (
+            AdaptationResult(run_id=run_id, status=PipelineStatus.COMPLETED, cover_letter=cover_letter),
             None,
         )
 
@@ -157,7 +179,7 @@ async def run_pipeline(
 
     # ── Stage 4: Cover letter (non-fatal) ────────────────────────────────────
     cover_letter: str | None = None
-    if adapted_schema is not None:
+    if adapted_schema is not None and mode == "both":
         try:
             cover_letter = await generate_cover_letter(
                 adapted_schema, job_description, output_language
