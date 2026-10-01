@@ -2,7 +2,7 @@
 
 ## Proyecto
 
-**Aurea** — SaaS de adaptación de CVs con IA. El usuario sube su CV + pega una descripción de trabajo → la app adapta el CV al rol, detecta skill gaps y genera una cover letter personalizada. Modelo freemium: 2 adaptaciones gratis, luego Pro (coming soon).
+**Aurea** — SaaS de adaptación de CVs con IA. El usuario sube su CV + pega una descripción de trabajo → la app adapta el CV al rol, detecta skill gaps y genera una cover letter personalizada. Modelo de créditos: 5 de bono al registrarse; costos por acción: cv 1, cover 1, both 2, improve 1.
 
 El proyecto también incluye un **job board** (herramienta secundaria, pre-existente) con scoring de CV contra ofertas de Remotive, búsqueda client-side e integración directa con el adapter.
 
@@ -10,10 +10,10 @@ El proyecto también incluye un **job board** (herramienta secundaria, pre-exist
 
 ### Backend
 - **Python 3.13**, `uv` como package manager
-- **FastAPI** + uvicorn, rate limiting con slowapi (3/min por IP en `/adapt`)
+- **FastAPI** + uvicorn, rate limiting con slowapi (3/min por IP en `/adapt`, `/evaluate`, `/improve` e `/interview`)
 - **AI**: `claude-haiku-4-5` vía LangChain con structured output (Pydantic)
-- **Auth**: Supabase magic link → JWT validado en cada request con `supabase.auth.get_user(token)`
-- **DB**: Supabase (PostgreSQL) — tablas `credits` y `waitlist`
+- **Auth**: Supabase magic link + Google OAuth (`shell.js`) → JWT validado en cada request con `supabase.auth.get_user(token)`
+- **DB**: Supabase (PostgreSQL) — tablas `credits`, `waitlist`, `user_cvs` y `generations` (más `cv_sessions`/`pipeline_runs`, legacy; ver abajo)
 - **Extracción de texto**: pdfplumber (PDFs, filtra texto oculto) + liteparse (DOCX y OCR de escaneos)
 - **HTTP async**: httpx
 
@@ -70,7 +70,8 @@ ANTHROPIC_API_KEY          # requerida — Claude AI
 SUPABASE_URL               # requerida — URL del proyecto Supabase
 SUPABASE_ANON_KEY          # requerida — clave pública de Supabase
 SUPABASE_SERVICE_ROLE_KEY  # REQUERIDA — créditos, CV base (user_cvs), historial (generations)
-                           #   y borrado de cuenta. Sin ella esas funciones son no-op / fallan.
+                           #   y borrado de cuenta. Sin ella db.client es None: créditos, CV base e
+                           #   historial son no-op y DELETE /account devuelve 503.
                            #   Debe estar seteada en el .env del VPS.
 SUPABASE_KEY               # opcional — SI se setea, sessions.py persiste los CVs en la tabla
                            #   cv_sessions en vez de usar memoria. Hoy NO se setea en prod
@@ -91,7 +92,7 @@ El mapeo stage → modelo vive en `backend/models.py` (`model_for(stage)`).
 ```
 backend/
   db.py             # cliente Supabase service-role compartido (db.client)
-  user_cv.py        # CV base del usuario (tabla user_cvs): get/put
+  user_cv.py        # CV base (tabla user_cvs): get_cv/save_cv/save_evaluation/delete_cv/schema_to_text
   history.py        # historial de generaciones (tabla generations)
   job_fetch.py      # trae el JD desde una URL: anti-SSRF, deadline total 10 s,
                     # tope 2 MB, solo encoding identity
@@ -154,7 +155,7 @@ src/
     cover.html      # Cover letter + cover.js
     jobs.html       # Job board: My Jobs + Recommended + jobs.js
     job-detail.html # Detalle de oferta (dentro del shell) + job-detail.js
-    cv.html         # CV base: ver/editar/mejorar + cv.js
+    cv.html         # CV base: ver y reemplazar (upload) + cv.js
     settings.html   # Cuenta, idioma, historial, paquetes, borrar cuenta + settings.js
     shell.js        # window.aurea: header, auth, créditos, escHtml, helpers de fetch
     i18n.js         # I18N_ES — traducciones (UI en inglés por default, data-i18n)
@@ -198,6 +199,17 @@ tests/
   test_scorer.py
   test_sessions.py
   test_waitlist.py         # POST /waitlist
+  test_account_route.py    # DELETE /account
+  test_cv_route.py         # GET/PUT /cv
+  test_db.py               # backend/db.py — cliente service-role
+  test_history.py          # backend/history.py
+  test_history_route.py    # GET /history, /history/{id}, /history/{id}/pdf
+  test_i18n.py             # toda key data-i18n tiene traducción en I18N_ES
+  test_improve.py          # backend/adapter/improver.py + POST /improve
+  test_job_fetch.py        # backend/job_fetch.py — anti-SSRF, deadline, tope de tamaño
+  test_static_backend_url.py # el frontend no hardcodea la URL del backend
+  test_static_pages.py     # páginas cargan el shell; redirects; JS viejo borrado
+  test_user_cv.py          # backend/user_cv.py
 ```
 
 ## Supabase — tablas y patrones
@@ -251,7 +263,9 @@ index.html (landing) → CTA → evaluator.html (anónimo: sube CV, ve score/str
 → la acción pendiente se guarda (aurea_pending_action) y se ejecuta al volver logueado
 → bono de 5 créditos → resultado (CV adaptado + gaps + cover + PDF) → queda en /history
 → (opcional) "Prepare for the interview" → POST /interview
-→ cv.html: CV base editable; "Improve" (POST /improve) lo reemplaza solo si no quedaron bullets marcados
+→ en los resultados del evaluator: "Apply to my CV" → POST /improve (1 crédito); el CV mejorado
+  reemplaza al CV base solo si no quedaron bullets marcados (src/routes/improve.py)
+→ cv.html: ver el CV base y reemplazarlo subiendo otro
 → settings.html: historial, idioma, paquetes de créditos, borrar cuenta (DELETE /account)
 
 Desde el job board:

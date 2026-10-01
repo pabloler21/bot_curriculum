@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- adapt.html pasó a tailor.html: se mantiene para magic links ya enviados y bookmarks.
-       Preserva el fragmento (#access_token / #error del magic link) vía el refresh relativo. -->
+  <!-- adapt.html pasó a tailor.html: se mantiene para bookmarks y magic links ya enviados.
+       El meta refresh NO preserva el fragmento de la URL (#access_token / #error): un magic
+       link viejo llega sin sesión y hay que pedir uno nuevo. -->
   <meta http-equiv="refresh" content="0; url=tailor.html">
   <title>Aurea</title>
 </head>
