@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurea — Tailor your CV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body data-page="tailor" data-requires-auth="true">
+  <main class="app-main">
+    <section id="tl-input-section">
+      <h1 class="page-title" data-i18n="tailor.title">Tailor your CV</h1>
+      <p class="page-sub" data-i18n="tailor.sub">Adapt your CV to a specific role. Every line stays true to your real experience.</p>
+      <div class="panel job-form">
+        <p id="job-cv-chip" class="cv-chip hidden"><span data-i18n="form.using">Using:</span> <strong id="job-cv-name"></strong> · <a href="cv.html" data-i18n="form.change">Change</a></p>
+        <p id="job-no-cv" class="no-credits-banner hidden"><span data-i18n="form.no_cv">Upload your CV first.</span> <a href="cv.html" data-i18n="form.upload_cv">Upload CV →</a></p>
+        <label for="job-input" class="field-label" data-i18n="job.label">Job link or description</label>
+        <textarea id="job-input" class="jd-textarea" rows="8" placeholder="https://… or paste the job description" data-i18n-placeholder="job.placeholder"></textarea>
+        <div class="job-form-actions">
+          <div class="lang-toggle" role="group" aria-label="Output language">
+            <span class="field-label" data-i18n="form.output_lang">Output language</span>
+            <button type="button" id="job-out-en" class="lang-btn" aria-pressed="true">English</button>
+            <button type="button" id="job-out-es" class="lang-btn" aria-pressed="false">Español</button>
+          </div>
+          <button type="button" id="job-submit" class="btn-primary"><span data-i18n="tailor.submit">Tailor your CV</span> · 1🪙</button>
+        </div>
+        <p id="job-error" class="error-msg hidden" role="alert"></p>
+        <div id="job-no-credits" class="no-credits-banner hidden" role="alert">
+          <span class="no-credits-banner-icon" aria-hidden="true">⚡</span>
+          <span><span data-i18n="credits.none">You've used all your credits.</span> <a href="settings.html#add-credits" data-i18n="credits.get_more">Get more →</a></span>
+        </div>
+      </div>
+    </section>
+
+    <div id="adapt-loading-section" class="hidden" aria-live="polite">
+      <div class="adapt-loading-card">
+        <div class="loading-spinner-wrap"><div class="loading-spinner-glow"></div><div class="spinner lg"></div></div>
+        <p class="loading-title" id="adapt-loading-title">Extracting structure</p>
+        <p class="loading-text" data-i18n="tailor.loading_text">Aurea's pipeline is running — this takes 10–30 seconds.</p>
+        <div class="pipeline-steps">
+          <div class="pipeline-step active" id="pstep-extract"><div class="pipeline-step-dot"></div><span data-i18n="tailor.step_extract">Extracting structure</span></div>
+          <div class="pipeline-step-connector"></div>
+          <div class="pipeline-step" id="pstep-adapt"><div class="pipeline-step-dot"></div><span data-i18n="tailor.step_adapt">Adapting to role</span></div>
+          <div class="pipeline-step-connector"></div>
+          <div class="pipeline-step" id="pstep-validate"><div class="pipeline-step-dot"></div><span data-i18n="tailor.step_validate">Validating output</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="adapt-results-section" class="hidden">
+      <div class="results-header">
+        <button type="button" id="adapt-reset-btn" class="btn-reset" data-i18n="tailor.reset">← Tailor for another role</button>
+        <button type="button" id="adapt-download-btn" class="btn-download hidden" data-i18n="tailor.download">Download PDF</button>
+      </div>
+      <div id="adapt-partial-banner" class="partial-banner hidden" role="alert">
+        <span class="partial-banner-icon" aria-hidden="true">⚠️</span>
+        <div data-i18n="tailor.partial">Some bullets were flagged — they might not closely match your original CV. Review the highlighted items before using this CV.</div>
+      </div>
+      <div class="adapt-results-grid">
+        <div class="panel adapt-cv-preview-panel">
+          <div class="panel-header"><h2 id="tl-cv-title" data-i18n="tailor.cv_title">Adapted CV</h2><span id="adapt-status-badge" class="badge"></span></div>
+          <div id="adapt-cv-preview" class="adapt-cv-preview"></div>
+        </div>
+        <div class="adapt-results-right">
+          <div class="panel" id="adapt-gaps-panel">
+            <div class="panel-header"><h3 data-i18n="tailor.gaps">Skill Gaps</h3><span class="gaps-count" id="adapt-gaps-count"></span></div>
+            <div id="adapt-gaps-list" class="adapt-gaps-list"></div>
+            <p id="adapt-no-gaps" class="adapt-no-gaps hidden" data-i18n="tailor.no_gaps">✅ Your CV covers all requirements in the JD.</p>
+          </div>
+          <div class="panel hidden" id="adapt-cover-letter-panel">
+            <div class="panel-header"><h3 data-i18n="tailor.cover">Cover Letter</h3><button type="button" id="adapt-copy-cover-btn" class="btn-copy" data-i18n="tailor.copy">Copy</button></div>
+            <p id="adapt-cover-letter-text" class="adapt-cover-letter-text"></p>
+            <p id="adapt-no-cover" class="hidden secondary-text" data-i18n="tailor.no_cover">Cover letter generation failed — generate it again from the Cover section.</p>
+          </div>
+          <div class="panel" id="adapt-interview-panel">
+            <div class="panel-header"><h3 data-i18n="tailor.interview">Interview Prep</h3><span class="interview-count hidden" id="adapt-interview-count"></span></div>
+            <div id="adapt-interview-intro" class="adapt-interview-intro">
+              <p class="secondary-text" data-i18n="tailor.interview_intro">The questions this role is likely to ask — including the ones aimed at your gaps — each with a draft answer built from your real experience.</p>
+              <button type="button" id="adapt-interview-btn" class="btn-interview" data-i18n="tailor.interview_btn">Prepare for the interview</button>
+            </div>
+            <div id="adapt-interview-list" class="adapt-interview-list hidden"></div>
+            <p id="adapt-interview-error" class="error-msg hidden" role="alert"></p>
+          </div>
+          <p id="tl-next" class="next-step hidden"><a href="cover.html" id="tl-cover-link"><span data-i18n="tailor.next_cover">Generate a cover letter for this job</span> · 1🪙 →</a></p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="shell.js"></script>
+  <script src="render.js"></script>
+  <script src="job-form.js"></script>
+  <script src="tailor.js"></script>
+</body>
+</html>
