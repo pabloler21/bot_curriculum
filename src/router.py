@@ -5,6 +5,7 @@ from fastapi import APIRouter
 
 from src.routes.adapt import router as adapt_router
 from src.routes.config import router as config_router
+from src.routes.cv import router as cv_router
 from src.routes.credits import router as credits_router
 from src.routes.evaluate import router as evaluate_router
 from src.routes.health import router as health_router
@@ -21,6 +22,7 @@ router = APIRouter()
 router.include_router(adapt_router)
 router.include_router(config_router)
 router.include_router(credits_router)
+router.include_router(cv_router)
 router.include_router(evaluate_router)
 router.include_router(health_router)
 router.include_router(interview_router)
