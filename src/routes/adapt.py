@@ -38,6 +38,7 @@ _pdf_store: OrderedDict[str, bytes] = OrderedDict()
 
 COSTS = {"cv": 1, "cover": 1, "both": 2}
 MIN_JD_CHARS = 50
+MAX_JD_CHARS = 20000
 MIN_CV_CHARS = 100
 _FAILED = (PipelineStatus.FAILED_EXTRACT, PipelineStatus.FAILED_ADAPT)
 
@@ -55,7 +56,7 @@ def _store_pdf(run_id: str, pdf_bytes: bytes) -> None:
 async def adapt_resume(
     request: Request,
     user_id: RequiredUser,
-    job_input: str = Form(..., max_length=20000, description="Job description text or a job posting URL"),
+    job_input: str = Form(..., max_length=MAX_JD_CHARS, description="Job description text or a job posting URL"),
     mode: Literal["cv", "cover", "both"] = Form("both"),
     output_language: str = Form("en", pattern="^(es|en)$", description="Output language: 'es' or 'en'"),
     file: Optional[UploadFile] = File(None),
@@ -72,6 +73,7 @@ async def adapt_resume(
                 status_code=422,
                 detail="We couldn't read that link — paste the job description instead.",
             ) from exc
+        job_description = job_description[:MAX_JD_CHARS]  # la URL no esquiva el límite del texto pegado
     else:
         job_description = job_input.strip()
     if len(job_description) < MIN_JD_CHARS:
@@ -123,6 +125,8 @@ async def adapt_resume(
     if result.status in _FAILED:
         restore(user_id, cost)
     else:
+        if mode == "both" and result.cover_letter is None:
+            restore(user_id, COSTS["cover"])  # la carta falló (no fatal): se reembolsa su parte
         try:
             history_id = history.add(user_id, mode, job_description, job_url, content)
         except Exception as exc:  # el usuario ya tiene su resultado: no romper por el historial

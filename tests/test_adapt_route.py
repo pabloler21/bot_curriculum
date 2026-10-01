@@ -349,12 +349,15 @@ def test_url_fetch_failure_is_422_and_not_charged():
         res = client.post("/adapt", data={"job_input": "https://www.linkedin.com/jobs/1", "mode": "cv"})
     assert res.status_code == 422
     assert "paste the job description" in res.json()["detail"]
+    assert "blocked" not in res.json()["detail"]
     dec.assert_not_called()
 
 
 def test_short_text_input_is_422():
-    with patch("src.routes.adapt.get_cv", return_value=_BASE):
+    with patch("src.routes.adapt.get_cv", return_value=_BASE), \
+         patch("src.routes.adapt.decrement") as dec:
         assert client.post("/adapt", data={"job_input": "Too short", "mode": "cv"}).status_code == 422
+    dec.assert_not_called()
 
 
 def test_failed_status_restores_cost_and_skips_history():
@@ -386,3 +389,23 @@ def test_history_failure_does_not_break_response():
         res = client.post("/adapt", data={"job_input": _JD, "mode": "cv"})
     assert res.status_code == 200
     assert res.json()["history_id"] is None
+
+
+def test_both_mode_refunds_cover_share_when_cover_missing():
+    with patch("src.routes.adapt.get_cv", return_value=_BASE), \
+         patch("src.routes.adapt.run_pipeline", AsyncMock(return_value=(_ok_result(), None))), \
+         patch("src.routes.adapt.restore") as rest, \
+         patch("src.routes.adapt.history", **_HIST) as hist:
+        res = client.post("/adapt", data={"job_input": _JD, "mode": "both"})
+    assert res.status_code == 200
+    rest.assert_called_once_with("test-user-id", 1)
+    hist.add.assert_called_once()
+
+
+def test_fetched_job_text_is_truncated_to_limit():
+    with patch("src.routes.adapt.get_cv", return_value=_BASE), \
+         patch("src.routes.adapt.fetch_job_text", AsyncMock(return_value="x" * 30000)), \
+         patch("src.routes.adapt.run_pipeline", AsyncMock(return_value=(_ok_result(), None))) as rp, \
+         patch("src.routes.adapt.history", **_HIST):
+        client.post("/adapt", data={"job_input": "https://jobs.example/1", "mode": "cv"})
+    assert len(rp.call_args.kwargs["job_description"]) == 20000
