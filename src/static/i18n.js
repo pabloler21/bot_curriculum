@@ -178,6 +178,19 @@ window.I18N_ES = {
   'cover.download': 'Descargar .txt',
   'cover.next_tailor': 'Adaptar mi CV a este puesto',
   'cover.err': 'No pudimos escribir la carta. Te devolvimos el crédito: probá de nuevo.',
+  // ── Jobs ──
+  'jobs.title': 'Empleos',
+  'jobs.mine': 'Mis empleos',
+  'jobs.mine_sub': 'Las descripciones de puesto que usaste, con los CVs y cartas que generó Aurea.',
+  'jobs.recommended': 'Empleos recomendados',
+  'jobs.recommended_sub': 'Ordenados según cuánto coinciden con tu CV.',
+  'jobs.kind_improve': 'Mejora de CV',
+  'jobs.kind_untitled': 'Puesto sin título',
+  'jobs.empty': 'Todavía no hay nada: adaptá tu CV a un puesto y va a aparecer acá.',
+  'jobs.history_error': 'No pudimos cargar tu historial.',
+  'jobs.open_posting': 'Abrir la oferta',
+  'jobs.jd': 'Descripción del puesto',
+  'jobs.detail_error': 'No pudimos abrir este elemento.',
 };
 
 window.applyI18n = function (root, lang) {

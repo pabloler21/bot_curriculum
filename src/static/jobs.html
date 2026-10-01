@@ -3,119 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aurea — Job Board</title>
+  <title>Aurea — Jobs</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="jobs.css">
+  <link rel="stylesheet" href="app.css">
 </head>
-<body>
-
-  <!-- Ambient background -->
-  <div class="ambient-bg" aria-hidden="true">
-    <div class="ambient-orb ambient-orb-coral"></div>
-    <div class="ambient-orb ambient-orb-aqua"></div>
-    <div class="ambient-orb ambient-orb-amber"></div>
-    <div class="ambient-orb ambient-orb-magenta"></div>
-    <div class="ambient-grid"></div>
-  </div>
-
-  <!-- Header -->
-  <header class="header">
-    <div class="header-inner">
-      <div class="header-pill">
-        <a href="index.html" class="brand">
-          <div class="brand-mark">✦</div>
-          <span class="brand-name">Aurea</span>
-          <span class="beta-badge">Beta</span>
-        </a>
-        <nav class="tab-nav" role="tablist" aria-label="App sections">
-          <a href="index.html" class="tab-nav-item" role="tab" aria-selected="false">Evaluator</a>
-          <a href="adapt.html" class="tab-nav-item" role="tab" aria-selected="false">✦ Adapter</a>
-          <a href="jobs.html" class="tab-nav-item active" role="tab" aria-selected="true">Job Board</a>
-          <a href="pricing.html" class="tab-nav-item" role="tab" aria-selected="false">Pricing</a>
-        </nav>
-      </div>
+<body data-page="jobs" data-requires-auth="true">
+  <main class="app-main">
+    <h1 class="page-title" data-i18n="jobs.title">Jobs</h1>
+    <div class="jobs-layout">
+      <section class="panel" aria-labelledby="jobs-mine-title">
+        <h2 id="jobs-mine-title" data-i18n="jobs.mine">My Jobs</h2>
+        <p class="secondary-text" data-i18n="jobs.mine_sub">The job descriptions you used, with the CVs and letters Aurea generated.</p>
+        <ul id="jobs-history" class="history-list"></ul>
+        <div id="jobs-detail" class="history-detail hidden"></div>
+      </section>
+      <section class="panel" aria-labelledby="jobs-rec-title">
+        <h2 id="jobs-rec-title" data-i18n="jobs.recommended">Recommended jobs</h2>
+        <p class="secondary-text" data-i18n="jobs.recommended_sub">Ranked by how well they match your CV.</p>
+        <div id="jobs-recommended" class="job-row"></div>
+      </section>
     </div>
-  </header>
-
-  <!-- CV Banner (pill) -->
-  <div class="cv-banner-container">
-    <div id="cv-banner" class="cv-banner" role="complementary" aria-label="CV upload status">
-
-      <!-- No-CV state -->
-      <div id="cv-upload-area">
-        <span class="cv-banner-sparkle">✦</span>
-        <p id="cv-banner-copy" class="cv-banner-copy">
-          <strong>Upload your CV</strong> to score every role and re-rank by match.
-        </p>
-      </div>
-
-      <!-- CV active state -->
-      <div id="cv-active-area" class="hidden">
-        <div class="cv-chip" role="status" aria-live="polite">
-          <div class="cv-chip-icon" aria-hidden="true">📄</div>
-          <span id="cv-chip-name" class="cv-chip-name"></span>
-          <span id="cv-scoring-status" class="cv-scoring-status hidden" aria-live="polite">
-            <span class="spinner-small" aria-hidden="true"></span>
-            Scoring jobs against your CV…
-          </span>
-        </div>
-        <button id="cv-remove-btn" class="cv-chip-remove" aria-label="Remove uploaded CV">×</button>
-      </div>
-
-      <p id="cv-error" class="cv-error hidden" role="alert"></p>
-
-      <!-- Upload button (always in banner, hidden when active) -->
-      <button id="cv-upload-btn" class="cv-banner-btn" aria-label="Upload your CV to see match scores">
-        ↑ Upload CV
-      </button>
-      <input type="file" id="cv-file-input" accept=".pdf,.docx" hidden aria-label="Select CV file">
-
-    </div>
-  </div>
-
-  <main class="container">
-
-    <!-- Sort toolbar -->
-    <div class="toolbar" role="toolbar" aria-label="Sort options">
-      <div class="toolbar-heading">
-        <span class="toolbar-title" id="jobs-count-label">Open roles</span>
-        <span class="toolbar-subtitle" id="jobs-subtitle">Curated remote tech opportunities</span>
-      </div>
-      <div class="sort-group">
-        <button id="sort-date" class="sort-btn active" aria-pressed="true">📅 Newest</button>
-        <button id="sort-score" class="sort-btn" aria-pressed="false" disabled title="Upload your CV to sort by match score">✦ Match</button>
-      </div>
-    </div>
-
-    <!-- Search bar -->
-    <div class="search-bar">
-      <span class="search-icon" aria-hidden="true">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      </span>
-      <input type="search" id="jobs-search" class="search-input"
-             placeholder="Search by title, company, or skill…"
-             aria-label="Search jobs" autocomplete="off">
-      <button id="jobs-search-clear" class="search-clear hidden" aria-label="Clear search">×</button>
-    </div>
-
-    <!-- Loading -->
-    <div id="loading-jobs" class="loading-state hidden" aria-live="polite">
-      <div class="spinner lg"></div>
-      <p class="loading-text">Loading job listings...</p>
-    </div>
-
-    <!-- Error -->
-    <p id="error-jobs" class="error-msg hidden" role="alert"></p>
-
-    <!-- Job grid -->
-    <div id="jobs-grid" class="jobs-grid" aria-label="Job listings"></div>
-
   </main>
 
+  <script src="i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="shell.js"></script>
+  <script src="render.js"></script>
   <script src="jobs.js"></script>
 </body>
 </html>
