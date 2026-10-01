@@ -20,7 +20,7 @@ El proyecto también incluye un **job board** (herramienta secundaria, pre-exist
 ### Frontend
 - HTML/JS/CSS vanilla, sin frameworks, sin build steps
 - Fuente Inter (Google Fonts)
-- Supabase JS CDN en `adapt.html` y `pricing.html` para auth client-side
+- Supabase JS CDN en todas las páginas de la app (vía `shell.js`) para auth client-side
 
 ### Testing y calidad
 - pytest + pytest-asyncio, mocks con `unittest.mock`
@@ -69,7 +69,9 @@ Render.com (`render.yaml`) quedó sin usar.
 ANTHROPIC_API_KEY          # requerida — Claude AI
 SUPABASE_URL               # requerida — URL del proyecto Supabase
 SUPABASE_ANON_KEY          # requerida — clave pública de Supabase
-SUPABASE_SERVICE_ROLE_KEY  # opcional — usada en waitlist si está disponible
+SUPABASE_SERVICE_ROLE_KEY  # REQUERIDA — créditos, CV base (user_cvs), historial (generations)
+                           #   y borrado de cuenta. Sin ella esas funciones son no-op / fallan.
+                           #   Debe estar seteada en el .env del VPS.
 SUPABASE_KEY               # opcional — SI se setea, sessions.py persiste los CVs en la tabla
                            #   cv_sessions en vez de usar memoria. Hoy NO se setea en prod
                            #   a propósito: esa tabla tiene RLS deshabilitada.
@@ -79,6 +81,7 @@ AUREA_EXTRACT_MODEL        # opcional — modelo etapa 1 (default: claude-haiku-
 AUREA_ADAPT_MODEL          # opcional — modelo etapa 2 (default: claude-haiku-4-5)
 AUREA_COVER_MODEL          # opcional — modelo cover letter (default: claude-haiku-4-5)
 AUREA_INTERVIEW_MODEL      # opcional — modelo interview prep (default: claude-haiku-4-5)
+AUREA_IMPROVE_MODEL        # opcional — modelo de /improve (default: claude-haiku-4-5)
 ```
 
 El mapeo stage → modelo vive en `backend/models.py` (`model_for(stage)`).
@@ -87,6 +90,11 @@ El mapeo stage → modelo vive en `backend/models.py` (`model_for(stage)`).
 
 ```
 backend/
+  db.py             # cliente Supabase service-role compartido (db.client)
+  user_cv.py        # CV base del usuario (tabla user_cvs): get/put
+  history.py        # historial de generaciones (tabla generations)
+  job_fetch.py      # trae el JD desde una URL: anti-SSRF, deadline total 10 s,
+                    # tope 2 MB, solo encoding identity
   models.py         # model_for(stage) — modelo por etapa, configurable por env var
   auth.py           # get_current_user(), get_required_user(), OptionalUser, RequiredUser
   credits.py        # get_balance(), ensure_user(), decrement(), restore(), add_credits()
@@ -98,6 +106,7 @@ backend/
     adapter.py      # Etapa 2: adapta el CVSchema al job description
     validator.py    # Etapa 3: valida que no haya alucinaciones (anti-hallucination)
     cover_letter.py # Etapa 4: genera la cover letter
+    improver.py     # /improve: reescribe el CV base (prompt improve_cv.md)
     interview.py    # Interview prep: preguntas + respuestas borrador
                     # (on-demand desde POST /interview, fuera de run_pipeline)
     renderer.py     # Genera PDF del CV adaptado
@@ -115,13 +124,20 @@ backend/
     extract_schema.md   # Prompt etapa 1 (extractor)
     cover_letter.md     # Prompt cover letter
     interview_prep.md   # Prompt interview prep
+    improve_cv.md       # Prompt improve CV
     ats_skill.md        # Prompt ATS evaluator
 
 src/
   main.py           # FastAPI app: CORS, static files, rate limiter global
   router.py         # Registra todos los routers
   routes/
-    adapt.py        # POST /adapt — pipeline principal; GET /adapt/{run_id}/pdf
+    adapt.py        # POST /adapt — campo job_input (texto o URL), mode cv|cover|both;
+                    # GET /adapt/{run_id}/pdf
+    cv_input.py     # helper compartido: CV desde upload, session token o CV base
+    cv.py           # GET/PUT /cv — CV base del usuario
+    improve.py      # POST /improve — mejora el CV base (1 crédito)
+    history.py      # GET /history, /history/{id}, /history/{id}/pdf
+    account.py      # DELETE /account — borra datos y usuario
     auth.py         # (no existe como ruta — auth es dependency injection)
     config.py       # GET /config — devuelve SUPABASE_URL y SUPABASE_ANON_KEY al frontend
     credits.py      # GET /credits — devuelve balance del usuario autenticado
@@ -132,29 +148,32 @@ src/
     session.py      # POST/GET/DELETE /session — CV sessions del job board
     waitlist.py     # POST /waitlist — registra interés en plan Pro
   static/
-    adapt.html      # ★ PRINCIPAL — CV Adapter UI con auth modal + credit chip
-    adapt.js        # Lógica: auth Supabase, upload CV, pipeline, results rendering,
-                    # localStorage: SESSION_KEY (cv session), RESULT_KEY (último resultado),
-                    # PENDING_JD_KEY (JD pre-cargado desde job board)
-    pricing.html    # Pricing page: Free ($0) y Pro (coming soon)
-    pricing.js      # Waitlist logic: detecta auth, botón "Notify me"
-    index.html      # ATS Evaluator (producto secundario)
-    app.js          # Lógica del ATS evaluator
-    style.css       # Estilos globales: design system, componentes compartidos,
-                    # pricing cards, auth modal, credit chip, waitlist confirm
-    jobs.html       # Job Board (producto secundario)
-    jobs.css        # Estilos del job board
-    jobs.js         # Lógica del job board: búsqueda client-side (filteredJobs, filterByTag),
-                    # CV upload, ranking, scoring background
-    job-detail.html # Detalle de oferta laboral
-    job-detail.js   # Lógica del detalle: carga job, CTA "Adapt my CV to this role"
-                    # guarda JD en localStorage (aurea_pending_jd) y redirige a adapt.html
+    index.html      # Landing pública (nav por anchors, funnel) + landing.js
+    evaluator.html  # ATS evaluator (anónimo) + evaluator.js
+    tailor.html     # Adaptar CV a un JD (texto o URL) + tailor.js
+    cover.html      # Cover letter + cover.js
+    jobs.html       # Job board: My Jobs + Recommended + jobs.js
+    job-detail.html # Detalle de oferta (dentro del shell) + job-detail.js
+    cv.html         # CV base: ver/editar/mejorar + cv.js
+    settings.html   # Cuenta, idioma, historial, paquetes, borrar cuenta + settings.js
+    shell.js        # window.aurea: header, auth, créditos, escHtml, helpers de fetch
+    i18n.js         # I18N_ES — traducciones (UI en inglés por default, data-i18n)
+    render.js       # window.aureaRender — render de CV/resultados
+    job-form.js     # input de JD compartido (texto o URL)
+    app.css         # Estilos del shell y las páginas nuevas
+    style.css       # Design system base (lo cargan todas las páginas)
+    jobs.css        # Estilos de job-detail.html (no borrar)
+    adapt.html      # Redirect (meta refresh) → tailor.html
+    pricing.html    # Redirect (meta refresh) → /#pricing
 
 supabase/
   migrations/
     20260502000000_credits.sql          # Tabla credits + RLS + funciones SQL atómicas
     20260502000001_credits_default_2.sql # DEFAULT balance = 2
     20260502000002_waitlist.sql         # Tabla waitlist + RLS
+    20260930000000_credits_default_5.sql # DEFAULT balance = 5
+    20260930000001_user_cvs.sql         # Tabla user_cvs (RLS sin políticas)
+    20260930000002_generations.sql      # Tabla generations (RLS sin políticas)
 
 tests/
   conftest.py              # fixture client (TestClient de FastAPI) + fixture autouse que
@@ -186,7 +205,9 @@ tests/
 ### Tablas
 | Tabla | PK | Campos clave | RLS |
 |---|---|---|---|
-| `credits` | `user_id TEXT` | `balance INT DEFAULT 2` | ✅ |
+| `credits` | `user_id TEXT` | `balance INT DEFAULT 5` | ✅ |
+| `user_cvs` | `user_id` | CV base + `last_evaluation` | ✅ sin políticas (solo service role) |
+| `generations` | `id` | historial de adaptaciones/cartas | ✅ sin políticas (solo service role) |
 | `waitlist` | `email TEXT` | `user_id TEXT`, `created_at` | ✅ |
 | `cv_sessions` | `token` | CV persistido del job board | ❌ |
 | `pipeline_runs` | — | runs del pipeline | ❌ |
@@ -213,29 +234,31 @@ def join_waitlist(user_id: OptionalUser, ...):        # opcional
 
 ### Patrones de créditos
 ```python
-ensure_user(user_id)   # upsert idempotente — crea fila con balance=2 si no existe
-decrement(user_id)     # lanza InsufficientCredits si balance = 0
-restore(user_id)       # llamar en except si el pipeline falla post-decrement
+ensure_user(user_id)   # upsert idempotente — crea fila con balance=5 (bono de signup) si no existe
+decrement(user_id, n)  # lanza InsufficientCredits si balance < n
+restore(user_id, n)    # llamar en except si el pipeline falla post-decrement
 get_balance(user_id)   # retorna int (0 si no hay fila o Supabase no disponible)
 ```
+Costos: `/adapt` `mode=cv` 1 · `mode=cover` 1 · `mode=both` 2 · `/improve` 1. En `both`, si la
+carta falla se reembolsa solo su parte (1). Los clientes salen de `backend/db.py` (service role).
 Todas las funciones son **no-op seguros** cuando `_supabase is None` (dev sin credenciales).
 
 ## Flujo del usuario (happy path)
 
 ```
-adapt.html → Sign in (magic link) → Ver "✦ 2" créditos en header
-→ Subir CV + pegar JD → POST /adapt → Pipeline 3 etapas + cover letter
-→ Ver CV adaptado + gaps + cover letter + PDF download
-→ (opcional) "Prepare for the interview" → POST /interview → preguntas + respuestas borrador
-→ Resultado guardado en localStorage (RESULT_KEY)
-→ Crédito baja a 1 → Segunda adaptación → Crédito a 0
-→ Banner "You've used all your free adaptations" → adapt btn deshabilitado
-→ pricing.html → "Notify me when Pro launches" → Confirmación
+index.html (landing) → CTA → evaluator.html (anónimo: sube CV, ve score/strengths/weaknesses)
+→ acción paga (Tailor, Cover, Improve) → modal de signup (magic link o Google)
+→ la acción pendiente se guarda (aurea_pending_action) y se ejecuta al volver logueado
+→ bono de 5 créditos → resultado (CV adaptado + gaps + cover + PDF) → queda en /history
+→ (opcional) "Prepare for the interview" → POST /interview
+→ cv.html: CV base editable; "Improve" (POST /improve) lo reemplaza solo si no quedaron bullets marcados
+→ settings.html: historial, idioma, paquetes de créditos, borrar cuenta (DELETE /account)
 
-Flujo alternativo (desde job board):
-jobs.html → buscar oferta → job-detail.html → "Adapt my CV to this role"
-→ JD guardado en localStorage (PENDING_JD_KEY) → redirige a adapt.html
-→ textarea pre-cargado con el JD → usuario sube CV → POST /adapt
+Desde el job board:
+jobs.html (My Jobs / Recommended, ranking con el CV base) → job-detail.html
+→ "Adapt my CV to this role" → JD en localStorage (aurea_pending_jd) → tailor.html pre-cargado
+
+adapt.html y pricing.html quedaron como redirects (tailor.html y /#pricing).
 ```
 
 ## Estrategia de ramas (Git workflow)
@@ -336,6 +359,7 @@ ruff check backend/ src/routes/ tests/
 | 3.27 | Interview prep — `POST /interview` + panel en resultados | ✅ mergeada |
 | 3.28 | Deploy automático al VPS en cada push a `main` | ✅ mergeada (falta instalar la clave en el server) |
 | 3.29 | Adapter y evaluator entran sin scroll en pantallas de laptop | ✅ mergeada |
+| 4.1 | Rediseño de navegación (spec 2026-09-25) | 🔄 en PR |
 
 **Sprint 3 cerrado y releaseado**: `main` está al día con `develop` (PR #29). La única tarea
 abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
@@ -351,3 +375,5 @@ abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant
 5. **Límite conocido del filtro de texto oculto** (marcado con comentario `ponytail:` en
    `backend/extractor.py`): pdfplumber no expone text render mode ni alpha, así que `3 Tr`,
    opacidad 0 y texto tapado por una imagen todavía pasan.
+6. **Precios de los paquetes en Settings son placeholders**: no hay pasarela de pago (ver 3.5).
+7. **Configurar Google OAuth en Supabase** (Auth → Providers) para que funcione el login con Google.

@@ -40,3 +40,15 @@ def test_pages_using_aurea_render_load_render_js():
             if js == "render.js" or not f.exists() or "aureaRender" not in f.read_text(encoding="utf-8"):
                 continue
             assert "render.js" in srcs[:i], f"{html.name}: {js} usa aureaRender pero render.js no carga antes"
+
+
+@pytest.mark.parametrize("page,target", [("adapt.html", "tailor.html"), ("pricing.html", "/#pricing")])
+def test_old_pages_redirect(client, page, target):
+    html = client.get(f"/{page}").text
+    assert f"url={target}" in html
+    assert "<script" not in html  # sin JS viejo colgando
+
+
+@pytest.mark.parametrize("gone", ["adapt.js", "app.js", "pricing.js"])
+def test_old_scripts_removed(client, gone):
+    assert client.get(f"/{gone}").status_code == 404
