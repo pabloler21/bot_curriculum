@@ -22,3 +22,12 @@ def _in_memory_sessions(monkeypatch):
 def client():
     with TestClient(app) as c:
         yield c
+
+
+@pytest.fixture(autouse=True)
+def _no_real_db(monkeypatch):
+    """La suite nunca escribe en la Supabase real aunque el .env tenga la service role."""
+    from backend import credits, db
+
+    monkeypatch.setattr(db, "client", None)
+    monkeypatch.setattr(credits, "_supabase", None)
