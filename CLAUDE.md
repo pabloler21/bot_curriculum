@@ -175,6 +175,7 @@ supabase/
     20260930000000_credits_default_5.sql # DEFAULT balance = 5
     20260930000001_user_cvs.sql         # Tabla user_cvs (RLS sin políticas)
     20260930000002_generations.sql      # Tabla generations (RLS sin políticas)
+    20260930000003_revoke_credit_functions.sql # REVOKE EXECUTE de increment/decrement_credits a anon/authenticated
 
 tests/
   conftest.py              # fixture client (TestClient de FastAPI) + fixture autouse que
@@ -386,6 +387,8 @@ abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant
 3. **Secret `CLAUDE_CODE_OAUTH_TOKEN` vencido** → los workflows de Claude Actions en `main` fallan.
 4. **Confirmar el redirect del magic link**: falta verificar que Supabase acepte
    `https://aurea.pablolerner.dev` (Auth → URL Configuration). Solo se comprueba con un login real.
+   El login manda `redirectTo` = URL de la página actual, así que la allow-list necesita wildcards:
+   `https://aurea.pablolerner.dev/**` y `http://localhost:8000/**` (Authentication → URL Configuration → Redirect URLs).
 5. **Límite conocido del filtro de texto oculto** (marcado con comentario `ponytail:` en
    `backend/extractor.py`): pdfplumber no expone text render mode ni alpha, así que `3 Tr`,
    opacidad 0 y texto tapado por una imagen todavía pasan.

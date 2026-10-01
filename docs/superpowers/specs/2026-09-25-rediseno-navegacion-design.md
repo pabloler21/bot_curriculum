@@ -242,7 +242,7 @@ Sin políticas, la anon key no puede leer ni escribir esas tablas; solo el backe
    - En Google Cloud Console, crear un OAuth client (Web).
    - Authorized redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`.
    - En Supabase → Authentication → Providers → Google, pegar el client ID y el secret.
-   - En Authentication → URL Configuration, agregar `https://aurea.pablolerner.dev` y `http://localhost:8000` como redirect URLs.
+   - En Authentication → URL Configuration, agregar `https://aurea.pablolerner.dev/**` y `http://localhost:8000/**` como redirect URLs (con wildcard: el login manda `redirectTo` = URL de la página actual).
 2. Confirmar que `SUPABASE_SERVICE_ROLE_KEY` esté en `/home/deploy/bot_curriculum/.env`.
 3. Aplicar las 3 migraciones.
 
