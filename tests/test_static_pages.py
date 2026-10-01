@@ -1,4 +1,7 @@
 """Cada página de la App se sirve y carga el shell compartido."""
+import re
+from pathlib import Path
+
 import pytest
 
 APP_PAGES: list[str] = [
@@ -26,3 +29,14 @@ def test_landing_has_nav_anchors_and_cta(client):
     for anchor in ('id="home"', 'id="about"', 'id="features-evaluator"', 'id="features-adapter"',
                    'id="features-jobs"', 'id="pricing"', 'href="evaluator.html"'):
         assert anchor in html
+
+
+def test_pages_using_aurea_render_load_render_js():
+    static = Path(__file__).resolve().parent.parent / "src" / "static"
+    for html in static.glob("*.html"):
+        srcs = re.findall(r'<script src="([\w.-]+\.js)"', html.read_text(encoding="utf-8"))
+        for i, js in enumerate(srcs):
+            f = static / js
+            if js == "render.js" or not f.exists() or "aureaRender" not in f.read_text(encoding="utf-8"):
+                continue
+            assert "render.js" in srcs[:i], f"{html.name}: {js} usa aureaRender pero render.js no carga antes"
