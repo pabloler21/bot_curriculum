@@ -48,3 +48,14 @@ def as_user():
     app.dependency_overrides[get_current_user] = lambda: USER_ID
     yield USER_ID
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limits():
+    """Cada módulo de rutas tiene su propio Limiter: resetear todos entre tests."""
+    from src.routes import adapt, evaluate
+
+    app.state.limiter.reset()
+    adapt.limiter.reset()
+    evaluate.limiter.reset()
+    yield
