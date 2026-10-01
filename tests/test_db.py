@@ -12,6 +12,10 @@ def test_client_is_none_without_service_role_key(monkeypatch):
 
 
 def test_credits_uses_the_shared_client():
+    # Nivel código fuente: el fixture autouse deja ambos valores en None en runtime.
+    import inspect
+
     import backend.credits as credits
-    import backend.db as db
-    assert credits._supabase is db.client
+    source = inspect.getsource(credits)
+    assert "from backend.db import client as _supabase" in source
+    assert 'os.getenv("SUPABASE_KEY")' not in source
