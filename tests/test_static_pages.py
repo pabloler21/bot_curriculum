@@ -1,7 +1,16 @@
 """Cada página de la App se sirve y carga el shell compartido."""
 import pytest
 
-APP_PAGES: list[str] = ["index.html", "evaluator.html", "tailor.html", "cover.html", "jobs.html", "job-detail.html", "cv.html", "settings.html"]
+APP_PAGES: list[str] = [
+    "index.html",
+    "evaluator.html",
+    "tailor.html",
+    "cover.html",
+    "jobs.html",
+    "job-detail.html",
+    "cv.html",
+    "settings.html",
+]
 
 
 @pytest.mark.parametrize("page", APP_PAGES)
