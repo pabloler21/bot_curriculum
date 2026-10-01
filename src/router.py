@@ -9,6 +9,7 @@ from src.routes.cv import router as cv_router
 from src.routes.credits import router as credits_router
 from src.routes.evaluate import router as evaluate_router
 from src.routes.health import router as health_router
+from src.routes.history import router as history_router
 from src.routes.improve import router as improve_router
 from src.routes.interview import router as interview_router
 from src.routes.session import router as session_router
@@ -26,6 +27,7 @@ router.include_router(credits_router)
 router.include_router(cv_router)
 router.include_router(evaluate_router)
 router.include_router(health_router)
+router.include_router(history_router)
 router.include_router(improve_router)
 router.include_router(interview_router)
 router.include_router(session_router)
