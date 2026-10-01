@@ -35,6 +35,9 @@ def _no_real_db(monkeypatch):
     from backend import user_cv
 
     monkeypatch.setattr(user_cv, "_db", None)
+    from backend import history
+
+    monkeypatch.setattr(history, "_db", None)
 
 
 USER_ID = "11111111-2222-3333-4444-555555555555"
