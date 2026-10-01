@@ -136,6 +136,13 @@ window.I18N_ES = {
   'job.err_short': 'Pegá la descripción completa del puesto (al menos 50 caracteres).',
   'credits.none': 'Usaste todos tus créditos.',
   'credits.get_more': 'Conseguí más →',
+  // ── Form de Tailor / Cover ──
+  'cv.untitled': 'Tu CV',
+  'form.using': 'Usando:',
+  'form.change': 'Cambiar',
+  'form.no_cv': 'Primero subí tu CV.',
+  'form.upload_cv': 'Subir CV →',
+  'form.output_lang': 'Idioma del resultado',
 };
 
 window.applyI18n = function (root, lang) {
