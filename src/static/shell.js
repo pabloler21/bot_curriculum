@@ -181,8 +181,9 @@
 
   function closeAuthModal() {
     $('auth-modal').classList.add('hidden');
-    // Cerrar sin loguearse descarta la acción pendiente: no debe dispararse en otro login futuro.
-    store(PENDING_KEY, null);
+    // Abandonar antes de enviar el link descarta la acción pendiente; si ya se envió
+    // (#auth-sent visible), se conserva para ejecutarla al volver por el magic link.
+    if ($('auth-sent').classList.contains('hidden')) store(PENDING_KEY, null);
   }
 
   function currentUrl() { return window.location.href.split('#')[0]; }
@@ -231,6 +232,8 @@
 
   async function signOut() {
     signingOut = true;
+    // No dejar datos del usuario anterior en el navegador (aurea_lang se conserva).
+    [SESSION_TOKEN_KEY, CLAIMED_KEY, PENDING_KEY, 'aurea_last_evaluation', 'aurea_last_result', 'aurea_pending_jd'].forEach((k) => store(k, null));
     try { if (client) await client.auth.signOut(); } catch (_) {}
     aurea.session = null;
     window.location.href = '/';

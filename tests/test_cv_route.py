@@ -52,6 +52,19 @@ def test_put_cv_claims_session_token(client, as_user):
     save.assert_called_once_with(as_user, CV_TEXT, "cv.pdf", "upload")
 
 
+def test_put_cv_accepts_browser_empty_multipart_body(client, as_user):
+    # Lo que envía shell.js: fetch con `new FormData()` vacío + X-CV-Session-Token.
+    token = _put_session()
+    with patch("src.routes.cv.save_cv") as save:
+        res = client.put(
+            "/cv",
+            content=b"--X--\r\n",
+            headers={"Content-Type": "multipart/form-data; boundary=X", "X-CV-Session-Token": token},
+        )
+    assert res.status_code == 200
+    save.assert_called_once_with(as_user, CV_TEXT, "cv.pdf", "upload")
+
+
 def test_put_cv_with_expired_token_is_400(client, as_user):
     with patch("src.routes.cv.save_cv") as save:
         res = client.put("/cv", headers={"X-CV-Session-Token": str(uuid.uuid4())}, data={})
