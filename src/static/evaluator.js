@@ -187,7 +187,11 @@ async function improve(recommendations) {
       body: JSON.stringify({ recommendations }),
     });
     const data = await paidJson(res);
-    if (data) { goToResult(data, 'improve', ''); return; }  // navegando: dejar las acciones deshabilitadas
+    if (data) {
+      localStorage.removeItem(EVAL_KEY);  // /improve cambió el CV: la evaluación guardada ya es del CV viejo
+      goToResult(data, 'improve', '');
+      return;
+    }  // navegando: dejar las acciones deshabilitadas
     setActionsBusy(false);
   } catch (_) {
     showError($('ev-action-error'), networkError());

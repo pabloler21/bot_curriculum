@@ -126,7 +126,7 @@
     const res = await window.aurea.authFetch(url);
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || t('result.pdf_failed', 'PDF download failed. Please try again.'));
+      throw new Error(detailText(err.detail, t('result.pdf_failed', 'PDF download failed. Please try again.')));
     }
     saveBlob(await res.blob(), filename);
   }
