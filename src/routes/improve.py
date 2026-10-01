@@ -54,19 +54,20 @@ async def improve_resume(request: Request, body: ImproveRequest, user_id: Requir
         improved = await improve_cv(original, body.recommendations)
         suspicious = validate_adaptation(original, improved)
         pdf_bytes = render_pdf(improved)
+        result = AdaptationResult(
+            run_id=run_id,
+            status=PipelineStatus.PARTIAL if suspicious else PipelineStatus.COMPLETED,
+            adapted_schema=improved,
+            suspicious_bullets=suspicious,
+        )
+        _store_pdf(run_id, pdf_bytes)
+        # Un resultado marcado (PARTIAL) no pisa el CV base: puede contener bullets inventados.
+        if not suspicious:
+            save_cv(user_id, schema_to_text(improved), base.get("filename"), "improved")
     except Exception as exc:
         restore(user_id, COST)
         logger.exception("[improve] Failed: %s", exc)
         raise HTTPException(status_code=500, detail="Could not improve your CV. Your credit was restored.") from exc
-
-    result = AdaptationResult(
-        run_id=run_id,
-        status=PipelineStatus.PARTIAL if suspicious else PipelineStatus.COMPLETED,
-        adapted_schema=improved,
-        suspicious_bullets=suspicious,
-    )
-    _store_pdf(run_id, pdf_bytes)
-    save_cv(user_id, schema_to_text(improved), base.get("filename"), "improved")
 
     content = result.model_dump(mode="json")
     history_id = None

@@ -54,6 +54,14 @@ def test_improve_happy_path(client, as_user, pipeline_ok):
     assert pipeline_ok["history"].add.call_args.args[1] == "improve"
 
 
+def test_save_failure_restores_credit(client, as_user, pipeline_ok):
+    pipeline_ok["save"].side_effect = RuntimeError("db down")
+    with patch("src.routes.improve.get_cv", return_value=BASE):
+        res = client.post("/improve", json=BODY)
+    assert res.status_code == 500
+    pipeline_ok["restore"].assert_called_once_with(as_user, 1)
+
+
 def test_improve_failure_restores_credit_and_keeps_base_cv(client, as_user, pipeline_ok):
     pipeline_ok["improve"].side_effect = RuntimeError("llm down")
     with patch("src.routes.improve.get_cv", return_value=BASE):
@@ -83,3 +91,5 @@ def test_flagged_bullets_make_it_partial(client, as_user, pipeline_ok):
         data = client.post("/improve", json=BODY).json()
     assert data["status"] == "partial"
     assert data["suspicious_bullets"] == ["Built APIs"]
+    pipeline_ok["save"].assert_not_called()
+    pipeline_ok["history"].add.assert_called_once()
