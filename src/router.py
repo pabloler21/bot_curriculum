@@ -6,8 +6,8 @@ from fastapi import APIRouter
 from src.routes.account import router as account_router
 from src.routes.adapt import router as adapt_router
 from src.routes.config import router as config_router
-from src.routes.cv import router as cv_router
 from src.routes.credits import router as credits_router
+from src.routes.cv import router as cv_router
 from src.routes.evaluate import router as evaluate_router
 from src.routes.health import router as health_router
 from src.routes.history import router as history_router
