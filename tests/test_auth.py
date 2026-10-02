@@ -98,7 +98,7 @@ class TestAdaptRouteWithAuth:
     def test_adapt_without_auth_header_returns_401(self):
         response = client.post(
             "/adapt",
-            data={"job_description": _JD},
+            data={"job_input": _JD},
             files={"file": ("cv.pdf", b"fake", "application/pdf")},
         )
         assert response.status_code == 401
@@ -109,7 +109,7 @@ class TestAdaptRouteWithAuth:
             response = client.post(
                 "/adapt",
                 headers={"Authorization": "Bearer bad.token"},
-                data={"job_description": _JD},
+                data={"job_input": _JD},
                 files={"file": ("cv.pdf", b"fake", "application/pdf")},
             )
         assert response.status_code == 401
@@ -130,7 +130,7 @@ class TestAdaptRouteWithAuth:
         fake_auth_response.user = fake_user
 
         _run_patch = patch("src.routes.adapt.run_pipeline", new_callable=AsyncMock, return_value=(result, None))
-        with patch("src.routes.adapt.extract_text", return_value="x" * 150), \
+        with patch("src.routes.cv_input.extract_text", return_value="x" * 150), \
              _run_patch as mock_pipeline, \
              patch("backend.auth._supabase") as mock_sb, \
              patch("src.routes.adapt.ensure_user"), \
@@ -139,7 +139,7 @@ class TestAdaptRouteWithAuth:
             client.post(
                 "/adapt",
                 headers={"Authorization": "Bearer valid.token"},
-                data={"job_description": _JD},
+                data={"job_input": _JD},
                 files={"file": ("cv.pdf", b"fake", "application/pdf")},
             )
 

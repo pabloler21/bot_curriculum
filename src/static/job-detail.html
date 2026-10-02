@@ -10,6 +10,7 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="jobs.css">
+  <link rel="stylesheet" href="app.css">
   <style>
     /* ── Job detail page styles ── */
     .detail-container {
@@ -146,7 +147,7 @@
     }
   </style>
 </head>
-<body>
+<body data-page="jobs">
 
   <!-- Ambient background -->
   <div class="ambient-bg" aria-hidden="true">
@@ -157,25 +158,7 @@
     <div class="ambient-grid"></div>
   </div>
 
-  <!-- Header -->
-  <header class="header">
-    <div class="header-inner">
-      <div class="header-pill">
-        <a href="index.html" class="brand">
-          <div class="brand-mark">✦</div>
-          <span class="brand-name">Aurea</span>
-          <span class="beta-badge">Beta</span>
-        </a>
-        <nav class="tab-nav" role="tablist" aria-label="App sections">
-          <a href="index.html" class="tab-nav-item" role="tab" aria-selected="false">Evaluator</a>
-          <a href="adapt.html" class="tab-nav-item" role="tab" aria-selected="false">✦ Adapter</a>
-          <a href="jobs.html" class="tab-nav-item active" role="tab" aria-selected="true">Job Board</a>
-          <a href="pricing.html" class="tab-nav-item" role="tab" aria-selected="false">Pricing</a>
-        </nav>
-      </div>
-    </div>
-  </header>
-
+  <main class="app-main">
   <div class="detail-container">
 
     <a href="jobs.html" class="detail-back">← Back to Job Board</a>
@@ -192,7 +175,11 @@
     </div>
 
   </div>
+  </main>
 
+  <script src="i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="shell.js"></script>
   <script src="job-detail.js"></script>
 </body>
 </html>

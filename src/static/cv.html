@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurea — Your CV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body data-page="cv" data-requires-auth="true">
+  <main class="app-main">
+    <div class="stack">
+      <div>
+        <h1 class="page-title" data-i18n="cvpage.title">Your CV</h1>
+        <p class="page-sub" data-i18n="cvpage.sub">This is the CV Aurea uses for tailoring, cover letters and job matching.</p>
+      </div>
+      <section id="cvp-current" class="panel hidden">
+        <h2 data-i18n="cvpage.current">Current CV</h2>
+        <dl class="kv">
+          <dt data-i18n="cvpage.file">File</dt><dd id="cvp-file"></dd>
+          <dt data-i18n="cvpage.source">Source</dt><dd id="cvp-source"></dd>
+          <dt data-i18n="cvpage.updated">Updated</dt><dd id="cvp-updated"></dd>
+        </dl>
+        <p><a href="evaluator.html?reevaluate=1" class="btn-secondary" data-i18n="cvpage.reevaluate">Re-evaluate</a></p>
+      </section>
+      <section class="panel">
+        <h2 id="cvp-upload-title" data-i18n="cvpage.replace">Replace CV</h2>
+        <div id="cvp-drop" class="drop-zone" tabindex="0" role="button" aria-labelledby="cvp-upload-title">
+          <p data-i18n="ev.drop_title">Upload or drop your CV</p>
+          <p class="secondary-text" data-i18n="ev.drop_hint">PDF or DOCX · up to 5 MB</p>
+          <input type="file" id="cvp-file-input" accept=".pdf,.docx" hidden aria-label="Select CV file">
+        </div>
+        <p id="cvp-busy" class="ev-working hidden"><span class="spinner sm" aria-hidden="true"></span> <span data-i18n="cvpage.saving">Saving your CV…</span></p>
+        <p id="cvp-ok" class="notice hidden" data-i18n="cvpage.saved">Saved. Aurea will use this CV from now on.</p>
+        <p id="cvp-error" class="error-msg hidden" role="alert"></p>
+      </section>
+    </div>
+  </main>
+
+  <script src="i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="shell.js"></script>
+  <script src="render.js"></script>
+  <script src="cv.js"></script>
+</body>
+</html>

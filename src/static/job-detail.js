@@ -113,7 +113,7 @@ async function loadJobDetail() {
       adaptBtn.addEventListener('click', () => {
         const jd = sanitizeText(job.description).slice(0, MAX_JD_CHARS);
         localStorage.setItem(PENDING_JD_KEY, jd);
-        window.location.href = 'adapt.html';
+        window.location.href = 'tailor.html';
       });
     }
 

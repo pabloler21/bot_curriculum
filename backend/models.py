@@ -18,6 +18,7 @@ _STAGE_MODELS = {
     "adapt": os.getenv("AUREA_ADAPT_MODEL", _DEFAULT),
     "cover": os.getenv("AUREA_COVER_MODEL", _DEFAULT),
     "interview": os.getenv("AUREA_INTERVIEW_MODEL", _DEFAULT),
+    "improve": os.getenv("AUREA_IMPROVE_MODEL", _DEFAULT),
 }
 
 

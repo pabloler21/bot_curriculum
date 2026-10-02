@@ -3,243 +3,134 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aurea — ATS CV Evaluator</title>
+  <title>Aurea — Land more interviews with a CV built for each role</title>
+  <meta name="description" content="Aurea scores your CV like an ATS, tailors it to each job without inventing anything, and writes your cover letter.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="app.css">
 </head>
-<body>
-
-  <!-- Ambient background orbs -->
-  <div class="ambient-bg" aria-hidden="true">
-    <div class="ambient-orb ambient-orb-coral"></div>
-    <div class="ambient-orb ambient-orb-aqua"></div>
-    <div class="ambient-orb ambient-orb-amber"></div>
-    <div class="ambient-orb ambient-orb-magenta"></div>
-    <div class="ambient-grid"></div>
-  </div>
-
-  <!-- Header -->
-  <header class="header">
-    <div class="header-inner">
-      <div class="header-pill">
-        <a href="index.html" class="brand">
-          <div class="brand-mark">✦</div>
-          <span class="brand-name">Aurea</span>
-          <span class="beta-badge">Beta</span>
-        </a>
-        <nav class="tab-nav" role="tablist" aria-label="App sections">
-          <a href="index.html" class="tab-nav-item active" role="tab" aria-selected="true">Evaluator</a>
-          <a href="adapt.html" class="tab-nav-item" role="tab" aria-selected="false">✦ Adapter</a>
-          <a href="jobs.html" class="tab-nav-item" role="tab" aria-selected="false">Job Board</a>
-          <a href="pricing.html" class="tab-nav-item" role="tab" aria-selected="false">Pricing</a>
-        </nav>
-      </div>
+<body data-page="landing">
+  <nav class="landing-nav" aria-label="Main">
+    <a href="#home" class="brand"><div class="brand-mark">✦</div><span class="brand-name">Aurea</span></a>
+    <div class="landing-links">
+      <a href="#home" data-i18n="landing.nav_home">Home</a>
+      <a href="#about" data-i18n="landing.nav_about">About</a>
+      <details class="nav-dropdown">
+        <summary><span data-i18n="landing.nav_features">Features</span> ▾</summary>
+        <div class="nav-dropdown-menu">
+          <a href="#features-evaluator" data-i18n="landing.feat_evaluator">Evaluator</a>
+          <a href="#features-adapter" data-i18n="landing.feat_adapter">Adapter</a>
+          <a href="#features-jobs" data-i18n="landing.feat_jobs">Job board</a>
+        </div>
+      </details>
+      <a href="#pricing" data-i18n="landing.nav_pricing">Pricing</a>
     </div>
-  </header>
-
-  <main class="container">
-
-    <!-- Hero (hidden during loading / results) -->
-    <section id="hero-section" aria-label="Hero">
-      <div class="hero-badge">
-        <span class="hero-badge-dot"></span>
-        <span class="hero-badge-text">AI-powered · built for engineers</span>
+    <div class="landing-actions">
+      <div class="ui-lang" role="group" aria-label="Language">
+        <button type="button" data-set-lang="en">EN</button><button type="button" data-set-lang="es">ES</button>
       </div>
-      <h1 class="hero-title">
-        Land roles you're
-        <span class="hero-title-gradient">actually built for</span>
-      </h1>
-      <p class="hero-subtitle">
-        Aurea reads your CV like a hiring system would, then matches you to remote tech roles with a transparent score. No tricks, no fluff.
-      </p>
-      <div class="hero-trust">
-        <span class="trust-pill"><span>✦</span> Claude-grade analysis</span>
-        <span class="trust-pill"><span>⚡</span> Results in under 30s</span>
-        <span class="trust-pill"><span>🛡</span> Your CV stays private</span>
-      </div>
+      <button type="button" class="btn-ghost hidden" data-auth="guest" data-open-auth="login" data-i18n="landing.login">Login</button>
+      <button type="button" class="btn-primary btn-sm hidden" data-auth="guest" data-open-auth="signup" data-i18n="landing.signup">Sign up</button>
+      <a href="evaluator.html" class="btn-primary btn-sm hidden" data-auth="user" data-i18n="landing.go_app">Go to app</a>
+    </div>
+  </nav>
+
+  <main>
+    <section id="home" class="landing-section hero">
+      <h1 class="hero-title"><span data-i18n="landing.hero_1">Your CV, rebuilt</span> <em data-i18n="landing.hero_2">for every job.</em></h1>
+      <p class="hero-sub" data-i18n="landing.hero_sub">Aurea reads your CV like an ATS, tells you exactly what to fix, and tailors it to each role without inventing a single line.</p>
+      <a href="evaluator.html" class="btn-primary hero-cta" data-i18n="landing.cta">Improve my CV</a>
+      <p class="hero-note" data-i18n="landing.cta_note">Free analysis, no sign-up needed.</p>
     </section>
 
-    <!-- Upload state (two-column) -->
-    <div class="evaluator-layout">
+    <section id="about" class="landing-section">
+      <p class="section-kicker" data-i18n="landing.about_kicker">About</p>
+      <h2 class="section-title" data-i18n="landing.about_title">Most CVs are rejected before a human reads them.</h2>
+      <p class="secondary-text" data-i18n="landing.about_body">Applicant tracking systems filter candidates by structure and keywords. Aurea shows you how those systems see your CV, then adapts it to each job description while keeping every fact true to your real experience.</p>
+    </section>
 
-      <!-- Left: Upload zone -->
-      <div class="upload-zone-wrap">
+    <section id="features" class="landing-section">
+      <p class="section-kicker" data-i18n="landing.features_kicker">Features</p>
+      <h2 class="section-title" data-i18n="landing.features_title">Everything between your CV and the interview.</h2>
 
-        <!-- Job context panel (shown when ?job_id= in URL) -->
-        <div id="job-context-badge" class="job-context-panel hidden"></div>
-
-        <!-- Session chip: shown when CV already uploaded in job board -->
-        <div id="session-chip" class="session-chip hidden" aria-live="polite">
-          <div class="session-chip-icon" aria-hidden="true">📄</div>
-          <span id="session-chip-name" class="session-chip-name"></span>
-          <button id="session-chip-change" class="session-chip-change">Change file</button>
+      <article id="features-evaluator" class="feature">
+        <div>
+          <h3 data-i18n="landing.feat_evaluator">Evaluator</h3>
+          <p class="secondary-text" data-i18n="landing.feat_evaluator_body">A precise 0–100 read on how parsers see your CV, with strengths, weaknesses and ranked recommendations.</p>
+          <ul>
+            <li data-i18n="landing.feat_evaluator_1">ATS compatibility score</li>
+            <li data-i18n="landing.feat_evaluator_2">Keyword intelligence</li>
+            <li data-i18n="landing.feat_evaluator_3">Formatting flags</li>
+          </ul>
+          <a href="evaluator.html" class="btn-secondary" data-i18n="landing.try_it">Try it</a>
         </div>
+        <div class="feature-visual" aria-hidden="true">◎</div>
+      </article>
 
-        <div id="upload-section">
-          <div id="drop-zone" class="drop-zone">
-            <div class="drop-zone-content">
-              <div class="drop-icon-wrap">
-                <div class="drop-icon-glow"></div>
-                <div class="drop-icon-box" aria-hidden="true">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-light)">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="17 8 12 3 7 8"/>
-                    <line x1="12" y1="3" x2="12" y2="15"/>
-                  </svg>
-                </div>
-              </div>
-              <h3>Drop your CV here</h3>
-              <p class="secondary-text">PDF or DOCX · up to 5 MB</p>
-              <button id="select-btn" class="btn-primary">Browse files</button>
-              <p id="file-name" class="file-name hidden" aria-live="polite"></p>
-            </div>
-            <input type="file" id="file-input" accept=".pdf,.docx" hidden aria-label="Select CV file">
+      <article id="features-adapter" class="feature">
+        <div>
+          <h3 data-i18n="landing.feat_adapter">Adapter</h3>
+          <p class="secondary-text" data-i18n="landing.feat_adapter_body">Paste a job link or description and get a CV tailored to the role, the skill gaps to work on, and a cover letter.</p>
+          <ul>
+            <li data-i18n="landing.feat_adapter_1">No invented experience — every line traces back to your CV</li>
+            <li data-i18n="landing.feat_adapter_2">Cover letter and interview prep</li>
+            <li data-i18n="landing.feat_adapter_3">PDF ready to send</li>
+          </ul>
+          <a href="evaluator.html" class="btn-secondary" data-i18n="landing.try_it">Try it</a>
+        </div>
+        <div class="feature-visual" aria-hidden="true">✦</div>
+      </article>
+
+      <article id="features-jobs" class="feature">
+        <div>
+          <h3 data-i18n="landing.feat_jobs">Job board</h3>
+          <p class="secondary-text" data-i18n="landing.feat_jobs_body">Remote jobs ranked by how well they match your CV, one click away from a tailored application.</p>
+          <a href="evaluator.html" class="btn-secondary" data-i18n="landing.try_it">Try it</a>
+        </div>
+        <div class="feature-visual" aria-hidden="true">▤</div>
+      </article>
+    </section>
+
+    <section id="pricing" class="landing-section">
+      <p class="section-kicker" data-i18n="landing.pricing_kicker">Pricing</p>
+      <h2 class="section-title" data-i18n="landing.pricing_title">Start free. Upgrade when you're applying at scale.</h2>
+      <div class="pricing-grid">
+        <div class="price-card">
+          <h3>Free</h3>
+          <p class="price">$0</p>
+          <ul>
+            <li data-i18n="landing.free_1">Unlimited CV evaluations</li>
+            <li data-i18n="landing.free_2">5 credits when you sign up</li>
+            <li data-i18n="landing.free_3">Tailored CV, cover letter and interview prep</li>
+          </ul>
+          <a href="evaluator.html" class="btn-primary" data-i18n="landing.cta">Improve my CV</a>
+        </div>
+        <div class="price-card price-card--pro">
+          <h3>Pro <span class="badge" data-i18n="landing.soon">Coming soon</span></h3>
+          <p class="price">—</p>
+          <ul>
+            <li data-i18n="landing.pro_1">Credit packs for active job searches</li>
+            <li data-i18n="landing.pro_2">Priority processing</li>
+          </ul>
+          <div id="waitlist-guest" class="hidden" data-auth="guest">
+            <input type="email" id="waitlist-email" class="text-input" placeholder="you@example.com" data-i18n-placeholder="auth.email_placeholder" aria-label="Email">
           </div>
-          <p id="error-msg" class="error-msg hidden" role="alert"></p>
-          <button id="analyze-btn" class="btn-primary btn-large hidden">
-            Analyze my CV →
-          </button>
+          <button type="button" id="waitlist-btn" class="btn-secondary" data-i18n="landing.notify">Notify me when Pro launches</button>
+          <p id="waitlist-error" class="error-msg hidden" role="alert"></p>
+          <p id="waitlist-ok" class="notice hidden" data-i18n="landing.notify_ok">You're on the list — we'll email you when Pro launches.</p>
         </div>
       </div>
-
-      <!-- Right: Feature panel -->
-      <div class="feature-panel">
-        <span class="feature-panel-badge">✦ What you get</span>
-        <ul class="feature-list">
-          <li class="feature-item" style="animation-delay:0.10s">
-            <div class="feature-item-icon" style="background:var(--accent-subtle);border-color:var(--accent-border);color:var(--accent)">🎯</div>
-            <div class="feature-item-text">
-              <p class="feature-item-title">ATS compatibility score</p>
-              <p class="feature-item-desc">A precise 0–100 read on how parsers see your CV.</p>
-            </div>
-          </li>
-          <li class="feature-item" style="animation-delay:0.18s">
-            <div class="feature-item-icon" style="background:var(--aqua-subtle);border-color:var(--aqua-border);color:var(--aqua)">🔑</div>
-            <div class="feature-item-text">
-              <p class="feature-item-title">Keyword intelligence</p>
-              <p class="feature-item-desc">See what you have, and what the role is missing.</p>
-            </div>
-          </li>
-          <li class="feature-item" style="animation-delay:0.26s">
-            <div class="feature-item-icon" style="background:var(--warning-subtle);border-color:var(--warning-border);color:var(--warning)">⚠️</div>
-            <div class="feature-item-text">
-              <p class="feature-item-title">Formatting flags</p>
-              <p class="feature-item-desc">Spot the layout issues that quietly hurt rankings.</p>
-            </div>
-          </li>
-          <li class="feature-item" style="animation-delay:0.34s">
-            <div class="feature-item-icon" style="background:var(--success-subtle);border-color:var(--success-border);color:var(--success)">✅</div>
-            <div class="feature-item-text">
-              <p class="feature-item-title">Actionable recommendations</p>
-              <p class="feature-item-desc">Concrete edits ranked by impact on your score.</p>
-            </div>
-          </li>
-        </ul>
-        <div class="feature-panel-footer">
-          <span class="feature-panel-footer-dot"></span>
-          AI-powered · works with PDF and DOCX
-        </div>
-      </div>
-
-    </div><!-- /.evaluator-layout -->
-
-    <!-- Loading (full width) -->
-    <div id="loading-section" class="hidden">
-      <div class="loading-card">
-        <div class="loading-spinner-wrap">
-          <div class="loading-spinner-glow"></div>
-          <div class="spinner lg"></div>
-        </div>
-        <p class="loading-title">Reading your CV</p>
-        <p class="loading-text">Analyzing your resume, this may take a few seconds...</p>
-      </div>
-    </div>
-
-    <!-- Results dashboard (full width) -->
-    <div id="results-section" class="hidden">
-
-      <div class="results-header">
-        <button id="reset-btn" class="btn-reset">← Analyze another CV</button>
-      </div>
-
-      <!-- Score panel with SVG ring -->
-      <div class="panel panel-score">
-        <div class="score-ring-wrap">
-          <svg id="score-circle" width="180" height="180" class="score-ring-svg" aria-label="ATS Score">
-            <defs>
-              <linearGradient id="score-grad-high" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%"   stop-color="#FFA590"/>
-                <stop offset="50%"  stop-color="#FF7A5C"/>
-                <stop offset="100%" stop-color="#FBBF24"/>
-              </linearGradient>
-              <linearGradient id="score-grad-mid" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%"   stop-color="#FBBF24"/>
-                <stop offset="100%" stop-color="#FF7A5C"/>
-              </linearGradient>
-              <linearGradient id="score-grad-low" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%"   stop-color="#FB7185"/>
-                <stop offset="100%" stop-color="#F472B6"/>
-              </linearGradient>
-            </defs>
-            <!-- Track -->
-            <circle cx="90" cy="90" r="85" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="10"/>
-            <!-- Progress -->
-            <circle id="score-ring-progress" cx="90" cy="90" r="85" fill="none"
-              stroke="url(#score-grad-high)" stroke-width="10" stroke-linecap="round"
-              stroke-dasharray="534.07" stroke-dashoffset="534.07"/>
-          </svg>
-          <div class="score-ring-center">
-            <span id="score-value" class="score-number">0</span>
-            <span id="score-ring-label" class="score-label">Score</span>
-          </div>
-        </div>
-
-        <div class="score-right">
-          <span class="score-eyebrow">✦ Your evaluation</span>
-          <h2 id="candidate-name"></h2>
-          <span id="verdict-badge" class="badge"></span>
-        </div>
-      </div>
-
-      <div class="panel" style="animation-delay:0.15s">
-        <h3>Summary <button class="copy-btn" data-copy-target="summary-text" aria-label="Copy summary">copy</button></h3>
-        <p id="summary-text"></p>
-      </div>
-
-      <div class="panel" style="animation-delay:0.20s">
-        <h3>Strengths · keywords found <button class="copy-btn" data-copy-target="keywords-found" aria-label="Copy found keywords">copy</button></h3>
-        <div id="keywords-found" class="tag-cloud"></div>
-      </div>
-
-      <div class="panel" style="animation-delay:0.25s">
-        <h3>Gaps · keywords missing <button class="copy-btn" data-copy-target="keywords-missing" aria-label="Copy missing keywords">copy</button></h3>
-        <div id="keywords-missing" class="tag-cloud"></div>
-      </div>
-
-      <div class="panel" style="animation-delay:0.30s">
-        <h3>Formatting flags <button class="copy-btn" data-copy-target="formatting-issues" aria-label="Copy formatting issues">copy</button></h3>
-        <ul id="formatting-issues" class="issue-list"></ul>
-      </div>
-
-      <div class="panel" style="animation-delay:0.35s">
-        <h3>Recommendations · ranked by impact <button class="copy-btn" data-copy-target="recommendations" aria-label="Copy recommendations">copy</button></h3>
-        <ol id="recommendations" class="recommendations-list"></ol>
-      </div>
-
-      <!-- CTA -->
-      <div class="results-cta">
-        <p class="results-cta-title">Ready to apply?</p>
-        <p class="results-cta-text">Adapt your CV to a specific job description in seconds — no hallucinations, guaranteed.</p>
-        <a href="adapt.html" class="btn-browse-jobs">Adapt my CV for a role →</a>
-      </div>
-
-    </div><!-- /#results-section -->
-
+    </section>
   </main>
 
-  <script src="app.js"></script>
+  <footer class="landing-footer">© Aurea</footer>
+
+  <script src="i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="shell.js"></script>
+  <script src="landing.js"></script>
 </body>
 </html>

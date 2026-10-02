@@ -11,10 +11,12 @@ from pydantic import BaseModel as PydanticBaseModel
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
+from backend.auth import OptionalUser
 from backend.jobs import Job, fetch_jobs
-from backend.ranker import get_jobs_collection
+from backend.ranker import embed_text, get_jobs_collection
 from backend.scorer import score_job
 from backend.sessions import get_session
+from backend.user_cv import get_cv
 
 logger = logging.getLogger(__name__)
 limiter = Limiter(key_func=get_remote_address)
@@ -22,7 +24,7 @@ router = APIRouter()
 
 
 @router.get("/jobs/ranked")
-async def get_ranked_jobs(token: str | None = Query(default=None)):
+async def get_ranked_jobs(user_id: OptionalUser, token: str | None = Query(default=None)):
     # UUID validation
     if token is not None:
         try:
@@ -54,13 +56,23 @@ async def get_ranked_jobs(token: str | None = Query(default=None)):
             content={"detail": "Internal server error", "code": "internal_error"},
         )
 
-    # Try to get session embedding for ranking
+    # Embedding para rankear: token de sesión, o el CV base del usuario logueado
+    embedding: list[float] | None = None
     session = get_session(token) if token else None
-
     if session and session.cv_embedding:
+        embedding = session.cv_embedding
+    elif token is None and user_id:
+        base = get_cv(user_id)
+        if base:
+            try:
+                embedding = embed_text(base["cv_text"])
+            except Exception:
+                logger.warning("[jobs] Could not embed base CV", exc_info=True)
+
+    if embedding:
         col = get_jobs_collection()
         results = col.query(
-            vectors=zvec.VectorQuery("embedding", vector=session.cv_embedding),
+            vectors=zvec.VectorQuery("embedding", vector=embedding),
             topk=20,
         )
         jobs_by_id = {job.id: job for job in jobs}
