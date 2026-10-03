@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurea — Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body data-page="settings" data-requires-auth="true">
+  <main class="app-main">
+    <div class="stack">
+      <h1 class="page-title" data-i18n="settings.title">Settings</h1>
+
+      <section class="panel" id="language">
+        <h2 data-i18n="settings.language">Language</h2>
+        <div class="ui-lang" role="group" aria-label="Language">
+          <button type="button" data-set-lang="en">English</button><button type="button" data-set-lang="es">Español</button>
+        </div>
+      </section>
+
+      <section class="panel" id="usage">
+        <h2 data-i18n="settings.usage">Usage</h2>
+        <dl class="kv">
+          <dt data-i18n="settings.account">Account</dt><dd id="st-email"></dd>
+          <dt data-i18n="settings.credits">Credits available</dt><dd><strong id="st-credits">–</strong> 🪙</dd>
+          <dt data-i18n="settings.generations">Generations</dt><dd id="st-generations">–</dd>
+        </dl>
+      </section>
+
+      <section class="panel" id="add-credits">
+        <h2 data-i18n="settings.add_credits">Add credits</h2>
+        <p class="secondary-text" data-i18n="settings.add_credits_sub">Payments are coming soon. Pick a pack and we'll email you as soon as you can buy it.</p>
+        <div class="packs">
+          <div class="pack"><div class="pack-credits">10 🪙</div><div class="pack-price">$5</div><button type="button" class="btn-secondary" data-pack="10" data-i18n="settings.notify">Notify me</button></div>
+          <div class="pack"><div class="pack-credits">30 🪙</div><div class="pack-price">$12</div><button type="button" class="btn-secondary" data-pack="30" data-i18n="settings.notify">Notify me</button></div>
+          <div class="pack"><div class="pack-credits">100 🪙</div><div class="pack-price">$35</div><button type="button" class="btn-secondary" data-pack="100" data-i18n="settings.notify">Notify me</button></div>
+        </div>
+        <p id="st-notify-ok" class="notice hidden" data-i18n="settings.notify_ok">You're on the list — we'll email you when credit packs are available.</p>
+        <p id="st-notify-error" class="error-msg hidden" role="alert"></p>
+      </section>
+
+      <section class="panel" id="billing">
+        <h2 data-i18n="settings.billing">Billing</h2>
+        <dl class="kv">
+          <dt data-i18n="settings.plan">Plan</dt><dd>Free</dd>
+          <dt data-i18n="settings.payments">Payments</dt><dd class="secondary-text" data-i18n="settings.no_payments">No payments yet.</dd>
+        </dl>
+      </section>
+
+      <section class="panel danger-zone" id="delete">
+        <h2 data-i18n="settings.delete">Delete account</h2>
+        <p class="secondary-text" data-i18n="settings.delete_body">This permanently deletes your CV, your history, your credits and your account. It can't be undone.</p>
+        <label for="st-delete-confirm" class="field-label" data-i18n="settings.delete_label">Type DELETE to confirm</label>
+        <input type="text" id="st-delete-confirm" class="text-input" autocomplete="off">
+        <p><button type="button" id="st-delete" class="btn-danger" disabled data-i18n="settings.delete_btn">Delete my account</button></p>
+        <p id="st-delete-error" class="error-msg hidden" role="alert"></p>
+      </section>
+    </div>
+  </main>
+
+  <script src="i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="shell.js"></script>
+  <script src="settings.js"></script>
+</body>
+</html>

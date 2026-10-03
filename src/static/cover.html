@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurea — Cover letter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body data-page="cover" data-requires-auth="true">
+  <main class="app-main">
+    <section id="cv-input-section">
+      <h1 class="page-title" data-i18n="cover.title">Cover letter</h1>
+      <p class="page-sub" data-i18n="cover.sub">A three-paragraph letter written from your real experience, for one specific role.</p>
+      <div class="panel job-form">
+        <p id="job-cv-chip" class="cv-chip hidden"><span data-i18n="form.using">Using:</span> <strong id="job-cv-name"></strong> · <a href="cv.html" data-i18n="form.change">Change</a></p>
+        <p id="job-no-cv" class="no-credits-banner hidden"><span data-i18n="form.no_cv">Upload your CV first.</span> <a href="cv.html" data-i18n="form.upload_cv">Upload CV →</a></p>
+        <label for="job-input" class="field-label" data-i18n="job.label">Job link or description</label>
+        <textarea id="job-input" class="jd-textarea" rows="8" placeholder="https://… or paste the job description" data-i18n-placeholder="job.placeholder"></textarea>
+        <div class="job-form-actions">
+          <div class="lang-toggle" role="group" aria-label="Output language">
+            <span class="field-label" data-i18n="form.output_lang">Output language</span>
+            <button type="button" id="job-out-en" class="lang-btn" aria-pressed="true">English</button>
+            <button type="button" id="job-out-es" class="lang-btn" aria-pressed="false">Español</button>
+          </div>
+          <button type="button" id="job-submit" class="btn-primary"><span data-i18n="cover.submit">Generate Cover Letter</span> · 1🪙</button>
+        </div>
+        <p id="job-error" class="error-msg hidden" role="alert"></p>
+        <div id="job-no-credits" class="no-credits-banner hidden" role="alert">
+          <span class="no-credits-banner-icon" aria-hidden="true">⚡</span>
+          <span><span data-i18n="credits.none">You've used all your credits.</span> <a href="settings.html#add-credits" data-i18n="credits.get_more">Get more →</a></span>
+        </div>
+      </div>
+    </section>
+
+    <div id="cv-loading" class="hidden adapt-loading-card" aria-live="polite">
+      <div class="spinner lg" aria-hidden="true"></div>
+      <p class="loading-title" data-i18n="cover.loading">Writing your cover letter…</p>
+    </div>
+
+    <section id="cv-result" class="hidden">
+      <div class="results-header">
+        <button type="button" id="cv-reset" class="btn-reset" data-i18n="cover.reset">← Write another letter</button>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <h2 data-i18n="tailor.cover">Cover Letter</h2>
+          <div>
+            <button type="button" id="cv-copy" class="btn-copy" data-i18n="tailor.copy">Copy</button>
+            <button type="button" id="cv-download" class="btn-copy" data-i18n="cover.download">Download .txt</button>
+          </div>
+        </div>
+        <p id="cv-letter" class="cover-letter-body"></p>
+      </div>
+      <p class="next-step"><a href="tailor.html" id="cv-tailor-link"><span data-i18n="cover.next_tailor">Tailor my CV for this job</span> · 1🪙 →</a></p>
+    </section>
+  </main>
+
+  <script src="i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="shell.js"></script>
+  <script src="render.js"></script>
+  <script src="job-form.js"></script>
+  <script src="cover.js"></script>
+</body>
+</html>

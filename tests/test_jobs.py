@@ -214,3 +214,36 @@ async def test_fetch_jobs_calls_upsert_for_each_job():
     assert mock_upsert.call_count == len(jobs)
     called_ids = {c.args[0].id for c in mock_upsert.call_args_list}
     assert jobs[0].id in called_ids
+
+
+# ── Task 4.1: ranking contra el CV base ───────────────────────────────────────
+from datetime import date as _date
+from unittest.mock import AsyncMock as _AsyncMock
+from unittest.mock import MagicMock as _MagicMock
+from unittest.mock import patch as _patch
+
+from backend.jobs import Job as _Job
+
+
+def _job(i):
+    return _Job(id=str(i), title=f"Job {i}", company="Co", location="Remote", employment_type="full_time",
+                description="Python", tags=[], url=f"https://x.io/{i}", posted_at=_date(2026, 9, 1))
+
+
+def test_ranked_uses_base_cv_embedding_when_logged_in(client, as_user):
+    col = _MagicMock()
+    col.query.return_value = [_MagicMock(id="2", score=0.9)]
+    with _patch("src.routes.jobs.fetch_jobs", _AsyncMock(return_value=[_job(1), _job(2)])), \
+         _patch("src.routes.jobs.get_cv", return_value={"cv_text": "Python dev"}), \
+         _patch("src.routes.jobs.embed_text", return_value=[0.1] * 384) as emb, \
+         _patch("src.routes.jobs.get_jobs_collection", return_value=col):
+        data = client.get("/jobs/ranked").json()
+    emb.assert_called_once_with("Python dev")
+    assert data[0]["id"] == "2" and data[0]["similarity_score"] == 0.9
+
+
+def test_ranked_unranked_when_logged_in_without_cv(client, as_user):
+    with _patch("src.routes.jobs.fetch_jobs", _AsyncMock(return_value=[_job(1)])), \
+         _patch("src.routes.jobs.get_cv", return_value=None):
+        data = client.get("/jobs/ranked").json()
+    assert data[0]["similarity_score"] is None

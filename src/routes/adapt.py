@@ -1,29 +1,31 @@
 # src/routes/adapt.py
 """
-POST /adapt  — run the adaptation pipeline on a CV + JD
-GET  /adapt/{run_id}/pdf — download the generated PDF
+POST /adapt  — adapta el CV a una oferta. Modos: cv (1🪙), cover (1🪙), both (2🪙).
+GET  /adapt/{run_id}/pdf — descarga el PDF generado.
 
-Phase 1a: no auth, no credits. Rate limited 3/min per IP.
-Phase 1b: add auth dependency + credit check before run_pipeline().
+CV: archivo > token de sesión > CV base del usuario. La JD puede ser texto o una URL,
+que se descarga con backend.job_fetch ANTES de cobrar.
 
-PDF storage: lightweight in-memory dict with a fixed max size.
-In Phase 1b this moves to Supabase Storage.
+PDF storage: dict en memoria acotado. Los PDFs del historial se regeneran (GET /history/{id}/pdf).
 """
 import logging
 import uuid
 from collections import OrderedDict
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
+from backend import history
 from backend.adapter.pipeline import run_pipeline
 from backend.auth import RequiredUser
 from backend.credits import InsufficientCredits, decrement, ensure_user, restore
-from backend.extractor import extract_text
-from backend.sessions import get_session
+from backend.job_fetch import JobFetchError, fetch_job_text, is_url
+from backend.schemas import PipelineStatus
+from backend.user_cv import get_cv
+from src.routes.cv_input import read_session, read_upload
 
 logger = logging.getLogger(__name__)
 limiter = Limiter(key_func=get_remote_address)
@@ -34,7 +36,11 @@ router = APIRouter()
 _PDF_STORE_MAX = 50
 _pdf_store: OrderedDict[str, bytes] = OrderedDict()
 
-MAX_FILE_BYTES = 5 * 1024 * 1024  # 5 MB
+COSTS = {"cv": 1, "cover": 1, "both": 2}
+MIN_JD_CHARS = 50
+MAX_JD_CHARS = 20000
+MIN_CV_CHARS = 100
+_FAILED = (PipelineStatus.FAILED_EXTRACT, PipelineStatus.FAILED_ADAPT)
 
 
 def _store_pdf(run_id: str, pdf_bytes: bytes) -> None:
@@ -50,94 +56,88 @@ def _store_pdf(run_id: str, pdf_bytes: bytes) -> None:
 async def adapt_resume(
     request: Request,
     user_id: RequiredUser,
-    job_description: str = Form(..., min_length=50, description="Full job description text"),
+    job_input: str = Form(..., max_length=MAX_JD_CHARS, description="Job description text or a job posting URL"),
+    mode: Literal["cv", "cover", "both"] = Form("both"),
     output_language: str = Form("en", pattern="^(es|en)$", description="Output language: 'es' or 'en'"),
     file: Optional[UploadFile] = File(None),
 ):
-    """
-    Run the 3-stage adaptation pipeline on a CV + job description.
-
-    CV source (in priority order):
-    1. `file` upload in this request
-    2. `X-CV-Session-Token` header pointing to an existing session
-
-    Returns AdaptationResult as JSON, with `run_id` to download the PDF.
-    """
-    # ── Resolve CV text ───────────────────────────────────────────────────────
-    cv_text: str | None = None
-
-    if file is not None:
-        file_bytes = await file.read()
-        if not file_bytes:
-            raise HTTPException(status_code=400, detail="Uploaded file is empty")
-        if len(file_bytes) > MAX_FILE_BYTES:
-            raise HTTPException(status_code=413, detail="File exceeds 5 MB limit")
+    # ── JD: texto o URL (se descarga antes de cobrar) ─────────────────────────
+    job_url: str | None = None
+    if is_url(job_input):
+        job_url = job_input.strip()
         try:
-            cv_text = extract_text(file_bytes, file.filename)
-        except Exception as exc:
-            logger.warning("[adapt] Text extraction failed: %s", exc)
+            job_description = await fetch_job_text(job_url)
+        except JobFetchError as exc:
+            logger.info("[adapt] Job link unreadable: %s", exc)
             raise HTTPException(
                 status_code=422,
-                detail="Could not extract text from the CV. Use a PDF with selectable text or DOCX.",
+                detail="We couldn't read that link — paste the job description instead.",
             ) from exc
+        job_description = job_description[:MAX_JD_CHARS]  # la URL no esquiva el límite del texto pegado
+    else:
+        job_description = job_input.strip()
+    if len(job_description) < MIN_JD_CHARS:
+        raise HTTPException(status_code=422, detail="Job description is too short (min 50 characters).")
 
-    if not cv_text:
-        token = request.headers.get("X-CV-Session-Token")
-        if token:
-            try:
-                uuid.UUID(token)
-            except ValueError:
-                raise HTTPException(status_code=400, detail="Invalid session token format")
-            session = get_session(token)
-            if session is None:
-                raise HTTPException(status_code=400, detail="Session not found or expired")
-            cv_text = session.cv_text
-
+    # ── CV: archivo > token de sesión > CV base ───────────────────────────────
+    cv_text: str | None = None
+    if file is not None:
+        cv_text = await read_upload(file)
+    elif token := request.headers.get("X-CV-Session-Token"):
+        cv_text = read_session(token)
+    elif base := get_cv(user_id):
+        cv_text = base["cv_text"]
     if not cv_text or not cv_text.strip():
-        raise HTTPException(status_code=400, detail="No CV provided. Upload a file or supply X-CV-Session-Token.")
-
-    if len(cv_text.strip()) < 100:
+        raise HTTPException(status_code=400, detail="No CV found. Upload your CV first.")
+    if len(cv_text.strip()) < MIN_CV_CHARS:
         raise HTTPException(
             status_code=422,
             detail="Extracted CV text is too short. The file may be image-only or corrupted.",
         )
 
-    # ── Credit check ─────────────────────────────────────────────────────────
+    # ── Créditos ──────────────────────────────────────────────────────────────
+    cost = COSTS[mode]
     ensure_user(user_id)
     try:
-        decrement(user_id)
+        decrement(user_id, cost)
     except InsufficientCredits:
-        return JSONResponse(
-            status_code=402,
-            content={"detail": "No credits remaining", "code": "no_credits"},
-        )
+        return JSONResponse(status_code=402, content={"detail": "No credits remaining", "code": "no_credits"})
 
-    # ── Run pipeline ──────────────────────────────────────────────────────────
+    # ── Pipeline ──────────────────────────────────────────────────────────────
     logger.info(
-        "[adapt] Starting pipeline, cv_len=%d, jd_len=%d, lang=%s",
-        len(cv_text),
-        len(job_description),
-        output_language,
+        "[adapt] mode=%s cv_len=%d jd_len=%d lang=%s", mode, len(cv_text), len(job_description), output_language
     )
-
     try:
         result, pdf_bytes = await run_pipeline(
             cv_text=cv_text,
             job_description=job_description,
             output_language=output_language,
             user_id=user_id,
+            mode=mode,
         )
     except Exception as exc:
-        restore(user_id)
+        restore(user_id, cost)
         logger.exception("[adapt] Unexpected pipeline error: %s", exc)
         raise HTTPException(status_code=500, detail=f"Pipeline error: {exc}") from exc
+
+    content = result.model_dump(mode="json")
+    history_id: str | None = None
+    if result.status in _FAILED:
+        restore(user_id, cost)
+    else:
+        if mode == "both" and result.cover_letter is None:
+            restore(user_id, COSTS["cover"])  # la carta falló (no fatal): se reembolsa su parte
+        try:
+            history_id = history.add(user_id, mode, job_description, job_url, content)
+        except Exception as exc:  # el usuario ya tiene su resultado: no romper por el historial
+            logger.warning("[adapt] Could not save history: %s", exc)
 
     if pdf_bytes:
         _store_pdf(result.run_id, pdf_bytes)
 
     return JSONResponse(
         status_code=200,
-        content=result.model_dump(mode="json"),
+        content={**content, "job_description": job_description, "history_id": history_id},
     )
 
 

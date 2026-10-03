@@ -134,7 +134,7 @@ class TestEnsureUser:
         with patch("backend.credits._supabase", mock):
             ensure_user(USER_ID)
         mock.table.return_value.upsert.assert_called_once_with(
-            {"user_id": USER_ID, "balance": 2},
+            {"user_id": USER_ID, "balance": 5},
             on_conflict="user_id",
             ignore_duplicates=True,
         )

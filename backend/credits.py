@@ -7,21 +7,13 @@ to avoid race conditions. Every public function is a no-op when Supabase is
 unavailable, so the adapter keeps working in dev without credentials.
 """
 import logging
-import os
+
+from backend.db import client as _supabase
 
 logger = logging.getLogger(__name__)
 
-_SUPABASE_URL = os.getenv("SUPABASE_URL")
-_SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
-_supabase = None
-if _SUPABASE_URL and _SUPABASE_KEY:
-    try:
-        from supabase import create_client
-        _supabase = create_client(_SUPABASE_URL, _SUPABASE_KEY)
-        logger.info("[credits] Supabase client initialized")
-    except ImportError:
-        logger.warning("[credits] supabase package not installed — credits disabled")
+# Antes leía SUPABASE_KEY, que prod no setea (es la variable de sessions.py): los
+# créditos quedaban desactivados. Ahora usa el cliente con service role.
 
 
 class InsufficientCredits(Exception):
@@ -29,11 +21,11 @@ class InsufficientCredits(Exception):
 
 
 def ensure_user(user_id: str) -> None:
-    """Insert a credits row with balance=0 if one doesn't exist yet (idempotent)."""
+    """Insert a credits row with the signup bonus (5) if one doesn't exist yet (idempotent)."""
     if _supabase is None:
         return
     _supabase.table("credits").upsert(
-        {"user_id": user_id, "balance": 2},
+        {"user_id": user_id, "balance": 5},
         on_conflict="user_id",
         ignore_duplicates=True,
     ).execute()

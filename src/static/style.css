@@ -50,7 +50,15 @@
 /* ── Reset ─────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-html { background: var(--bg-deep); }
+html {
+  background: var(--bg-deep);
+  /* Reservar siempre el canal de la barra de scroll. Sin esto, pasar de una
+     página que entra sin scroll (adapter, evaluator) a una que sí scrollea
+     (job board) aparece la barra, el viewport se angosta 10px y todo el
+     contenido centrado salta 5px al costado. Baseline desde 2024-12; los
+     navegadores que no lo soportan lo ignoran y se comportan como hasta ahora. */
+  scrollbar-gutter: stable;
+}
 
 body {
   color: var(--text-primary);

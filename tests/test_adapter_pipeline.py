@@ -177,3 +177,57 @@ async def test_pipeline_cover_letter_failure_is_non_fatal():
     assert result.status == PipelineStatus.COMPLETED
     assert result.cover_letter is None  # not delivered but not a failure
     assert pdf is not None
+
+
+# ── Task 4.1: modos del pipeline ──────────────────────────────────────────────
+from unittest.mock import MagicMock  # noqa: E402
+
+from backend.adapter.pipeline import run_pipeline  # noqa: E402
+
+_SCHEMA = CVSchema(candidate_name="Jane", experiences=[], skills=["Python"], education=[])
+_CV = "Jane Doe Python engineer " * 10
+_JD = "We need a Python engineer with FastAPI " * 3
+
+
+def _patches(cover=None):
+    return (
+        patch("backend.adapter.pipeline.extract_schema", AsyncMock(return_value=_SCHEMA)),
+        patch("backend.adapter.pipeline.adapt_cv", AsyncMock(return_value=(_SCHEMA, []))),
+        patch("backend.adapter.pipeline.validate_adaptation", MagicMock(return_value=[])),
+        patch("backend.adapter.pipeline.render_pdf", MagicMock(return_value=b"%PDF")),
+        patch("backend.adapter.pipeline.generate_cover_letter", cover or AsyncMock(return_value="Dear team")),
+    )
+
+
+@pytest.mark.asyncio
+async def test_cover_mode_skips_adaptation_and_pdf():
+    p = _patches()
+    with p[0], p[1] as adapt, p[2], p[3] as render, p[4] as cover:
+        result, pdf = await run_pipeline(_CV, _JD, mode="cover")
+    adapt.assert_not_called()
+    render.assert_not_called()
+    cover.assert_awaited_once_with(_SCHEMA, _JD, "en")
+    assert result.status == PipelineStatus.COMPLETED
+    assert result.cover_letter == "Dear team"
+    assert result.adapted_schema is None
+    assert pdf is None
+
+
+@pytest.mark.asyncio
+async def test_cover_mode_failure_is_failed_adapt():
+    p = _patches(cover=AsyncMock(side_effect=RuntimeError("llm down")))
+    with p[0], p[1], p[2], p[3], p[4]:
+        result, pdf = await run_pipeline(_CV, _JD, mode="cover")
+    assert result.status == PipelineStatus.FAILED_ADAPT
+    assert "llm down" in result.error_message
+    assert pdf is None
+
+
+@pytest.mark.asyncio
+async def test_cv_mode_does_not_write_cover_letter():
+    p = _patches()
+    with p[0], p[1], p[2], p[3], p[4] as cover:
+        result, pdf = await run_pipeline(_CV, _JD, mode="cv")
+    cover.assert_not_called()
+    assert result.cover_letter is None
+    assert pdf == b"%PDF"
