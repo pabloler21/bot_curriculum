@@ -42,6 +42,14 @@ def test_pages_using_aurea_render_load_render_js():
             assert "render.js" in srcs[:i], f"{html.name}: {js} usa aureaRender pero render.js no carga antes"
 
 
+def test_ambient_background_lives_in_shell():
+    """El fondo ambiental (orbs + grilla) lo pone shell.js; si una página lo repite, sale doble."""
+    static = Path(__file__).resolve().parent.parent / "src" / "static"
+    assert 'class="ambient-bg"' in (static / "shell.js").read_text(encoding="utf-8")
+    for html in static.glob("*.html"):
+        assert "ambient-bg" not in html.read_text(encoding="utf-8"), f"{html.name} repite el fondo ambiental"
+
+
 @pytest.mark.parametrize("page,target", [("adapt.html", "tailor.html"), ("pricing.html", "/#pricing")])
 def test_old_pages_redirect(client, page, target):
     html = client.get(f"/{page}").text
