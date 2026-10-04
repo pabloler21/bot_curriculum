@@ -24,3 +24,6 @@ zvec_test_*/
 # Tesseract OCR data (5MB, no versionar)
 *.traineddata
 .playwright-mcp/
+
+# Artefactos del visual companion de superpowers
+.superpowers/
