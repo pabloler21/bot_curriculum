@@ -2,8 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=/#pricing">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aurea — Pricing</title>
+  <meta name="description" content="Aurea scores your CV like an ATS, tailors it to each job without inventing anything, and writes your cover letter.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="app.css">
 </head>
-<body><a href="/#pricing">Continue to pricing</a></body>
+<body data-page="landing" data-section="pricing">
+  <main>
+    <section class="landing-section">
+      <p class="section-kicker" data-i18n="landing.pricing_kicker">Pricing</p>
+      <h1 class="section-title" data-i18n="landing.pricing_title">Start free. Upgrade when you're applying at scale.</h1>
+      <div class="pricing-grid">
+        <div class="price-card">
+          <h3>Free</h3>
+          <p class="price">$0</p>
+          <ul>
+            <li data-i18n="landing.free_1">Unlimited CV evaluations</li>
+            <li data-i18n="landing.free_2">5 credits when you sign up</li>
+            <li data-i18n="landing.free_3">Tailored CV, cover letter and interview prep</li>
+          </ul>
+          <a href="evaluator.html" class="btn-primary" data-i18n="landing.cta">Improve my CV</a>
+        </div>
+        <div class="price-card price-card--pro">
+          <h3>Pro <span class="badge" data-i18n="landing.soon">Coming soon</span></h3>
+          <p class="price">—</p>
+          <ul>
+            <li data-i18n="landing.pro_1">Credit packs for active job searches</li>
+            <li data-i18n="landing.pro_2">Priority processing</li>
+          </ul>
+          <div id="waitlist-guest" class="hidden" data-auth="guest">
+            <input type="email" id="waitlist-email" class="text-input" placeholder="you@example.com" data-i18n-placeholder="auth.email_placeholder" aria-label="Email">
+          </div>
+          <button type="button" id="waitlist-btn" class="btn-secondary" data-i18n="landing.notify">Notify me when Pro launches</button>
+          <p id="waitlist-error" class="error-msg hidden" role="alert"></p>
+          <p id="waitlist-ok" class="notice hidden" data-i18n="landing.notify_ok">You're on the list — we'll email you when Pro launches.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="shell.js"></script>
+  <script src="landing.js"></script>
+</body>
 </html>

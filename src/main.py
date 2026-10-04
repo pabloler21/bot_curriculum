@@ -37,5 +37,15 @@ app.add_middleware(
 
 app.include_router(router)
 
+class RevalidatedStaticFiles(StaticFiles):
+    """Fuerza a revalidar con el ETag (304 barato). Sin esto el navegador cachea por
+    heurística y tras un deploy mezcla un HTML viejo con un shell.js nuevo."""
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 STATIC_DIR = pathlib.Path(__file__).parent / "static"
-app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
+app.mount("/", RevalidatedStaticFiles(directory=STATIC_DIR, html=True), name="static")
