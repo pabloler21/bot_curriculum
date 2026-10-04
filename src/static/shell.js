@@ -103,6 +103,37 @@
       <div class="ambient-grid"></div>
     </div>`;
 
+  // Nav de la landing: cada sección es su propia página; body[data-section] marca la actual.
+  function landingNavHtml() {
+    const section = body.dataset.section || '';
+    const cur = (s) => (s === section ? ' aria-current="page"' : '');
+    return `
+    <nav class="landing-nav" aria-label="Main">
+      <a href="/" class="brand"><div class="brand-mark">✦</div><span class="brand-name">Aurea</span></a>
+      <div class="landing-links">
+        <a href="/" data-i18n="landing.nav_home"${cur('home')}>Home</a>
+        <a href="about.html" data-i18n="landing.nav_about"${cur('about')}>About</a>
+        <details class="nav-dropdown${section.startsWith('features-') ? ' active' : ''}">
+          <summary><span data-i18n="landing.nav_features">Features</span> ▾</summary>
+          <div class="nav-dropdown-menu">
+            <a href="features-evaluator.html" data-i18n="landing.feat_evaluator"${cur('features-evaluator')}>Evaluator</a>
+            <a href="features-adapter.html" data-i18n="landing.feat_adapter"${cur('features-adapter')}>Adapter</a>
+            <a href="features-jobs.html" data-i18n="landing.feat_jobs"${cur('features-jobs')}>Job board</a>
+          </div>
+        </details>
+        <a href="pricing.html" data-i18n="landing.nav_pricing"${cur('pricing')}>Pricing</a>
+      </div>
+      <div class="landing-actions">
+        <div class="ui-lang" role="group" aria-label="Language">
+          <button type="button" data-set-lang="en">EN</button><button type="button" data-set-lang="es">ES</button>
+        </div>
+        <button type="button" class="btn-ghost hidden" data-auth="guest" data-open-auth="login" data-i18n="landing.login">Login</button>
+        <button type="button" class="btn-primary btn-sm hidden" data-auth="guest" data-open-auth="signup" data-i18n="landing.signup">Sign up</button>
+        <a href="evaluator.html" class="btn-primary btn-sm hidden" data-auth="user" data-i18n="landing.go_app">Go to app</a>
+      </div>
+    </nav>`;
+  }
+
   function topbarHtml() {
     return `
     <header class="topbar">
@@ -295,6 +326,8 @@
 
   function wire() {
     document.addEventListener('click', (e) => {
+      const dropdown = document.querySelector('.nav-dropdown[open]');
+      if (dropdown && !dropdown.contains(e.target)) dropdown.open = false;
       const langBtn = e.target.closest('[data-set-lang]');
       if (langBtn) { store(LANG_KEY, langBtn.dataset.setLang); window.location.reload(); return; }
       const openBtn = e.target.closest('[data-open-auth]');
@@ -316,7 +349,10 @@
 
   async function init() {
     body.insertAdjacentHTML('afterbegin', AMBIENT_HTML);
-    if (!isLanding) {
+    if (isLanding) {
+      body.insertAdjacentHTML('afterbegin', landingNavHtml());
+      body.insertAdjacentHTML('beforeend', '<footer class="landing-footer">© Aurea</footer>');
+    } else {
       body.insertAdjacentHTML('afterbegin', topbarHtml() + (page === 'evaluator' ? offerBarHtml() : ''));
     }
     body.insertAdjacentHTML('beforeend', modalHtml());

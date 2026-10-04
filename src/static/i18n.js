@@ -72,7 +72,6 @@ window.I18N_ES = {
   'landing.about_title': 'La mayoría de los CVs se descartan antes de que los lea una persona.',
   'landing.about_body': 'Los sistemas de seguimiento de candidatos filtran por estructura y palabras clave. Aurea te muestra cómo ven tu CV esos sistemas y lo adapta a cada búsqueda, manteniendo cada dato fiel a tu experiencia real.',
   'landing.features_kicker': 'Funciones',
-  'landing.features_title': 'Todo lo que hay entre tu CV y la entrevista.',
   'landing.feat_evaluator': 'Evaluador',
   'landing.feat_evaluator_body': 'Una lectura precisa de 0 a 100 de cómo ven tu CV los parsers, con fortalezas, debilidades y recomendaciones priorizadas.',
   'landing.feat_evaluator_1': 'Puntaje de compatibilidad ATS',

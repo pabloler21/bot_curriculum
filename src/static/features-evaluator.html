@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurea — Evaluator</title>
+  <meta name="description" content="Aurea scores your CV like an ATS, tailors it to each job without inventing anything, and writes your cover letter.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body data-page="landing" data-section="features-evaluator">
+  <main>
+    <section class="landing-section">
+      <p class="section-kicker" data-i18n="landing.features_kicker">Features</p>
+      <article class="feature">
+        <div>
+          <h1 class="section-title" data-i18n="landing.feat_evaluator">Evaluator</h1>
+          <p class="secondary-text" data-i18n="landing.feat_evaluator_body">A precise 0–100 read on how parsers see your CV, with strengths, weaknesses and ranked recommendations.</p>
+          <ul>
+            <li data-i18n="landing.feat_evaluator_1">ATS compatibility score</li>
+            <li data-i18n="landing.feat_evaluator_2">Keyword intelligence</li>
+            <li data-i18n="landing.feat_evaluator_3">Formatting flags</li>
+          </ul>
+          <a href="evaluator.html" class="btn-secondary" data-i18n="landing.try_it">Try it</a>
+        </div>
+        <div class="feature-visual" aria-hidden="true">◎</div>
+      </article>
+    </section>
+  </main>
+
+  <script src="i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="shell.js"></script>
+</body>
+</html>
