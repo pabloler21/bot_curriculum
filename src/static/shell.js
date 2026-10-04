@@ -93,6 +93,16 @@
   });
 
   // ── Markup ────────────────────────────────────────────────────────────────
+  // Fondo ambiental (orbs + grilla, estilos en style.css): lo pone el shell para que esté en todas las páginas.
+  const AMBIENT_HTML = `
+    <div class="ambient-bg" aria-hidden="true">
+      <div class="ambient-orb ambient-orb-coral"></div>
+      <div class="ambient-orb ambient-orb-aqua"></div>
+      <div class="ambient-orb ambient-orb-amber"></div>
+      <div class="ambient-orb ambient-orb-magenta"></div>
+      <div class="ambient-grid"></div>
+    </div>`;
+
   function topbarHtml() {
     return `
     <header class="topbar">
@@ -305,6 +315,7 @@
   }
 
   async function init() {
+    body.insertAdjacentHTML('afterbegin', AMBIENT_HTML);
     if (!isLanding) {
       body.insertAdjacentHTML('afterbegin', topbarHtml() + (page === 'evaluator' ? offerBarHtml() : ''));
     }
