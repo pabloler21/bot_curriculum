@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurea — Adapter</title>
+  <meta name="description" content="Aurea scores your CV like an ATS, tailors it to each job without inventing anything, and writes your cover letter.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body data-page="landing" data-section="features-adapter">
+  <main>
+    <section class="landing-section">
+      <p class="section-kicker" data-i18n="landing.features_kicker">Features</p>
+      <article class="feature">
+        <div>
+          <h1 class="section-title" data-i18n="landing.feat_adapter">Adapter</h1>
+          <p class="secondary-text" data-i18n="landing.feat_adapter_body">Paste a job link or description and get a CV tailored to the role, the skill gaps to work on, and a cover letter.</p>
+          <ul>
+            <li data-i18n="landing.feat_adapter_1">No invented experience — every line traces back to your CV</li>
+            <li data-i18n="landing.feat_adapter_2">Cover letter and interview prep</li>
+            <li data-i18n="landing.feat_adapter_3">PDF ready to send</li>
+          </ul>
+          <a href="evaluator.html" class="btn-secondary" data-i18n="landing.try_it">Try it</a>
+        </div>
+        <div class="feature-visual" aria-hidden="true">✦</div>
+      </article>
+    </section>
+  </main>
+
+  <script src="i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="shell.js"></script>
+</body>
+</html>

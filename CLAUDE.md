@@ -149,7 +149,11 @@ src/
     session.py      # POST/GET/DELETE /session — CV sessions del job board
     waitlist.py     # POST /waitlist — registra interés en plan Pro
   static/
-    index.html      # Landing pública (nav por anchors, funnel) + landing.js
+    index.html      # Landing: Home (hero + CTA). Cada sección es su propia página,
+                    # con body data-page="landing" data-section="…"; el nav y el footer los pone shell.js
+    about.html      # Landing: About
+    features-evaluator.html / features-adapter.html / features-jobs.html  # Landing: una página por feature
+    pricing.html    # Landing: Free/Pro + waitlist (landing.js)
     evaluator.html  # ATS evaluator (anónimo) + evaluator.js
     tailor.html     # Adaptar CV a un JD (texto o URL) + tailor.js
     cover.html      # Cover letter + cover.js
@@ -165,7 +169,6 @@ src/
     style.css       # Design system base (lo cargan todas las páginas)
     jobs.css        # Estilos de job-detail.html (no borrar)
     adapt.html      # Redirect (meta refresh) → tailor.html
-    pricing.html    # Redirect (meta refresh) → /#pricing
 
 supabase/
   migrations/
@@ -209,7 +212,7 @@ tests/
   test_improve.py          # backend/adapter/improver.py + POST /improve
   test_job_fetch.py        # backend/job_fetch.py — anti-SSRF, deadline, tope de tamaño
   test_static_backend_url.py # el frontend no hardcodea la URL del backend
-  test_static_pages.py     # páginas cargan el shell; redirects; JS viejo borrado
+  test_static_pages.py     # páginas cargan el shell; landing en páginas; Cache-Control; redirects
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -273,7 +276,7 @@ Desde el job board:
 jobs.html (My Jobs / Recommended, ranking con el CV base) → job-detail.html
 → "Adapt my CV to this role" → JD en localStorage (aurea_pending_jd) → tailor.html pre-cargado
 
-adapt.html y pricing.html quedaron como redirects (tailor.html y /#pricing).
+adapt.html quedó como redirect a tailor.html.
 ```
 
 ## Estrategia de ramas (Git workflow)
@@ -374,7 +377,9 @@ ruff check backend/ src/routes/ tests/
 | 3.27 | Interview prep — `POST /interview` + panel en resultados | ✅ mergeada |
 | 3.28 | Deploy automático al VPS en cada push a `main` | ✅ mergeada (falta instalar la clave en el server) |
 | 3.29 | Adapter y evaluator entran sin scroll en pantallas de laptop | ✅ mergeada |
-| 4.1 | Rediseño de navegación (spec 2026-09-25) | 🔄 en PR |
+| 4.1 | Rediseño de navegación (spec 2026-09-25) | ✅ mergeada |
+| 4.2 | Fondo ambiental (orbs + grilla) en todas las páginas, topbar/sidebar translúcidos | ✅ mergeada |
+| 4.3 | Landing en páginas separadas (Home, About, 3 Features, Pricing) + `Cache-Control: no-cache` | ✅ mergeada |
 
 **Sprint 3 cerrado y releaseado**: `main` está al día con `develop` (PR #29). La única tarea
 abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.

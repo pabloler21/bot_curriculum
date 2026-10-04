@@ -1,13 +1,5 @@
-// landing.js — dropdown de Features y waitlist del plan Pro.
+// landing.js — waitlist del plan Pro (pricing.html). El dropdown del nav lo maneja shell.js.
 'use strict';
-
-const $dropdown = document.querySelector('.nav-dropdown');
-document.querySelectorAll('.nav-dropdown-menu a').forEach((a) => {
-  a.addEventListener('click', () => { $dropdown.open = false; });
-});
-document.addEventListener('click', (e) => {
-  if ($dropdown.open && !$dropdown.contains(e.target)) $dropdown.open = false;
-});
 
 const $btn = document.getElementById('waitlist-btn');
 const $email = document.getElementById('waitlist-email');
