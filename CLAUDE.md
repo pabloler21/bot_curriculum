@@ -308,6 +308,10 @@ gh pr create --base develop --title "..." --body "..."
 # 6. Al iniciar la siguiente tarea → volver al paso 1
 ```
 
+**Commits lo más chicos posible.** Un commit = un cambio lógico: cada fix, cada ajuste visual,
+cada test y cada cambio de docs va en su propio commit, aunque viajen en la misma rama o PR.
+Nunca juntar dos arreglos no relacionados en un commit, ni "aprovechar" un commit para otra cosa.
+
 **Nunca trabajar directo en `develop` ni en `main`.**
 **No usamos worktrees.** Se trabaja directamente en el repo clonado.
 
