@@ -55,6 +55,10 @@ el runner con reintentos. Si no responde, el workflow falla — no hay rollback 
   en `/etc/sudoers.d/deploy`, así que sin el forced command la clave sería root.
 - Secrets del repo: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`.
 - El script nunca hace `git clean`: el `.env` vive en ese directorio y no está trackeado.
+- **Si GitHub Actions está caído** (ver githubstatus.com), los jobs quedan en cola ~15 min y
+  GitHub los cancela sin correr ningún paso: el run figura `failure`, pero no falló ningún test.
+  Pasó con la 4.4 (2026-10-05). El merge a `main` no se deshace; queda pendiente solo el deploy.
+  Cuando Actions vuelva, `gh run rerun <run_id> --failed`; si no puede esperar, deploy manual.
 
 ```bash
 # Deploy manual (si hace falta saltear CI)
