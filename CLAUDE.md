@@ -379,7 +379,7 @@ ruff check backend/ src/routes/ tests/
 | 3.25 | Actualizar CLAUDE.md | ✅ mergeada |
 | 3.26 | Header nav: mismo set de tabs, pill de dos filas en pantallas angostas | ✅ mergeada |
 | 3.27 | Interview prep — `POST /interview` + panel en resultados | ✅ mergeada |
-| 3.28 | Deploy automático al VPS en cada push a `main` | ✅ mergeada (falta instalar la clave en el server) |
+| 3.28 | Deploy automático al VPS en cada push a `main` | ✅ funcionando |
 | 3.29 | Adapter y evaluator entran sin scroll en pantallas de laptop | ✅ mergeada |
 | 4.1 | Rediseño de navegación (spec 2026-09-25) | ✅ mergeada |
 | 4.2 | Fondo ambiental (orbs + grilla) en todas las páginas, topbar/sidebar translúcidos | ✅ mergeada |
