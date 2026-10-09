@@ -409,3 +409,7 @@ No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya
    opacidad 0 y texto tapado por una imagen todavía pasan.
 6. **Precios de los paquetes en Settings son placeholders**: no hay pasarela de pago (ver 3.5).
 7. **Configurar Google OAuth en Supabase** (Auth → Providers) para que funcione el login con Google.
+8. **Supabase manda solo 2 mails por hora** con su servicio de correo incorporado (doc oficial,
+   Auth → Rate limits, verificado el 2026-10-09). **Bloquea el producto**: no alcanza para
+   onboardear usuarios reales ni para probar el magic link más de dos veces seguidas. Se levanta
+   configurando SMTP propio o un Send Email hook; ahí el límite se ajusta en Auth → Rate Limits.
