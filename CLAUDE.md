@@ -399,6 +399,7 @@ ruff check .
 | 4.2 | Fondo ambiental (orbs + grilla) en todas las páginas, topbar/sidebar translúcidos | ✅ mergeada |
 | 4.3 | Landing en páginas separadas (Home, About, 3 Features, Pricing) + `Cache-Control: no-cache` | ✅ mergeada |
 | 4.4 | UI fixes: el home entra sin scroll (no desborda ni tiembla) | ✅ mergeada |
+| 4.5 | Actualizar CLAUDE.md (estado post-4.4, runbook de deploy, deuda de mails) | ✅ mergeada |
 
 **Último release**: `main` al día con `develop` hasta la 4.4 (PR #49, deployado el 2026-10-08).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
