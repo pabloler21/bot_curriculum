@@ -399,10 +399,11 @@ No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya
    en texto plano. Se untrackeó, pero dos tokens siguen en el historial público de GitHub.
 2. **RLS deshabilitada** en `cv_sessions` y `pipeline_runs` (ver sección Supabase).
 3. **Secret `CLAUDE_CODE_OAUTH_TOKEN` vencido** → los workflows de Claude Actions en `main` fallan.
-4. **Confirmar el redirect del magic link**: falta verificar que Supabase acepte
-   `https://aurea.pablolerner.dev` (Auth → URL Configuration). Solo se comprueba con un login real.
-   El login manda `redirectTo` = URL de la página actual, así que la allow-list necesita wildcards:
-   `https://aurea.pablolerner.dev/**` y `http://localhost:8000/**` (Authentication → URL Configuration → Redirect URLs).
+4. **Redirect del magic link en dev**: el login manda `redirectTo` = URL de la página actual, así
+   que la allow-list de Supabase (Authentication → URL Configuration → Redirect URLs) necesita
+   wildcards. Producción está resuelta: los enlaces caían en el Site URL (`localhost:3000`) hasta
+   que se agregó `https://aurea.pablolerner.dev/**` (2026-09-17, PR #39). Falta confirmar
+   `http://localhost:8000/**` para probar el login en local.
 5. **Límite conocido del filtro de texto oculto** (marcado con comentario `ponytail:` en
    `backend/extractor.py`): pdfplumber no expone text render mode ni alpha, así que `3 Tr`,
    opacidad 0 y texto tapado por una imagen todavía pasan.
