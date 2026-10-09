@@ -57,6 +57,7 @@ el runner con reintentos. Si no responde, el workflow falla — no hay rollback 
   la contraseña bloqueada. Un bug en la app queda en `deploy`, no es root del VPS. **No
   ampliarlo**: lo que necesite más va por `linuxuser` (la cuenta de administración; vps-infra
   ya instala con ella). Verificar con `sudo -l -U deploy`: tiene que listar ese único comando.
+  La regla anterior (`NOPASSWD:ALL`) quedó guardada en `/root/sudoers.deploy.bak`.
 - Secrets del repo: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`.
 - El script nunca hace `git clean`: el `.env` vive en ese directorio y no está trackeado.
 - **Si GitHub Actions está caído** (ver githubstatus.com), los jobs quedan en cola ~15 min y
