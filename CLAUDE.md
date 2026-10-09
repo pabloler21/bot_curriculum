@@ -36,7 +36,9 @@ Producción: **VPS Vultr `64.176.23.59`** (`aurea.pablolerner.dev`, respaldo `au
   working dir `/home/deploy/bot_curriculum`, env en el `.env` de ese directorio.
 - Caddy hace TLS y ruteo (`/etc/caddy/Caddyfile`). El snippet `lazy` duerme el servicio cuando
   no hay tráfico y lo despierta con la primera navegación — que `botcv` figure `inactive`
-  es normal, no es que esté caído.
+  es normal, no es que esté caído. Dormido, `/health` devuelve **503 "aurea is asleep"** y la
+  navegación redirige a `starting.pablolerner.dev/wake/…`, que arranca el servicio por JS:
+  para despertarlo hay que abrir la URL en un navegador, con `curl` no alcanza.
 - La rama desplegada es `main`.
 
 ### Deploy automático
@@ -49,17 +51,30 @@ el runner con reintentos. Si no responde, el workflow falla — no hay rollback 
   `/home/deploy/deploy.sh`, **fuera del árbol de git**: si estuviera adentro, el checkout
   la reescribiría mientras corre. Si cambia acá, hay que reinstalarla allá.
 - La clave SSH de CI está restringida con `command="/home/deploy/deploy.sh"` en el
-  `authorized_keys` del usuario `deploy`. Esto importa: ese usuario tiene `NOPASSWD:ALL`
-  en `/etc/sudoers.d/deploy`, así que sin el forced command la clave sería root.
+  `authorized_keys` del usuario `deploy`: con esa clave no se puede correr otra cosa.
+- **`deploy` corre Aurea, así que su sudo es mínimo** (desde 2026-10-09): solo
+  `/usr/bin/systemctl restart botcv` (`/etc/sudoers.d/deploy`), fuera del grupo `sudo` y con
+  la contraseña bloqueada. Un bug en la app queda en `deploy`, no es root del VPS. **No
+  ampliarlo**: lo que necesite más va por `linuxuser` (la cuenta de administración; vps-infra
+  ya instala con ella). Verificar con `sudo -l -U deploy`: tiene que listar ese único comando.
 - Secrets del repo: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`.
 - El script nunca hace `git clean`: el `.env` vive en ese directorio y no está trackeado.
+- **Si GitHub Actions está caído** (ver githubstatus.com), los jobs quedan en cola ~15 min y
+  GitHub los cancela sin correr ningún paso: el run figura `failure`, pero no falló ningún test.
+  Pasó con la 4.4 (2026-10-05). El merge a `main` no se deshace; queda pendiente solo el deploy.
+  Cuando Actions vuelva, `gh run rerun <run_id> --failed`; si no puede esperar, deploy manual.
 
 ```bash
 # Deploy manual (si hace falta saltear CI)
-ssh linuxuser@64.176.23.59
-sudo -iu deploy
-/home/deploy/deploy.sh
+ssh linuxuser@64.176.23.59                # clave ~/.ssh/id_ed25519; root no tiene login
+sudo -iu deploy                           # -i: login shell, carga el PATH con ~/.local/bin (uv)
+/home/deploy/deploy.sh                    # mismo script que corre CI
+curl -s http://127.0.0.1:8000/health      # directo a uvicorn, sin Caddy → {"status":"ok"}
+exit; exit
 ```
+
+El script imprime `[deploy] now at <commit>`: tiene que ser el último commit de `origin/main`.
+Si no, el fetch no trajo lo esperado — no seguir sin entender por qué.
 
 Render.com (`render.yaml`) quedó sin usar.
 
@@ -329,8 +344,8 @@ uvicorn src.main:app --reload
 pytest tests/ -v
 pytest tests/ -q   # resumen
 
-# Lint
-ruff check backend/ src/routes/ tests/
+# Lint — igual que CI: todo el repo, no solo backend/ src/routes/ tests/
+ruff check .
 ```
 
 ## Convenciones
@@ -379,15 +394,21 @@ ruff check backend/ src/routes/ tests/
 | 3.25 | Actualizar CLAUDE.md | ✅ mergeada |
 | 3.26 | Header nav: mismo set de tabs, pill de dos filas en pantallas angostas | ✅ mergeada |
 | 3.27 | Interview prep — `POST /interview` + panel en resultados | ✅ mergeada |
-| 3.28 | Deploy automático al VPS en cada push a `main` | ✅ mergeada (falta instalar la clave en el server) |
+| 3.28 | Deploy automático al VPS en cada push a `main` | ✅ funcionando |
 | 3.29 | Adapter y evaluator entran sin scroll en pantallas de laptop | ✅ mergeada |
+| 3.30 | `BACKEND_URL` relativo — arregla el login roto en producción | ✅ mergeada |
+| 3.31 | Auth usa la anon key, no la variable de sessions | ✅ mergeada |
+| 3.32 | Error del magic link visible en la UI | ✅ mergeada |
 | 4.1 | Rediseño de navegación (spec 2026-09-25) | ✅ mergeada |
 | 4.2 | Fondo ambiental (orbs + grilla) en todas las páginas, topbar/sidebar translúcidos | ✅ mergeada |
 | 4.3 | Landing en páginas separadas (Home, About, 3 Features, Pricing) + `Cache-Control: no-cache` | ✅ mergeada |
 | 4.4 | UI fixes: el home entra sin scroll (no desborda ni tiembla) | ✅ mergeada |
+| 4.5 | Actualizar CLAUDE.md (estado post-4.4, runbook de deploy, deuda de mails) | ✅ mergeada |
+| 4.6 | Hardening del VPS: `deploy` solo reinicia `botcv`; vps-infra instala como `linuxuser` | ✅ aplicado en el server |
 
-**Sprint 3 cerrado y releaseado**: `main` está al día con `develop` (PR #29). La única tarea
-abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
+**Último release**: `main` al día con `develop` hasta la 4.4 (PR #49, deployado el 2026-10-08).
+La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
+No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya está en este archivo).
 
 ## Deuda abierta
 
@@ -395,12 +416,17 @@ abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant
    en texto plano. Se untrackeó, pero dos tokens siguen en el historial público de GitHub.
 2. **RLS deshabilitada** en `cv_sessions` y `pipeline_runs` (ver sección Supabase).
 3. **Secret `CLAUDE_CODE_OAUTH_TOKEN` vencido** → los workflows de Claude Actions en `main` fallan.
-4. **Confirmar el redirect del magic link**: falta verificar que Supabase acepte
-   `https://aurea.pablolerner.dev` (Auth → URL Configuration). Solo se comprueba con un login real.
-   El login manda `redirectTo` = URL de la página actual, así que la allow-list necesita wildcards:
-   `https://aurea.pablolerner.dev/**` y `http://localhost:8000/**` (Authentication → URL Configuration → Redirect URLs).
+4. **Redirect del magic link en dev**: el login manda `redirectTo` = URL de la página actual, así
+   que la allow-list de Supabase (Authentication → URL Configuration → Redirect URLs) necesita
+   wildcards. Producción está resuelta: los enlaces caían en el Site URL (`localhost:3000`) hasta
+   que se agregó `https://aurea.pablolerner.dev/**` (2026-09-17, PR #39). Falta confirmar
+   `http://localhost:8000/**` para probar el login en local.
 5. **Límite conocido del filtro de texto oculto** (marcado con comentario `ponytail:` en
    `backend/extractor.py`): pdfplumber no expone text render mode ni alpha, así que `3 Tr`,
    opacidad 0 y texto tapado por una imagen todavía pasan.
 6. **Precios de los paquetes en Settings son placeholders**: no hay pasarela de pago (ver 3.5).
 7. **Configurar Google OAuth en Supabase** (Auth → Providers) para que funcione el login con Google.
+8. **Supabase manda solo 2 mails por hora** con su servicio de correo incorporado (doc oficial,
+   Auth → Rate limits, verificado el 2026-10-09). **Bloquea el producto**: no alcanza para
+   onboardear usuarios reales ni para probar el magic link más de dos veces seguidas. Se levanta
+   configurando SMTP propio o un Send Email hook; ahí el límite se ajusta en Auth → Rate Limits.
