@@ -340,8 +340,8 @@ uvicorn src.main:app --reload
 pytest tests/ -v
 pytest tests/ -q   # resumen
 
-# Lint
-ruff check backend/ src/routes/ tests/
+# Lint — igual que CI: todo el repo, no solo backend/ src/routes/ tests/
+ruff check .
 ```
 
 ## Convenciones
