@@ -51,8 +51,12 @@ el runner con reintentos. Si no responde, el workflow falla — no hay rollback 
   `/home/deploy/deploy.sh`, **fuera del árbol de git**: si estuviera adentro, el checkout
   la reescribiría mientras corre. Si cambia acá, hay que reinstalarla allá.
 - La clave SSH de CI está restringida con `command="/home/deploy/deploy.sh"` en el
-  `authorized_keys` del usuario `deploy`. Esto importa: ese usuario tiene `NOPASSWD:ALL`
-  en `/etc/sudoers.d/deploy`, así que sin el forced command la clave sería root.
+  `authorized_keys` del usuario `deploy`: con esa clave no se puede correr otra cosa.
+- **`deploy` corre Aurea, así que su sudo es mínimo** (desde 2026-10-09): solo
+  `/usr/bin/systemctl restart botcv` (`/etc/sudoers.d/deploy`), fuera del grupo `sudo` y con
+  la contraseña bloqueada. Un bug en la app queda en `deploy`, no es root del VPS. **No
+  ampliarlo**: lo que necesite más va por `linuxuser` (la cuenta de administración; vps-infra
+  ya instala con ella). Verificar con `sudo -l -U deploy`: tiene que listar ese único comando.
 - Secrets del repo: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`.
 - El script nunca hace `git clean`: el `.env` vive en ese directorio y no está trackeado.
 - **Si GitHub Actions está caído** (ver githubstatus.com), los jobs quedan en cola ~15 min y
