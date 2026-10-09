@@ -26,7 +26,9 @@
             <li data-i18n="landing.free_2">5 credits when you sign up</li>
             <li data-i18n="landing.free_3">Tailored CV, cover letter and interview prep</li>
           </ul>
-          <a href="evaluator.html" class="btn-primary" data-i18n="landing.cta">Improve my CV</a>
+          <div class="price-foot">
+            <a href="evaluator.html" class="btn-primary" data-i18n="landing.cta">Improve my CV</a>
+          </div>
         </div>
         <div class="price-card price-card--pro">
           <h3>Pro <span class="badge" data-i18n="landing.soon">Coming soon</span></h3>
@@ -35,12 +37,14 @@
             <li data-i18n="landing.pro_1">Credit packs for active job searches</li>
             <li data-i18n="landing.pro_2">Priority processing</li>
           </ul>
-          <div id="waitlist-guest" class="hidden" data-auth="guest">
-            <input type="email" id="waitlist-email" class="text-input" placeholder="you@example.com" data-i18n-placeholder="auth.email_placeholder" aria-label="Email">
+          <div class="price-foot">
+            <div id="waitlist-guest" class="hidden" data-auth="guest">
+              <input type="email" id="waitlist-email" class="text-input" placeholder="you@example.com" data-i18n-placeholder="auth.email_placeholder" aria-label="Email">
+            </div>
+            <button type="button" id="waitlist-btn" class="btn-secondary" data-i18n="landing.notify">Notify me when Pro launches</button>
+            <p id="waitlist-error" class="error-msg hidden" role="alert"></p>
+            <p id="waitlist-ok" class="notice hidden" data-i18n="landing.notify_ok">You're on the list — we'll email you when Pro launches.</p>
           </div>
-          <button type="button" id="waitlist-btn" class="btn-secondary" data-i18n="landing.notify">Notify me when Pro launches</button>
-          <p id="waitlist-error" class="error-msg hidden" role="alert"></p>
-          <p id="waitlist-ok" class="notice hidden" data-i18n="landing.notify_ok">You're on the list — we'll email you when Pro launches.</p>
         </div>
       </div>
     </section>
