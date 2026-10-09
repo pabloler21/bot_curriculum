@@ -370,6 +370,9 @@ ruff check .
 - **Patch de `OptionalUser`**: como `Depends(get_current_user)` guarda la referencia directa, parchear `backend.auth._supabase`, no `backend.auth.get_current_user`
 - **`.mcp.json` no se versiona** (está en `.gitignore`): contiene el access token de Supabase.
   Tampoco versionar `*.traineddata` ni ningún otro binario grande.
+- **El repo es público**: CLAUDE.md, README y commits nunca llevan secretos (tokens, claves
+  privadas, contenido del `.env`). Datos de infraestructura (IP, usuarios, rutas, cómo se
+  deploya) sí pueden ir: sin la clave SSH no dan acceso. Lo que protege es la clave, no ocultar el mapa.
 
 ## Estado actual de tareas
 
