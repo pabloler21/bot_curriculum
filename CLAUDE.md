@@ -76,6 +76,13 @@ exit; exit
 El script imprime `[deploy] now at <commit>`: tiene que ser el último commit de `origin/main`.
 Si no, el fetch no trajo lo esperado — no seguir sin entender por qué.
 
+**Acceso SSH.** El server solo acepta clave (`publickey`), nunca contraseña. La clave personal
+(`id_ed25519`, la misma que usa GitHub) tiene passphrase desde 2026-10-09:
+- PowerShell: la aporta el `ssh-agent` de Windows (servicio en Automatic), no pide nada.
+  git también lo usa, vía `core.sshCommand = C:/Windows/System32/OpenSSH/ssh.exe`.
+- Git Bash: su `ssh` (`/usr/bin/ssh`) no ve ese agente y pide la passphrase en cada conexión.
+  Por eso un `ssh` **no interactivo** desde Git Bash falla: para automatizar, usar PowerShell.
+
 Render.com (`render.yaml`) quedó sin usar.
 
 ## Variables de entorno
