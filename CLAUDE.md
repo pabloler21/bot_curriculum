@@ -381,6 +381,9 @@ ruff check backend/ src/routes/ tests/
 | 3.27 | Interview prep — `POST /interview` + panel en resultados | ✅ mergeada |
 | 3.28 | Deploy automático al VPS en cada push a `main` | ✅ funcionando |
 | 3.29 | Adapter y evaluator entran sin scroll en pantallas de laptop | ✅ mergeada |
+| 3.30 | `BACKEND_URL` relativo — arregla el login roto en producción | ✅ mergeada |
+| 3.31 | Auth usa la anon key, no la variable de sessions | ✅ mergeada |
+| 3.32 | Error del magic link visible en la UI | ✅ mergeada |
 | 4.1 | Rediseño de navegación (spec 2026-09-25) | ✅ mergeada |
 | 4.2 | Fondo ambiental (orbs + grilla) en todas las páginas, topbar/sidebar translúcidos | ✅ mergeada |
 | 4.3 | Landing en páginas separadas (Home, About, 3 Features, Pricing) + `Cache-Control: no-cache` | ✅ mergeada |
