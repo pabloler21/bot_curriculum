@@ -36,7 +36,9 @@ Producción: **VPS Vultr `64.176.23.59`** (`aurea.pablolerner.dev`, respaldo `au
   working dir `/home/deploy/bot_curriculum`, env en el `.env` de ese directorio.
 - Caddy hace TLS y ruteo (`/etc/caddy/Caddyfile`). El snippet `lazy` duerme el servicio cuando
   no hay tráfico y lo despierta con la primera navegación — que `botcv` figure `inactive`
-  es normal, no es que esté caído.
+  es normal, no es que esté caído. Dormido, `/health` devuelve **503 "aurea is asleep"** y la
+  navegación redirige a `starting.pablolerner.dev/wake/…`, que arranca el servicio por JS:
+  para despertarlo hay que abrir la URL en un navegador, con `curl` no alcanza.
 - La rama desplegada es `main`.
 
 ### Deploy automático
