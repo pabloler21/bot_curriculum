@@ -62,10 +62,15 @@ el runner con reintentos. Si no responde, el workflow falla — no hay rollback 
 
 ```bash
 # Deploy manual (si hace falta saltear CI)
-ssh linuxuser@64.176.23.59
-sudo -iu deploy
-/home/deploy/deploy.sh
+ssh linuxuser@64.176.23.59                # clave ~/.ssh/id_ed25519; root no tiene login
+sudo -iu deploy                           # -i: login shell, carga el PATH con ~/.local/bin (uv)
+/home/deploy/deploy.sh                    # mismo script que corre CI
+curl -s http://127.0.0.1:8000/health      # directo a uvicorn, sin Caddy → {"status":"ok"}
+exit; exit
 ```
+
+El script imprime `[deploy] now at <commit>`: tiene que ser el último commit de `origin/main`.
+Si no, el fetch no trajo lo esperado — no seguir sin entender por qué.
 
 Render.com (`render.yaml`) quedó sin usar.
 
