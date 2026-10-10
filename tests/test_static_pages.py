@@ -62,6 +62,11 @@ def test_pricing_page_has_waitlist(client):
     assert 'src="landing.js"' in html
 
 
+def test_pricing_styles_live_only_in_app_css():
+    """Un .pricing-grid viejo en style.css se sumaba al de app.css y descentraba las cards."""
+    assert ".pricing-" not in (STATIC / "style.css").read_text(encoding="utf-8")
+
+
 def test_pages_using_aurea_render_load_render_js():
     static = Path(__file__).resolve().parent.parent / "src" / "static"
     for html in static.glob("*.html"):
