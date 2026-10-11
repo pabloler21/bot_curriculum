@@ -52,6 +52,38 @@ def test_landing_nav_links_to_pages_not_anchors():
     assert not re.search(r'href="/?#', shell), "el nav todavía usa anclas"
 
 
+FEATURE_SCENES: dict[str, str] = {
+    "features-evaluator.html": "evaluator",
+    "features-adapter.html": "adapter",
+    "features-jobs.html": "jobs",
+}
+
+
+@pytest.mark.parametrize("page,scene", FEATURE_SCENES.items())
+def test_feature_page_mounts_its_3d_scene(client, page, scene):
+    html = client.get(f"/{page}").text
+    assert f'class="feature-visual" data-scene="{scene}"' in html
+    assert '<script type="module" src="feature-3d.js"></script>' in html
+    assert client.get("/feature-3d.js").status_code == 200
+
+
+@pytest.mark.parametrize("page", FEATURE_SCENES)
+def test_three_is_pinned_to_one_exact_version(page):
+    """three y sus addons con la misma versión exacta: si difieren, se cargan dos copias de three."""
+    html = (STATIC / page).read_text(encoding="utf-8")
+    versions = re.findall(r"three@([^/\"]+)/", html)
+    assert len(versions) == 2, f"{page}: el importmap debe mapear three y three/addons/"
+    assert len(set(versions)) == 1 and re.fullmatch(r"\d+\.\d+\.\d+", versions[0])
+
+
+def test_only_feature_pages_load_three():
+    """three.js pesa ~195 KB gz: el resto del sitio no lo paga."""
+    for html in STATIC.glob("*.html"):
+        if html.name not in FEATURE_SCENES:
+            text = html.read_text(encoding="utf-8")
+            assert "feature-3d.js" not in text and "three@" not in text, f"{html.name} carga three.js"
+
+
 def test_home_cta_goes_to_evaluator(client):
     assert 'href="evaluator.html"' in client.get("/").text
 
