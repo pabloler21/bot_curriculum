@@ -27,7 +27,7 @@
           </ul>
           <a href="evaluator.html" class="btn-secondary" data-i18n="landing.try_it">Try it</a>
         </div>
-        <div class="feature-visual" aria-hidden="true">◎</div>
+        <div class="feature-visual" data-scene="evaluator" aria-hidden="true">◎</div>
       </article>
     </section>
   </main>
@@ -35,5 +35,12 @@
   <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="shell.js"></script>
+  <script type="importmap">
+    { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+    } }
+  </script>
+  <script type="module" src="feature-3d.js"></script>
 </body>
 </html>
