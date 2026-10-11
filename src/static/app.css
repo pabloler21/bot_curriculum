@@ -133,7 +133,11 @@ body[data-section="home"] main { display: flex; }
 .feature { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; padding-top: 8px; }
 .feature ul { padding-left: 18px; margin: 12px 0 22px; color: var(--text-secondary); }
 a.btn-primary, a.btn-secondary { text-decoration: none; }
-.feature-visual { aspect-ratio: 4 / 3; border-radius: var(--radius-lg); background: var(--glass-bg); border: 1px solid var(--glass-border); display: grid; place-items: center; font-size: 3.4rem; box-shadow: var(--shadow-card); }
+.feature-visual { position: relative; overflow: hidden; aspect-ratio: 4 / 3; border-radius: var(--radius-lg); background: var(--glass-bg); border: 1px solid var(--glass-border); display: grid; place-items: center; font-size: 3.4rem; box-shadow: var(--shadow-card); }
+/* feature-3d.js: el glifo queda hasta el primer cuadro; pan-y deja scrollear con el dedo encima */
+.feature-visual canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; touch-action: pan-y; }
+.feature-visual canvas:active { cursor: grabbing; }
+.feature-visual.is-3d { font-size: 0; }
 .pricing-section { text-align: center; }
 .pricing-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; max-width: 760px; margin: 28px auto 0; text-align: left; }
 .price-card { position: relative; display: flex; flex-direction: column; padding: 28px; border-radius: var(--radius-lg); background: var(--glass-bg); border: 1px solid var(--glass-border); }
