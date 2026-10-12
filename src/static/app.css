@@ -133,7 +133,38 @@ body[data-section="home"] main { display: flex; }
 .feature { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; padding-top: 8px; }
 .feature ul { padding-left: 18px; margin: 12px 0 22px; color: var(--text-secondary); }
 a.btn-primary, a.btn-secondary { text-decoration: none; }
-.feature-visual { aspect-ratio: 4 / 3; border-radius: var(--radius-lg); background: var(--glass-bg); border: 1px solid var(--glass-border); display: grid; place-items: center; font-size: 3.4rem; box-shadow: var(--shadow-card); }
+.feature-visual { position: relative; overflow: hidden; aspect-ratio: 4 / 3; border-radius: var(--radius-lg); background: var(--glass-bg); border: 1px solid var(--glass-border); box-shadow: var(--shadow-card); container-type: inline-size; perspective: 110cqw; }
+/* Tile de vidrio con borde de gradiente, en capas a distinta profundidad (medidas en cqw: escalan con la card).
+   feature-visual.js setea --rx/--ry para inclinarlo hacia el cursor. */
+.fv-scene { position: absolute; inset: 0; display: grid; place-items: center; transform-style: preserve-3d; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); animation: fv-float 7s ease-in-out infinite; }
+.feature-visual.is-tilting .fv-scene { transition: transform 0.1s linear; animation-play-state: paused; }
+.fv-glow { position: absolute; width: 56cqw; height: 56cqw; border-radius: 50%; background: radial-gradient(circle, rgba(255,122,92,0.22), rgba(94,234,212,0.14) 55%, transparent 70%); filter: blur(7cqw); transform: translateZ(-10cqw); }
+.fv-floor { position: absolute; width: 38cqw; height: 7cqw; border-radius: 50%; background: linear-gradient(90deg, var(--accent), var(--aqua)); opacity: 0.18; filter: blur(5cqw); transform: translateY(27cqw) translateZ(-6cqw); }
+.fv-tile { position: relative; width: 46cqw; height: 46cqw; border-radius: 11cqw; background: linear-gradient(160deg, rgba(255,255,255,0.13), rgba(255,255,255,0.035)); -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 4cqw 10cqw rgba(0,0,0,0.35); }
+.fv-tile::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(255,255,255,0.22), transparent 46%); }
+.fv-tile::after { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 0.45cqw; background: linear-gradient(135deg, var(--accent), var(--warning) 50%, var(--aqua)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0.85; }
+.fv-glyph { position: absolute; width: 28.5cqw; height: 28.5cqw; transform: translateZ(9cqw); filter: drop-shadow(0 0 1.4cqw rgba(255,165,144,0.35)); }
+.fv-pill { position: absolute; transform: translateZ(16cqw); padding: 1.2cqw 2.4cqw; border-radius: var(--radius-pill); font-size: 2.6cqw; font-weight: 700; white-space: nowrap; background: rgba(20,23,46,0.55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 1.6cqw 4cqw rgba(0,0,0,0.35); }
+.fv-pill--tr { right: 17cqw; top: 10cqw; }
+.fv-pill--bl { left: 15cqw; bottom: 12cqw; }
+.fv-pill--br { right: 15cqw; bottom: 12cqw; }
+.fv-pill--accent { color: var(--accent-light); border-color: var(--accent-border); }
+.fv-pill--good { color: var(--success); border-color: var(--success-border); }
+.fv-dim { color: var(--text-secondary); font-weight: 600; }
+.fv-needle { transform-origin: 50px 60px; animation: fv-needle 5s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+.fv-line { animation: fv-line 2.7s infinite; }
+.fv-line:nth-of-type(2) { animation-delay: 0.9s; }
+.fv-line:nth-of-type(3) { animation-delay: 1.8s; }
+.fv-spark { transform-origin: 72px 22px; animation: fv-spark 2.7s ease-in-out infinite; }
+@keyframes fv-float { 50% { translate: 0 -1.2cqw; } }
+@keyframes fv-needle { 0% { transform: rotate(-120deg); } 32%, 88% { transform: rotate(68deg); } 100% { transform: rotate(-120deg); } }
+@keyframes fv-line { 0%, 30% { opacity: 1; } 34%, 100% { opacity: 0.4; } }
+@keyframes fv-spark { 0%, 100% { transform: scale(1) rotate(0deg); } 15% { transform: scale(1.25) rotate(45deg); } 30% { transform: scale(1) rotate(90deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .fv-scene, .fv-needle, .fv-line, .fv-spark { animation: none; }
+  .fv-scene { transform: none; }
+  .fv-needle { transform: rotate(68deg); }
+}
 .pricing-section { text-align: center; }
 .pricing-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; max-width: 760px; margin: 28px auto 0; text-align: left; }
 .price-card { position: relative; display: flex; flex-direction: column; padding: 28px; border-radius: var(--radius-lg); background: var(--glass-bg); border: 1px solid var(--glass-border); }
