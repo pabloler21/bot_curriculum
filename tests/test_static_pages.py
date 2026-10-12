@@ -52,40 +52,22 @@ def test_landing_nav_links_to_pages_not_anchors():
     assert not re.search(r'href="/?#', shell), "el nav todavía usa anclas"
 
 
-FEATURE_SCENES: dict[str, str] = {
-    "features-evaluator.html": "evaluator",
-    "features-adapter.html": "adapter",
-    "features-jobs.html": "jobs",
-}
+FEATURE_PAGES = ["features-evaluator.html", "features-adapter.html", "features-jobs.html"]
 
 
-@pytest.mark.parametrize("page,scene", FEATURE_SCENES.items())
-def test_feature_page_mounts_its_3d_scene(client, page, scene):
+@pytest.mark.parametrize("page", FEATURE_PAGES)
+def test_feature_page_shows_the_glass_tile(client, page):
     html = client.get(f"/{page}").text
-    assert f'class="feature-visual" data-scene="{scene}"' in html
-    assert '<script type="module" src="feature-3d.js"></script>' in html
-    assert client.get("/feature-3d.js").status_code == 200
+    assert '<div class="fv-tile">' in html and '<svg class="fv-glyph"' in html
+    assert '<script src="feature-visual.js"></script>' in html
+    assert client.get("/feature-visual.js").status_code == 200
 
 
-def test_three_is_the_minified_bundle_pinned_to_one_exact_version():
-    """El paquete de three no trae builds minificados: +esm de jsDelivr lo minifica en un
-    solo archivo (~190 KB gz en vez de ~400). El addon +esm importa esa misma URL, así que
-    con la misma versión exacta hay una sola copia de three."""
-    js = (STATIC / "feature-3d.js").read_text(encoding="utf-8")
-    imports = re.findall(r"'(https://cdn\.jsdelivr\.net/npm/three@[^']+)'", js)
-    assert len(imports) == 2, "feature-3d.js debe importar three y RoomEnvironment"
-    assert all(url.endswith("/+esm") for url in imports)
-    versions = {re.search(r"three@([^/]+)/", url).group(1) for url in imports}
-    assert len(versions) == 1 and re.fullmatch(r"\d+\.\d+\.\d+", versions.pop())
-
-
-def test_only_feature_pages_load_three():
-    """three.js pesa ~190 KB gz: el resto del sitio no lo paga."""
-    for html in STATIC.glob("*.html"):
-        text = html.read_text(encoding="utf-8")
-        assert "three@" not in text, f"{html.name}: three se fija solo en feature-3d.js"
-        if html.name not in FEATURE_SCENES:
-            assert "feature-3d.js" not in text, f"{html.name} carga three.js"
+def test_feature_visuals_need_no_webgl():
+    """El 3D con three.js no encajaba con el sitio y en mobile bloqueaba ~2 s: el tile es HTML/CSS."""
+    for f in STATIC.iterdir():
+        if f.suffix in (".html", ".js"):
+            assert "three@" not in f.read_text(encoding="utf-8"), f"{f.name} carga three.js"
 
 
 def test_home_cta_goes_to_evaluator(client):
@@ -134,6 +116,6 @@ def test_adapt_redirects_to_tailor(client):
     assert "<script" not in html  # sin JS viejo colgando
 
 
-@pytest.mark.parametrize("gone", ["adapt.js", "app.js", "pricing.js"])
+@pytest.mark.parametrize("gone", ["adapt.js", "app.js", "pricing.js", "feature-3d.js"])
 def test_old_scripts_removed(client, gone):
     assert client.get(f"/{gone}").status_code == 404
