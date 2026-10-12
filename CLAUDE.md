@@ -180,6 +180,7 @@ src/
     i18n.js         # I18N_ES — traducciones (UI en inglés por default, data-i18n)
     render.js       # window.aureaRender — render de CV/resultados
     job-form.js     # input de JD compartido (texto o URL)
+    feature-visual.js # inclina hacia el cursor el tile de vidrio de features-*.html (el resto es CSS)
     app.css         # Estilos del shell y las páginas nuevas
     style.css       # Design system base (lo cargan todas las páginas)
     jobs.css        # Estilos de job-detail.html (no borrar)
@@ -227,7 +228,8 @@ tests/
   test_improve.py          # backend/adapter/improver.py + POST /improve
   test_job_fetch.py        # backend/job_fetch.py — anti-SSRF, deadline, tope de tamaño
   test_static_backend_url.py # el frontend no hardcodea la URL del backend
-  test_static_pages.py     # páginas cargan el shell; landing en páginas; Cache-Control; redirects
+  test_static_pages.py     # páginas cargan el shell; landing en páginas; Cache-Control; redirects;
+                           # tile de vidrio en las páginas de features, sin three.js
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -405,6 +407,7 @@ ruff check .
 | 4.4 | UI fixes: el home entra sin scroll (no desborda ni tiembla) | ✅ mergeada |
 | 4.5 | Actualizar CLAUDE.md (estado post-4.4, runbook de deploy, deuda de mails) | ✅ mergeada |
 | 4.6 | Hardening del VPS: `deploy` solo reinicia `botcv`; vps-infra instala como `linuxuser` | ✅ aplicado en el server |
+| 4.8 | Features: tile de vidrio con volumen (HTML/CSS; reemplazó un intento con three.js) | 🔄 PR abierto |
 
 **Último release**: `main` al día con `develop` hasta la 4.4 (PR #49, deployado el 2026-10-08).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.

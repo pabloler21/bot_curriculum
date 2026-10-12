@@ -52,6 +52,24 @@ def test_landing_nav_links_to_pages_not_anchors():
     assert not re.search(r'href="/?#', shell), "el nav todavía usa anclas"
 
 
+FEATURE_PAGES = ["features-evaluator.html", "features-adapter.html", "features-jobs.html"]
+
+
+@pytest.mark.parametrize("page", FEATURE_PAGES)
+def test_feature_page_shows_the_glass_tile(client, page):
+    html = client.get(f"/{page}").text
+    assert '<div class="fv-tile">' in html and '<svg class="fv-glyph"' in html
+    assert '<script src="feature-visual.js"></script>' in html
+    assert client.get("/feature-visual.js").status_code == 200
+
+
+def test_feature_visuals_need_no_webgl():
+    """El 3D con three.js no encajaba con el sitio y en mobile bloqueaba ~2 s: el tile es HTML/CSS."""
+    for f in STATIC.iterdir():
+        if f.suffix in (".html", ".js"):
+            assert "three@" not in f.read_text(encoding="utf-8"), f"{f.name} carga three.js"
+
+
 def test_home_cta_goes_to_evaluator(client):
     assert 'href="evaluator.html"' in client.get("/").text
 
@@ -98,6 +116,6 @@ def test_adapt_redirects_to_tailor(client):
     assert "<script" not in html  # sin JS viejo colgando
 
 
-@pytest.mark.parametrize("gone", ["adapt.js", "app.js", "pricing.js"])
+@pytest.mark.parametrize("gone", ["adapt.js", "app.js", "pricing.js", "feature-3d.js"])
 def test_old_scripts_removed(client, gone):
     assert client.get(f"/{gone}").status_code == 404
