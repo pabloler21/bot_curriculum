@@ -27,7 +27,22 @@
           </ul>
           <a href="evaluator.html" class="btn-secondary" data-i18n="landing.try_it">Try it</a>
         </div>
-        <div class="feature-visual" data-scene="evaluator" aria-hidden="true">◎</div>
+        <div class="feature-visual" aria-hidden="true">
+          <div class="fv-scene">
+            <div class="fv-glow"></div>
+            <div class="fv-floor"></div>
+            <div class="fv-tile"></div>
+            <svg class="fv-glyph" viewBox="0 0 100 100">
+              <defs><linearGradient id="fv-g" gradientUnits="userSpaceOnUse" x1="10" y1="10" x2="90" y2="90"><stop offset="0" stop-color="#FFA590"/><stop offset=".5" stop-color="#FDE08A"/><stop offset="1" stop-color="#8FF0DF"/></linearGradient></defs>
+              <g fill="none" stroke="url(#fv-g)" stroke-width="6" stroke-linecap="round">
+                <path d="M22 72A32 32 0 1 1 78 72"/>
+                <line class="fv-needle" x1="50" y1="60" x2="50" y2="37"/>
+                <circle cx="50" cy="60" r="4.5"/>
+              </g>
+            </svg>
+            <span class="fv-pill fv-pill--tr">87 <span class="fv-dim">/ 100</span></span>
+          </div>
+        </div>
       </article>
     </section>
   </main>
@@ -35,6 +50,6 @@
   <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="shell.js"></script>
-  <script type="module" src="feature-3d.js"></script>
+  <script src="feature-visual.js"></script>
 </body>
 </html>

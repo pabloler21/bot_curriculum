@@ -27,7 +27,24 @@
           </ul>
           <a href="evaluator.html" class="btn-secondary" data-i18n="landing.try_it">Try it</a>
         </div>
-        <div class="feature-visual" data-scene="adapter" aria-hidden="true">✦</div>
+        <div class="feature-visual" aria-hidden="true">
+          <div class="fv-scene">
+            <div class="fv-glow"></div>
+            <div class="fv-floor"></div>
+            <div class="fv-tile"></div>
+            <svg class="fv-glyph" viewBox="0 0 100 100">
+              <defs><linearGradient id="fv-g" gradientUnits="userSpaceOnUse" x1="10" y1="10" x2="90" y2="90"><stop offset="0" stop-color="#FFA590"/><stop offset=".5" stop-color="#FDE08A"/><stop offset="1" stop-color="#8FF0DF"/></linearGradient></defs>
+              <g fill="none" stroke="url(#fv-g)" stroke-width="6" stroke-linecap="round">
+                <rect x="24" y="16" width="46" height="64" rx="7"/>
+                <line class="fv-line" x1="34" y1="34" x2="60" y2="34"/>
+                <line class="fv-line" x1="34" y1="46" x2="54" y2="46"/>
+                <line class="fv-line" x1="34" y1="58" x2="58" y2="58"/>
+              </g>
+              <path class="fv-spark" d="M72 11Q72 22 83 22Q72 22 72 33Q72 22 61 22Q72 22 72 11Z" fill="url(#fv-g)"/>
+            </svg>
+            <span class="fv-pill fv-pill--bl fv-pill--accent">+ Python · SQL</span>
+          </div>
+        </div>
       </article>
     </section>
   </main>
@@ -35,6 +52,6 @@
   <script src="i18n.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="shell.js"></script>
-  <script type="module" src="feature-3d.js"></script>
+  <script src="feature-visual.js"></script>
 </body>
 </html>
