@@ -1,8 +1,11 @@
 // Objeto 3D de cada página de features: lupa (evaluator), puzzle (adapter), globo (jobs).
 // La escena la elige data-scene en .feature-visual; se arrastra para girarla.
 // Si WebGL o el CDN fallan, queda el glifo de .feature-visual.
-import * as THREE from 'three';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+// +esm: el paquete de three no trae builds minificados; jsDelivr los arma, y el addon
+// importa esta misma URL, así que hay una sola copia de three.
+const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.186.1/+esm';
+const ROOM_ENV_URL = 'https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/environments/RoomEnvironment.js/+esm';
+let THREE, RoomEnvironment;
 
 const ACCENT = 0xFF7A5C;
 const AQUA = 0x5EEAD4;
@@ -231,4 +234,11 @@ function mount(host, build, pose) {
 
 const host = document.querySelector('.feature-visual[data-scene]');
 const entry = host && SCENES[host.dataset.scene];
-if (entry) mount(host, ...entry);
+if (entry) {
+  // Evaluar three bloquea el hilo un rato: se baja con la página ya cargada y el navegador libre.
+  const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 200));
+  addEventListener('load', () => idle(async () => {
+    [THREE, { RoomEnvironment }] = await Promise.all([import(THREE_URL), import(ROOM_ENV_URL)]);
+    mount(host, ...entry);
+  }), { once: true });
+}
