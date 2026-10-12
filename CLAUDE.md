@@ -21,8 +21,6 @@ El proyecto también incluye un **job board** (herramienta secundaria, pre-exist
 - HTML/JS/CSS vanilla, sin frameworks, sin build steps
 - Fuente Inter (Google Fonts)
 - Supabase JS CDN en todas las páginas de la app (vía `shell.js`) para auth client-side
-- three.js 0.186.1 solo en las páginas `features-*.html` (vía `feature-3d.js`): bundle `+esm` de
-  jsDelivr, porque el paquete no trae builds minificados. Se baja después del `load`
 
 ### Testing y calidad
 - pytest + pytest-asyncio, mocks con `unittest.mock`
@@ -182,7 +180,7 @@ src/
     i18n.js         # I18N_ES — traducciones (UI en inglés por default, data-i18n)
     render.js       # window.aureaRender — render de CV/resultados
     job-form.js     # input de JD compartido (texto o URL)
-    feature-3d.js   # objeto 3D arrastrable de cada features-*.html (lupa, puzzle, globo)
+    feature-visual.js # inclina hacia el cursor el tile de vidrio de features-*.html (el resto es CSS)
     app.css         # Estilos del shell y las páginas nuevas
     style.css       # Design system base (lo cargan todas las páginas)
     jobs.css        # Estilos de job-detail.html (no borrar)
@@ -231,7 +229,7 @@ tests/
   test_job_fetch.py        # backend/job_fetch.py — anti-SSRF, deadline, tope de tamaño
   test_static_backend_url.py # el frontend no hardcodea la URL del backend
   test_static_pages.py     # páginas cargan el shell; landing en páginas; Cache-Control; redirects;
-                           # three.js fijado y solo en las páginas de features
+                           # tile de vidrio en las páginas de features, sin three.js
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -409,7 +407,7 @@ ruff check .
 | 4.4 | UI fixes: el home entra sin scroll (no desborda ni tiembla) | ✅ mergeada |
 | 4.5 | Actualizar CLAUDE.md (estado post-4.4, runbook de deploy, deuda de mails) | ✅ mergeada |
 | 4.6 | Hardening del VPS: `deploy` solo reinicia `botcv`; vps-infra instala como `linuxuser` | ✅ aplicado en el server |
-| 4.8 | Features: objeto 3D arrastrable con three.js (lupa, puzzle, globo) | 🔄 PR abierto |
+| 4.8 | Features: tile de vidrio con volumen (HTML/CSS; reemplazó un intento con three.js) | 🔄 PR abierto |
 
 **Último release**: `main` al día con `develop` hasta la 4.4 (PR #49, deployado el 2026-10-08).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
@@ -435,8 +433,3 @@ No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya
    Auth → Rate limits, verificado el 2026-10-09). **Bloquea el producto**: no alcanza para
    onboardear usuarios reales ni para probar el magic link más de dos veces seguidas. Se levanta
    configurando SMTP propio o un Send Email hook; ahí el límite se ajusta en Auth → Rate Limits.
-9. **Arranque de WebGL en las páginas de features** (4.8): Lighthouse mobile baja de ~81 a ~57–60
-   (TBT ~2 s, medido el 2026-10-11). Con WebGL desactivado da 76 y TBT 0, así que el costo es
-   crear el contexto, el PMREM de `RoomEnvironment` y compilar shaders, no el peso de three.
-   En desktop real son ~130 ms una vez. Próximos pasos: `renderer.compileAsync` y partir `mount`
-   en tareas cortas; si no alcanza, sin 3D en `(pointer: coarse)`.
