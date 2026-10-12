@@ -67,21 +67,25 @@ def test_feature_page_mounts_its_3d_scene(client, page, scene):
     assert client.get("/feature-3d.js").status_code == 200
 
 
-@pytest.mark.parametrize("page", FEATURE_SCENES)
-def test_three_is_pinned_to_one_exact_version(page):
-    """three y sus addons con la misma versión exacta: si difieren, se cargan dos copias de three."""
-    html = (STATIC / page).read_text(encoding="utf-8")
-    versions = re.findall(r"three@([^/\"]+)/", html)
-    assert len(versions) == 2, f"{page}: el importmap debe mapear three y three/addons/"
-    assert len(set(versions)) == 1 and re.fullmatch(r"\d+\.\d+\.\d+", versions[0])
+def test_three_is_the_minified_bundle_pinned_to_one_exact_version():
+    """El paquete de three no trae builds minificados: +esm de jsDelivr lo minifica en un
+    solo archivo (~190 KB gz en vez de ~400). El addon +esm importa esa misma URL, así que
+    con la misma versión exacta hay una sola copia de three."""
+    js = (STATIC / "feature-3d.js").read_text(encoding="utf-8")
+    imports = re.findall(r"'(https://cdn\.jsdelivr\.net/npm/three@[^']+)'", js)
+    assert len(imports) == 2, "feature-3d.js debe importar three y RoomEnvironment"
+    assert all(url.endswith("/+esm") for url in imports)
+    versions = {re.search(r"three@([^/]+)/", url).group(1) for url in imports}
+    assert len(versions) == 1 and re.fullmatch(r"\d+\.\d+\.\d+", versions.pop())
 
 
 def test_only_feature_pages_load_three():
-    """three.js pesa ~195 KB gz: el resto del sitio no lo paga."""
+    """three.js pesa ~190 KB gz: el resto del sitio no lo paga."""
     for html in STATIC.glob("*.html"):
+        text = html.read_text(encoding="utf-8")
+        assert "three@" not in text, f"{html.name}: three se fija solo en feature-3d.js"
         if html.name not in FEATURE_SCENES:
-            text = html.read_text(encoding="utf-8")
-            assert "feature-3d.js" not in text and "three@" not in text, f"{html.name} carga three.js"
+            assert "feature-3d.js" not in text, f"{html.name} carga three.js"
 
 
 def test_home_cta_goes_to_evaluator(client):
