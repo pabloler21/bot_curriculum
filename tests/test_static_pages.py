@@ -85,6 +85,13 @@ def test_evaluator_adapter_and_jobs_sit_beside_the_improvements():
     assert 'id="ev-job"' in side.group(1) and 'id="ev-jobs"' in side.group(1)
 
 
+def test_evaluator_strengths_and_weaknesses_start_folded():
+    """Lo principal son las mejoras: fortalezas y debilidades quedan a un clic, no empujan todo hacia abajo."""
+    folds = re.findall(r"<details\b(?![^>]*\bopen\b)[^>]*>(.*?)</details>", _evaluator_html(), re.S)
+    assert any('id="ev-strengths"' in f for f in folds)
+    assert any('id="ev-weaknesses"' in f for f in folds)
+
+
 def test_pricing_page_has_waitlist(client):
     html = client.get("/pricing.html").text
     assert 'id="waitlist-btn"' in html
