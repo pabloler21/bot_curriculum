@@ -367,6 +367,11 @@ ruff check .
 - Tests: **TDD estricto** — tests primero, luego implementación
 - Frontend: vanilla JS, sin frameworks, sin build steps
 - Seguridad JS: todo dato de API pasa por `escHtml()` antes de tocar el DOM
+- **Animaciones y `prefers-reduced-motion`**: se apagan con esa media query las que desplazan
+  cosas (tile de features); las que solo cambian luz o color (brillo de los CTA) quedan. Al
+  verificar: la PC de desarrollo tiene apagados los efectos de animación de Windows, así que
+  Chrome (también headless) reporta `reduce` y no muestra las animaciones apagadas.
+  Chequear `matchMedia('(prefers-reduced-motion: reduce)')` antes de concluir que algo no anda.
 - **Patch location en tests**: siempre parchear en el lugar de importación, no en la definición:
   - ✅ `patch("src.routes.adapt.ensure_user")`
   - ❌ `patch("backend.credits.ensure_user")`
