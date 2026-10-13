@@ -185,7 +185,9 @@ src/
     job-form.js     # input de JD compartido (texto o URL)
     feature-visual.js # inclina hacia el cursor el tile de vidrio de features-*.html (el resto es CSS)
     app.css         # Estilos del shell y las páginas nuevas
-    style.css       # Design system base (lo cargan todas las páginas)
+    style.css       # Design system base (lo cargan todas las páginas). Oculta el body hasta que
+                    # shell.js inserta fondo y nav (si no, el contenido saltaba 67px al cambiar
+                    # de página); si shell.js no carga, lo muestra igual a los 2 s
     jobs.css        # Estilos de job-detail.html (no borrar)
     adapt.html      # Redirect (meta refresh) → tailor.html
 
@@ -232,8 +234,10 @@ tests/
   test_job_fetch.py        # backend/job_fetch.py — anti-SSRF, deadline, tope de tamaño
   test_static_backend_url.py # el frontend no hardcodea la URL del backend
   test_static_pages.py     # páginas cargan el shell; landing en páginas; Cache-Control; redirects;
-                           # tile de vidrio en las páginas de features, sin three.js; layout de
-                           # resultados del evaluator (adapter al costado, pliegues, keywords primero)
+                           # body oculto hasta el shell y alto del nav reservado (sin temblor);
+                           # features: tile de vidrio sin three.js, sin kicker, título alineado,
+                           # "Try it" con gradiente; layout de resultados del evaluator (adapter
+                           # al costado, pliegues, keywords primero)
   test_user_cv.py          # backend/user_cv.py
 ```
 
