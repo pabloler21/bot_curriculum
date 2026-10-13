@@ -71,6 +71,12 @@ def test_feature_page_shows_the_glass_tile(client, page):
     assert client.get("/feature-visual.js").status_code == 200
 
 
+@pytest.mark.parametrize("page", FEATURE_PAGES)
+def test_feature_page_opens_with_its_title(client, page):
+    """Sin el kicker "Features": la página ya dice qué feature es en el título."""
+    assert "section-kicker" not in client.get(f"/{page}").text
+
+
 def test_feature_visuals_need_no_webgl():
     """El 3D con three.js no encajaba con el sitio y en mobile bloqueaba ~2 s: el tile es HTML/CSS."""
     for f in STATIC.iterdir():
