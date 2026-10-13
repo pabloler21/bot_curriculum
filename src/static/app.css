@@ -13,6 +13,14 @@
 }
 .btn-secondary:hover:not(:disabled) { background: rgba(255,122,92,0.22); }
 .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+/* El gradiente tornasolado de .btn-large (CTA de Pricing), en un botón de ancho natural. */
+.btn-gradient {
+  display: inline-flex; align-items: center; gap: 8px; padding: 11px 24px; border: none; border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--accent), var(--warning) 50%, var(--aqua)); color: var(--bg-base);
+  font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+  box-shadow: 0 8px 28px rgba(255,122,92,0.35), inset 0 1px 0 0 rgba(255,255,255,0.30); transition: filter 0.15s;
+}
+.btn-gradient:hover { filter: brightness(1.08); }
 .btn-ghost {
   padding: 8px 14px; border-radius: var(--radius-pill); border: 1px solid var(--glass-border);
   background: transparent; color: var(--text-secondary); font: inherit; cursor: pointer;
