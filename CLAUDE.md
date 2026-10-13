@@ -407,9 +407,11 @@ ruff check .
 | 4.4 | UI fixes: el home entra sin scroll (no desborda ni tiembla) | ✅ mergeada |
 | 4.5 | Actualizar CLAUDE.md (estado post-4.4, runbook de deploy, deuda de mails) | ✅ mergeada |
 | 4.6 | Hardening del VPS: `deploy` solo reinicia `botcv`; vps-infra instala como `linuxuser` | ✅ aplicado en el server |
-| 4.8 | Features: tile de vidrio con volumen (HTML/CSS; reemplazó un intento con three.js) | 🔄 PR abierto |
+| 4.7 | Pricing: layout centrado, cards alineadas, badge flotante | ✅ mergeada |
+| 4.8 | Features: tile de vidrio con volumen (HTML/CSS; reemplazó un intento con three.js) | ✅ mergeada |
 
-**Último release**: `main` al día con `develop` hasta la 4.4 (PR #49, deployado el 2026-10-08).
+**Último release**: `main` al día con `develop` hasta la 4.8 (PR #54, deployado el 2026-10-12;
+el anterior, PR #52 del 2026-10-10, llevó la 4.5 y la 4.7).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
 No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya está en este archivo).
 
