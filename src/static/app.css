@@ -13,6 +13,14 @@
 }
 .btn-secondary:hover:not(:disabled) { background: rgba(255,122,92,0.22); }
 .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+/* El gradiente tornasolado de .btn-large (CTA de Pricing), en un botón de ancho natural. */
+.btn-gradient {
+  display: inline-flex; align-items: center; gap: 8px; padding: 11px 24px; border: none; border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--accent), var(--warning) 50%, var(--aqua)); color: var(--bg-base);
+  font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+  box-shadow: 0 8px 28px rgba(255,122,92,0.35), inset 0 1px 0 0 rgba(255,255,255,0.30); transition: filter 0.15s;
+}
+.btn-gradient:hover { filter: brightness(1.08); }
 .btn-ghost {
   padding: 8px 14px; border-radius: var(--radius-pill); border: 1px solid var(--glass-border);
   background: transparent; color: var(--text-secondary); font: inherit; cursor: pointer;
@@ -114,7 +122,9 @@ body:not(.has-sidebar) .app-main { margin: 0 auto; }
 }
 .nav-dropdown-menu a { padding: 8px 10px; border-radius: var(--radius-sm); }
 .nav-dropdown-menu a:hover { background: var(--glass-bg); }
-.landing-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+/* min-height = alto del botón Login: shell.js lo muestra recién cuando responde Supabase, y sin
+   reservarlo el nav crece 12px en ese momento y la página entera baja (temblor al cargar). */
+.landing-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; min-height: 38px; }
 /* Footer abajo aunque la página sea corta */
 body[data-page="landing"] { display: flex; flex-direction: column; }
 body[data-page="landing"] main { flex: 1; }
@@ -130,8 +140,12 @@ body[data-section="home"] main { display: flex; }
 .hero-note { margin-top: 14px; color: var(--text-tertiary); font-size: 0.9rem; }
 .section-kicker { color: var(--accent-light); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.8rem; }
 .section-title { font-size: clamp(1.7rem, 3.4vw, 2.5rem); margin: 8px 0 16px; }
-.feature { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; padding-top: 8px; }
-.feature ul { padding-left: 18px; margin: 12px 0 22px; color: var(--text-secondary); }
+/* Texto arriba, a la altura del tile: centrado, el título bajaba en las páginas con menos texto. */
+.feature { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; padding-top: 8px; }
+.feature .section-title { margin-top: 0; }
+.feature ul { padding-left: 18px; margin: 12px 0 0; color: var(--text-secondary); }
+/* El aire sobre el botón es suyo: el Job board no tiene lista que lo aporte. */
+.feature .btn-gradient { margin-top: 22px; }
 a.btn-primary, a.btn-secondary { text-decoration: none; }
 .feature-visual { position: relative; overflow: hidden; aspect-ratio: 4 / 3; border-radius: var(--radius-lg); background: var(--glass-bg); border: 1px solid var(--glass-border); box-shadow: var(--shadow-card); container-type: inline-size; perspective: 110cqw; }
 /* Tile de vidrio con borde de gradiente, en capas a distinta profundidad (medidas en cqw: escalan con la card).

@@ -52,6 +52,22 @@ def test_landing_nav_links_to_pages_not_anchors():
     assert not re.search(r'href="/?#', shell), "el nav todavía usa anclas"
 
 
+def test_pages_stay_hidden_until_the_shell_is_in():
+    """El fondo y el nav los inserta shell.js, al final del body. Si el navegador pinta antes, el
+    contenido sale 67px más arriba y salta al llegar el nav: el temblor al cambiar de página."""
+    css = (STATIC / "style.css").read_text(encoding="utf-8")
+    rule = re.search(r"body:not\(:has\(> \.ambient-bg\)\) \{([^}]*)\}", css)
+    assert rule and "visibility: hidden" in rule.group(1)
+
+
+def test_landing_nav_height_does_not_wait_for_auth():
+    """shell.js muestra Login/Sign up recién cuando responde Supabase. Si el nav no reserva su
+    alto, crece 12px en ese momento y toda la página baja: el "temblor" al cargar."""
+    css = (STATIC / "app.css").read_text(encoding="utf-8")
+    rule = re.search(r"\.landing-actions \{([^}]*)\}", css)
+    assert rule and "min-height" in rule.group(1)
+
+
 FEATURE_PAGES = ["features-evaluator.html", "features-adapter.html", "features-jobs.html"]
 
 
@@ -61,6 +77,33 @@ def test_feature_page_shows_the_glass_tile(client, page):
     assert '<div class="fv-tile">' in html and '<svg class="fv-glyph"' in html
     assert '<script src="feature-visual.js"></script>' in html
     assert client.get("/feature-visual.js").status_code == 200
+
+
+@pytest.mark.parametrize("page", FEATURE_PAGES)
+def test_feature_page_opens_with_its_title(client, page):
+    """Sin el kicker "Features": la página ya dice qué feature es en el título."""
+    assert "section-kicker" not in client.get(f"/{page}").text
+
+
+@pytest.mark.parametrize("page", FEATURE_PAGES)
+def test_feature_try_it_uses_the_brand_gradient(client, page):
+    """"Try it" lleva el gradiente tornasolado de Aurea, el mismo del CTA de Pricing."""
+    assert re.search(r'<a [^>]*class="btn-gradient"[^>]*data-i18n="landing.try_it"', client.get(f"/{page}").text)
+    assert ".btn-gradient {" in (STATIC / "app.css").read_text(encoding="utf-8")
+
+
+def test_feature_try_it_keeps_its_distance_from_the_text():
+    """El aire sobre "Try it" lo ponía el margen de la lista; el Job board no tiene lista y el
+    botón quedaba pegado al párrafo."""
+    rule = re.search(r"\.feature \.btn-gradient \{([^}]*)\}", (STATIC / "app.css").read_text(encoding="utf-8"))
+    assert rule and "margin-top" in rule.group(1)
+
+
+def test_feature_title_sits_at_the_same_height_on_every_page():
+    """El texto va arriba, a la altura del tile: centrado, el título del Job board (texto más
+    corto) caía más abajo que en las otras dos páginas."""
+    rule = re.search(r"\.feature \{([^}]*)\}", (STATIC / "app.css").read_text(encoding="utf-8"))
+    assert rule and "align-items: start" in rule.group(1)
 
 
 def test_feature_visuals_need_no_webgl():
