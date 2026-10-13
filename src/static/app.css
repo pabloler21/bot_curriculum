@@ -215,6 +215,9 @@ a.btn-primary, a.btn-secondary { text-decoration: none; }
 .ev-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
 .ev-list--good li::marker { color: var(--success); }
 .ev-list--bad li::marker { color: var(--danger); }
+.ev-recs { gap: 12px; }
+.ev-recs li { font-size: 14.5px; }
+.ev-recs li::before { width: 30px; height: 30px; font-size: 13px; border-radius: 10px; }
 .ev-more { background: none; border: 0; color: var(--accent-light); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
 .ev-more:hover { text-decoration: underline; }
 .ev-label { margin-bottom: 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-tertiary); }
