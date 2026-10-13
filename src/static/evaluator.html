@@ -92,14 +92,16 @@
         <!-- El adapter es el gancho para pagar: al costado de las mejoras, no debajo de todo -->
         <aside class="ev-side">
           <div class="panel ev-adapter">
-            <h2 data-i18n="ev.adapter">Adapter</h2>
-            <label for="ev-job" class="field-label" data-i18n="job.label">Job link or description</label>
-            <textarea id="ev-job" class="jd-textarea" rows="3" placeholder="https://… or paste the job description" data-i18n-placeholder="job.placeholder"></textarea>
+            <h2 data-i18n="ev.tailor_title">Tailor it to a job</h2>
+            <p class="secondary-text" data-i18n="ev.tailor_pitch">Missing keywords depend on the role. Paste a job and Aurea tailors your CV to it, cover letter included.</p>
+            <div>
+              <label for="ev-job" class="field-label" data-i18n="job.label">Job link or description</label>
+              <textarea id="ev-job" class="jd-textarea" rows="3" placeholder="https://… or paste the job description" data-i18n-placeholder="job.placeholder"></textarea>
+            </div>
             <div class="ev-adapter-actions">
               <button type="button" id="ev-cover" class="btn-secondary"><span data-i18n="ev.cover_btn">Generate Cover Letter</span> · 1🪙</button>
               <button type="button" id="ev-tailor" class="btn-primary"><span data-i18n="ev.tailor_btn">Tailor your CV</span> · 2🪙</button>
             </div>
-            <p class="ev-adapter-note" data-i18n="ev.tailor_note">Tailor includes the adapted CV and a cover letter.</p>
             <p id="ev-working" class="ev-working hidden" aria-live="polite"><span class="spinner sm" aria-hidden="true"></span> <span data-i18n="ev.working">Working on it — this can take up to a minute…</span></p>
             <p id="ev-action-error" class="error-msg hidden" role="alert"></p>
             <div id="ev-no-credits" class="no-credits-banner hidden" role="alert">

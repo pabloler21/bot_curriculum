@@ -128,6 +128,8 @@ window.I18N_ES = {
   'ev.recs_less': 'Ver menos',
   'ev.apply': 'Aplicar a mi CV',
   'ev.adapter': 'Adaptador',
+  'ev.tailor_title': 'Adaptalo a un empleo',
+  'ev.tailor_pitch': 'Las palabras clave que faltan dependen del puesto. Pegá un empleo y Aurea adapta tu CV a ese rol, con carta de presentación incluida.',
   'ev.cover_btn': 'Generar carta de presentación',
   'ev.tailor_btn': 'Adaptar mi CV',
   'ev.tailor_note': 'Adaptar incluye el CV adaptado y una carta de presentación.',
