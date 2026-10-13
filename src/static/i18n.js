@@ -134,7 +134,7 @@ window.I18N_ES = {
   'ev.tailor_btn': 'Adaptar mi CV',
   'ev.tailor_note': 'Adaptar incluye el CV adaptado y una carta de presentación.',
   'ev.working': 'Trabajando: puede tardar hasta un minuto…',
-  'ev.jobs': 'Empleos recomendados',
+  'ev.jobs': 'Empleos para tu CV',
   'ev.jobs_loading': 'Buscando empleos que coincidan…',
   'ev.jobs_empty': 'No hay empleos disponibles ahora.',
   'ev.jobs_error': 'No pudimos cargar las recomendaciones.',

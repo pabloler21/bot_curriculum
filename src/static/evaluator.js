@@ -142,7 +142,7 @@ async function loadJobs() {
   try {
     const res = await aurea.authFetch(url);
     if (!res.ok) throw new Error();
-    const jobs = (await res.json()).slice(0, 6);
+    const jobs = (await res.json()).slice(0, 4);  // 2×2 en la columna lateral
     box.innerHTML = jobs.length
       ? jobs.map(aureaRender.jobCardHtml).join('')
       : `<p class="secondary-text">${esc(t('ev.jobs_empty', 'No jobs available right now.'))}</p>`;
