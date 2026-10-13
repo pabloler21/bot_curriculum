@@ -203,6 +203,7 @@ a.btn-primary, a.btn-secondary { text-decoration: none; }
 .ev-results .panel { padding: 20px; }
 .ev-results .panel > * { padding: 0; }
 .ev-results .panel:not(.ev-profile) > * + * { margin-top: 14px; }
+.ev-results .panel > .ev-list { padding-left: 18px; }
 .ev-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 20px; margin-top: 20px; align-items: start; }
 .ev-main, .ev-side { display: flex; flex-direction: column; gap: 20px; }
 .ev-profile { display: flex; align-items: center; gap: 16px; }
