@@ -70,8 +70,16 @@
             <ol id="ev-recs" class="recommendations-list"></ol>
           </div>
           <div class="panel"><h2 data-i18n="ev.summary">Summary</h2><p id="ev-summary" class="secondary-text"></p></div>
-          <div class="panel"><h2 data-i18n="ev.strengths">Strengths</h2><ul id="ev-strengths" class="ev-list ev-list--good"></ul></div>
-          <div class="panel"><h2 data-i18n="ev.weaknesses">Weaknesses</h2><ul id="ev-weaknesses" class="ev-list ev-list--bad"></ul></div>
+          <div class="ev-folds">
+            <details class="panel ev-fold">
+              <summary><span data-i18n="ev.strengths">Strengths</span> <span id="ev-strengths-count" class="ev-count"></span></summary>
+              <ul id="ev-strengths" class="ev-list ev-list--good"></ul>
+            </details>
+            <details class="panel ev-fold">
+              <summary><span data-i18n="ev.weak_format">Weaknesses &amp; formatting</span> <span id="ev-weaknesses-count" class="ev-count"></span></summary>
+              <ul id="ev-weaknesses" class="ev-list ev-list--bad"></ul>
+            </details>
+          </div>
         </div>
 
         <!-- El adapter es el gancho para pagar: al costado de las mejoras, no debajo de todo -->

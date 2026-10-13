@@ -117,6 +117,7 @@ window.I18N_ES = {
   'ev.summary': 'Resumen',
   'ev.strengths': 'Fortalezas',
   'ev.weaknesses': 'Debilidades',
+  'ev.weak_format': 'Debilidades y formato',
   'ev.missing_kw': 'Falta la palabra clave',
   'ev.recommendations': 'Recomendaciones',
   'ev.apply': 'Aplicar a mi CV',

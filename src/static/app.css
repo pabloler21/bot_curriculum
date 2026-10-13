@@ -214,6 +214,9 @@ a.btn-primary, a.btn-secondary { text-decoration: none; }
 .ev-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
 .ev-list--good li::marker { color: var(--success); }
 .ev-list--bad li::marker { color: var(--danger); }
+.ev-folds { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.ev-fold summary { cursor: pointer; font-weight: 600; }
+.ev-count { margin-left: 6px; padding: 1px 9px; border: 1px solid var(--glass-border); border-radius: var(--radius-pill); color: var(--text-secondary); font-size: 0.8rem; font-weight: 500; }
 .ev-recs-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .ev-adapter-actions { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; margin-top: 12px; }
 .ev-adapter-note { margin: 8px 0 0; text-align: right; color: var(--text-tertiary); font-size: 0.85rem; }

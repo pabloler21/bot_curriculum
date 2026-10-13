@@ -89,14 +89,19 @@ function initials(name) {
 
 function listHtml(items) { return items.map((i) => `<li>${esc(i)}</li>`).join(''); }
 
+function fillFold(id, items) {
+  $(id).innerHTML = listHtml(items);
+  $(`${id}-count`).textContent = items.length;
+}
+
 function renderResults(ev) {
   $('ev-avatar').textContent = initials(ev.candidate_name);
   $('ev-name').textContent = ev.candidate_name || '';
   $('ev-score').textContent = ev.overall_score ?? '–';
   $('ev-summary').textContent = ev.summary || '';
-  $('ev-strengths').innerHTML = listHtml(ev.strengths || []);
+  fillFold('ev-strengths', ev.strengths || []);
   const missing = (ev.keywords_missing || []).map((k) => `${t('ev.missing_kw', 'Missing keyword')}: ${k}`);
-  $('ev-weaknesses').innerHTML = listHtml([...(ev.weaknesses || []), ...(ev.formatting_issues || []), ...missing]);
+  fillFold('ev-weaknesses', [...(ev.weaknesses || []), ...(ev.formatting_issues || []), ...missing]);
   $('ev-recs').innerHTML = listHtml(ev.recommendations || []);
   $('ev-apply').disabled = !(ev.recommendations || []).length;
   hide($('ev-intake'));
