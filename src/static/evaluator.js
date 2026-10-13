@@ -89,18 +89,48 @@ function initials(name) {
 
 function listHtml(items) { return items.map((i) => `<li>${esc(i)}</li>`).join(''); }
 
+function openSummary(open) {
+  $('ev-summary').classList.toggle('is-open', open);
+  const btn = $('ev-summary-more');
+  btn.textContent = open ? t('ev.read_less', 'Show less') : t('ev.read_more', 'Read more');
+  btn.setAttribute('aria-expanded', String(open));
+}
+
+const RECS_SHOWN = 5;  // el resto queda detrás de "Show all"
+
+function showAllRecs(all) {
+  const items = [...$('ev-recs').children];
+  items.forEach((li, i) => li.classList.toggle('hidden', !all && i >= RECS_SHOWN));
+  const btn = $('ev-recs-more');
+  btn.classList.toggle('hidden', items.length <= RECS_SHOWN);
+  btn.textContent = all ? t('ev.recs_less', 'Show fewer') : `${t('ev.recs_all', 'Show all recommendations')} (${items.length})`;
+  btn.setAttribute('aria-expanded', String(all));
+}
+
+function fillFold(id, items) {
+  $(id).innerHTML = listHtml(items);
+  $(`${id}-count`).textContent = items.length;
+}
+
 function renderResults(ev) {
   $('ev-avatar').textContent = initials(ev.candidate_name);
   $('ev-name').textContent = ev.candidate_name || '';
   $('ev-score').textContent = ev.overall_score ?? '–';
   $('ev-summary').textContent = ev.summary || '';
-  $('ev-strengths').innerHTML = listHtml(ev.strengths || []);
-  const missing = (ev.keywords_missing || []).map((k) => `${t('ev.missing_kw', 'Missing keyword')}: ${k}`);
-  $('ev-weaknesses').innerHTML = listHtml([...(ev.weaknesses || []), ...(ev.formatting_issues || []), ...missing]);
+  fillFold('ev-strengths', ev.strengths || []);
+  const kws = ev.keywords_missing || [];
+  $('ev-keywords').innerHTML = kws.map((k) => `<span class="tag missing">${esc(k)}</span>`).join('');
+  $('ev-kw-count').textContent = kws.length;
+  $('ev-kw-block').classList.toggle('hidden', !kws.length);
+  fillFold('ev-weaknesses', [...(ev.weaknesses || []), ...(ev.formatting_issues || [])]);
   $('ev-recs').innerHTML = listHtml(ev.recommendations || []);
+  showAllRecs(false);
   $('ev-apply').disabled = !(ev.recommendations || []).length;
   hide($('ev-intake'));
   show($('ev-results'));
+  openSummary(false);
+  const sum = $('ev-summary');  // se mide ya visible: si entra en 2 líneas, no hace falta "Read more"
+  $('ev-summary-more').classList.toggle('hidden', sum.scrollHeight <= sum.clientHeight);
   loadJobs();
 }
 
@@ -112,7 +142,7 @@ async function loadJobs() {
   try {
     const res = await aurea.authFetch(url);
     if (!res.ok) throw new Error();
-    const jobs = (await res.json()).slice(0, 6);
+    const jobs = (await res.json()).slice(0, 4);  // 2×2 en la columna lateral
     box.innerHTML = jobs.length
       ? jobs.map(aureaRender.jobCardHtml).join('')
       : `<p class="secondary-text">${esc(t('ev.jobs_empty', 'No jobs available right now.'))}</p>`;
@@ -214,6 +244,8 @@ $drop.addEventListener('drop', (e) => {
 });
 $('ev-file').addEventListener('change', () => { uploadAndEvaluate($('ev-file').files[0]); $('ev-file').value = ''; });
 $('ev-new').addEventListener('click', showIntake);
+$('ev-summary-more').addEventListener('click', (e) => openSummary(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
+$('ev-recs-more').addEventListener('click', (e) => showAllRecs(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
 $('ev-apply').addEventListener('click', () => runAction('improve', { recommendations: ((evaluation && evaluation.recommendations) || []).slice(0, 20) }));
 $('ev-cover').addEventListener('click', () => runAction('cover', { job_input: $('ev-job').value.trim() }));
 $('ev-tailor').addEventListener('click', () => runAction('tailor', { job_input: $('ev-job').value.trim() }));
