@@ -84,6 +84,13 @@ def test_feature_try_it_uses_the_brand_gradient(client, page):
     assert ".btn-gradient {" in (STATIC / "app.css").read_text(encoding="utf-8")
 
 
+def test_feature_try_it_keeps_its_distance_from_the_text():
+    """El aire sobre "Try it" lo ponía el margen de la lista; el Job board no tiene lista y el
+    botón quedaba pegado al párrafo."""
+    rule = re.search(r"\.feature \.btn-gradient \{([^}]*)\}", (STATIC / "app.css").read_text(encoding="utf-8"))
+    assert rule and "margin-top" in rule.group(1)
+
+
 def test_feature_title_sits_at_the_same_height_on_every_page():
     """El texto va arriba, a la altura del tile: centrado, el título del Job board (texto más
     corto) caía más abajo que en las otras dos páginas."""
