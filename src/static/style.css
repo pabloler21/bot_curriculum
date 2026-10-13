@@ -60,6 +60,12 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* El fondo y el nav los inserta shell.js al final del body. Si el navegador pinta antes (mientras
+   baja un script), el contenido sale 67px más arriba y salta cuando llega el nav. Oculto hasta
+   entonces no hay salto; si shell.js no carga, se muestra igual a los 2s. */
+body:not(:has(> .ambient-bg)) { visibility: hidden; animation: shell-reveal 0s 2s forwards; }
+@keyframes shell-reveal { to { visibility: visible; } }
+
 body {
   color: var(--text-primary);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
