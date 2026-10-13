@@ -77,6 +77,13 @@ def test_feature_page_opens_with_its_title(client, page):
     assert "section-kicker" not in client.get(f"/{page}").text
 
 
+def test_feature_title_sits_at_the_same_height_on_every_page():
+    """El texto va arriba, a la altura del tile: centrado, el título del Job board (texto más
+    corto) caía más abajo que en las otras dos páginas."""
+    rule = re.search(r"\.feature \{([^}]*)\}", (STATIC / "app.css").read_text(encoding="utf-8"))
+    assert rule and "align-items: start" in rule.group(1)
+
+
 def test_feature_visuals_need_no_webgl():
     """El 3D con three.js no encajaba con el sitio y en mobile bloqueaba ~2 s: el tile es HTML/CSS."""
     for f in STATIC.iterdir():
