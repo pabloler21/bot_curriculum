@@ -74,6 +74,17 @@ def test_home_cta_goes_to_evaluator(client):
     assert 'href="evaluator.html"' in client.get("/").text
 
 
+def _evaluator_html() -> str:
+    return (STATIC / "evaluator.html").read_text(encoding="utf-8")
+
+
+def test_evaluator_adapter_and_jobs_sit_beside_the_improvements():
+    """El adapter es el gancho para pagar: va en la columna lateral, a la vista, no debajo de todo."""
+    side = re.search(r'<aside class="ev-side">(.*?)</aside>', _evaluator_html(), re.S)
+    assert side, "falta la columna lateral de resultados"
+    assert 'id="ev-job"' in side.group(1) and 'id="ev-jobs"' in side.group(1)
+
+
 def test_pricing_page_has_waitlist(client):
     html = client.get("/pricing.html").text
     assert 'id="waitlist-btn"' in html
