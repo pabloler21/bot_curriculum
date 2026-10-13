@@ -52,6 +52,14 @@ def test_landing_nav_links_to_pages_not_anchors():
     assert not re.search(r'href="/?#', shell), "el nav todavía usa anclas"
 
 
+def test_pages_stay_hidden_until_the_shell_is_in():
+    """El fondo y el nav los inserta shell.js, al final del body. Si el navegador pinta antes, el
+    contenido sale 67px más arriba y salta al llegar el nav: el temblor al cambiar de página."""
+    css = (STATIC / "style.css").read_text(encoding="utf-8")
+    rule = re.search(r"body:not\(:has\(> \.ambient-bg\)\) \{([^}]*)\}", css)
+    assert rule and "visibility: hidden" in rule.group(1)
+
+
 def test_landing_nav_height_does_not_wait_for_auth():
     """shell.js muestra Login/Sign up recién cuando responde Supabase. Si el nav no reserva su
     alto, crece 12px en ese momento y toda la página baja: el "temblor" al cargar."""
