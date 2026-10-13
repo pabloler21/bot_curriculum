@@ -77,6 +77,13 @@ def test_feature_page_opens_with_its_title(client, page):
     assert "section-kicker" not in client.get(f"/{page}").text
 
 
+@pytest.mark.parametrize("page", FEATURE_PAGES)
+def test_feature_try_it_uses_the_brand_gradient(client, page):
+    """"Try it" lleva el gradiente tornasolado de Aurea, el mismo del CTA de Pricing."""
+    assert re.search(r'<a [^>]*class="btn-gradient"[^>]*data-i18n="landing.try_it"', client.get(f"/{page}").text)
+    assert ".btn-gradient {" in (STATIC / "app.css").read_text(encoding="utf-8")
+
+
 def test_feature_title_sits_at_the_same_height_on_every_page():
     """El texto va arriba, a la altura del tile: centrado, el título del Job board (texto más
     corto) caía más abajo que en las otras dos páginas."""
