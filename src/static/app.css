@@ -132,7 +132,9 @@ body[data-section="home"] main { display: flex; }
 .hero-note { margin-top: 14px; color: var(--text-tertiary); font-size: 0.9rem; }
 .section-kicker { color: var(--accent-light); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.8rem; }
 .section-title { font-size: clamp(1.7rem, 3.4vw, 2.5rem); margin: 8px 0 16px; }
-.feature { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; padding-top: 8px; }
+/* Texto arriba, a la altura del tile: centrado, el título bajaba en las páginas con menos texto. */
+.feature { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; padding-top: 8px; }
+.feature .section-title { margin-top: 0; }
 .feature ul { padding-left: 18px; margin: 12px 0 22px; color: var(--text-secondary); }
 a.btn-primary, a.btn-secondary { text-decoration: none; }
 .feature-visual { position: relative; overflow: hidden; aspect-ratio: 4 / 3; border-radius: var(--radius-lg); background: var(--glass-bg); border: 1px solid var(--glass-border); box-shadow: var(--shadow-card); container-type: inline-size; perspective: 110cqw; }
