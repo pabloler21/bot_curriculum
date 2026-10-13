@@ -169,7 +169,10 @@ src/
     about.html      # Landing: About
     features-evaluator.html / features-adapter.html / features-jobs.html  # Landing: una página por feature
     pricing.html    # Landing: Free/Pro + waitlist (landing.js)
-    evaluator.html  # ATS evaluator (anónimo) + evaluator.js
+    evaluator.html  # ATS evaluator (anónimo) + evaluator.js. Resultados (4.9): a la izquierda
+                    # "What to fix" (keywords faltantes + top 5 recomendaciones); a la derecha el
+                    # adapter y 4 jobs en una columna sticky, porque el adapter es el gancho para
+                    # pagar; fortalezas y debilidades plegadas. Se aparta del Excalidraw a propósito.
     tailor.html     # Adaptar CV a un JD (texto o URL) + tailor.js
     cover.html      # Cover letter + cover.js
     jobs.html       # Job board: My Jobs + Recommended + jobs.js
@@ -229,7 +232,8 @@ tests/
   test_job_fetch.py        # backend/job_fetch.py — anti-SSRF, deadline, tope de tamaño
   test_static_backend_url.py # el frontend no hardcodea la URL del backend
   test_static_pages.py     # páginas cargan el shell; landing en páginas; Cache-Control; redirects;
-                           # tile de vidrio en las páginas de features, sin three.js
+                           # tile de vidrio en las páginas de features, sin three.js; layout de
+                           # resultados del evaluator (adapter al costado, pliegues, keywords primero)
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -279,7 +283,8 @@ Todas las funciones son **no-op seguros** cuando `_supabase is None` (dev sin cr
 ## Flujo del usuario (happy path)
 
 ```
-index.html (landing) → CTA → evaluator.html (anónimo: sube CV, ve score/strengths/weaknesses)
+index.html (landing) → CTA → evaluator.html (anónimo: sube CV, ve score, keywords faltantes y
+  recomendaciones; al costado, sin scroll, el adapter y los jobs)
 → acción paga (Tailor, Cover, Improve) → modal de signup (magic link o Google)
 → la acción pendiente se guarda (aurea_pending_action) y se ejecuta al volver logueado
 → bono de 5 créditos → resultado (CV adaptado + gaps + cover + PDF) → queda en /history
