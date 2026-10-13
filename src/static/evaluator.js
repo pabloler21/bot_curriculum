@@ -100,8 +100,11 @@ function renderResults(ev) {
   $('ev-score').textContent = ev.overall_score ?? '–';
   $('ev-summary').textContent = ev.summary || '';
   fillFold('ev-strengths', ev.strengths || []);
-  const missing = (ev.keywords_missing || []).map((k) => `${t('ev.missing_kw', 'Missing keyword')}: ${k}`);
-  fillFold('ev-weaknesses', [...(ev.weaknesses || []), ...(ev.formatting_issues || []), ...missing]);
+  const kws = ev.keywords_missing || [];
+  $('ev-keywords').innerHTML = kws.map((k) => `<span class="tag missing">${esc(k)}</span>`).join('');
+  $('ev-kw-count').textContent = kws.length;
+  $('ev-kw-block').classList.toggle('hidden', !kws.length);
+  fillFold('ev-weaknesses', [...(ev.weaknesses || []), ...(ev.formatting_issues || [])]);
   $('ev-recs').innerHTML = listHtml(ev.recommendations || []);
   $('ev-apply').disabled = !(ev.recommendations || []).length;
   hide($('ev-intake'));

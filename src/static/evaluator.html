@@ -64,9 +64,14 @@
         <div class="ev-main">
           <div class="panel">
             <div class="ev-recs-head">
-              <h2 data-i18n="ev.recommendations">Recommendations</h2>
+              <h2 data-i18n="ev.what_to_fix">What to fix</h2>
               <button type="button" id="ev-apply" class="btn-primary btn-sm"><span data-i18n="ev.apply">Apply to my CV</span> · 1🪙</button>
             </div>
+            <div id="ev-kw-block">
+              <p class="ev-label"><span data-i18n="ev.missing_kws">Missing keywords</span> · <span id="ev-kw-count"></span></p>
+              <div id="ev-keywords" class="tag-cloud"></div>
+            </div>
+            <p class="ev-label" data-i18n="ev.recommendations">Recommendations</p>
             <ol id="ev-recs" class="recommendations-list"></ol>
           </div>
           <div class="panel"><h2 data-i18n="ev.summary">Summary</h2><p id="ev-summary" class="secondary-text"></p></div>

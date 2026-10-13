@@ -120,6 +120,8 @@ window.I18N_ES = {
   'ev.weak_format': 'Debilidades y formato',
   'ev.missing_kw': 'Falta la palabra clave',
   'ev.recommendations': 'Recomendaciones',
+  'ev.what_to_fix': 'Qué mejorar',
+  'ev.missing_kws': 'Palabras clave que faltan',
   'ev.apply': 'Aplicar a mi CV',
   'ev.adapter': 'Adaptador',
   'ev.cover_btn': 'Generar carta de presentación',
