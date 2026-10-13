@@ -229,7 +229,8 @@ a.btn-primary, a.btn-secondary { text-decoration: none; }
 .ev-fold summary { cursor: pointer; font-weight: 600; }
 .ev-count { margin-left: 6px; padding: 1px 9px; border: 1px solid var(--glass-border); border-radius: var(--radius-pill); color: var(--text-secondary); font-size: 0.8rem; font-weight: 500; }
 .ev-recs-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.ev-adapter-actions { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+.ev-adapter-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.ev-adapter-actions button { flex: 1; justify-content: center; white-space: nowrap; }
 .ev-side .job-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .ev-working { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
 .job-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
@@ -289,6 +290,4 @@ a.btn-primary, a.btn-secondary { text-decoration: none; }
   .ev-profile { flex-wrap: wrap; }
   .ev-summary { order: 3; flex-basis: 100%; }
   #ev-summary-more { order: 4; }
-  .ev-adapter-actions { justify-content: stretch; }
-  .ev-adapter-actions button { flex: 1; }
 }
