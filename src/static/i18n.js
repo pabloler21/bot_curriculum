@@ -115,6 +115,8 @@ window.I18N_ES = {
   'ev.score': 'Puntaje ATS',
   'ev.new_cv': 'Subir otro CV',
   'ev.summary': 'Resumen',
+  'ev.read_more': 'Leer más',
+  'ev.read_less': 'Leer menos',
   'ev.strengths': 'Fortalezas',
   'ev.weaknesses': 'Debilidades',
   'ev.weak_format': 'Debilidades y formato',

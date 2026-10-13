@@ -206,8 +206,11 @@ a.btn-primary, a.btn-secondary { text-decoration: none; }
 .ev-results .panel > .ev-list { padding-left: 18px; }
 .ev-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 20px; margin-top: 20px; align-items: start; }
 .ev-main, .ev-side { display: flex; flex-direction: column; gap: 20px; }
-.ev-profile { display: flex; align-items: center; gap: 16px; }
+.ev-profile { display: flex; align-items: center; gap: 20px; }
 .ev-profile .btn-ghost { margin-left: auto; }
+.ev-who, .ev-profile button { flex-shrink: 0; }
+.ev-summary { flex: 1; min-width: 0; font-size: 0.9rem; line-height: 1.5; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.ev-summary.is-open { display: block; }
 .ev-avatar { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 1.3rem; background: linear-gradient(135deg, var(--accent), var(--aqua)); color: #0b0d1c; flex-shrink: 0; }
 .ev-name { margin: 0; font-size: 1.4rem; }
 .ev-score { margin: 4px 0 0; color: var(--text-secondary); }

@@ -89,6 +89,13 @@ function initials(name) {
 
 function listHtml(items) { return items.map((i) => `<li>${esc(i)}</li>`).join(''); }
 
+function openSummary(open) {
+  $('ev-summary').classList.toggle('is-open', open);
+  const btn = $('ev-summary-more');
+  btn.textContent = open ? t('ev.read_less', 'Show less') : t('ev.read_more', 'Read more');
+  btn.setAttribute('aria-expanded', String(open));
+}
+
 const RECS_SHOWN = 5;  // el resto queda detrás de "Show all"
 
 function showAllRecs(all) {
@@ -121,6 +128,9 @@ function renderResults(ev) {
   $('ev-apply').disabled = !(ev.recommendations || []).length;
   hide($('ev-intake'));
   show($('ev-results'));
+  openSummary(false);
+  const sum = $('ev-summary');  // se mide ya visible: si entra en 2 líneas, no hace falta "Read more"
+  $('ev-summary-more').classList.toggle('hidden', sum.scrollHeight <= sum.clientHeight);
   loadJobs();
 }
 
@@ -234,6 +244,7 @@ $drop.addEventListener('drop', (e) => {
 });
 $('ev-file').addEventListener('change', () => { uploadAndEvaluate($('ev-file').files[0]); $('ev-file').value = ''; });
 $('ev-new').addEventListener('click', showIntake);
+$('ev-summary-more').addEventListener('click', (e) => openSummary(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
 $('ev-recs-more').addEventListener('click', (e) => showAllRecs(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
 $('ev-apply').addEventListener('click', () => runAction('improve', { recommendations: ((evaluation && evaluation.recommendations) || []).slice(0, 20) }));
 $('ev-cover').addEventListener('click', () => runAction('cover', { job_input: $('ev-job').value.trim() }));

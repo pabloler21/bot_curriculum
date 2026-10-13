@@ -53,10 +53,12 @@
     <section id="ev-results" class="ev-results hidden" aria-label="Results">
       <div class="panel ev-profile">
         <div id="ev-avatar" class="ev-avatar" aria-hidden="true"></div>
-        <div>
+        <div class="ev-who">
           <h1 id="ev-name" class="ev-name"></h1>
           <p class="ev-score"><span data-i18n="ev.score">ATS score</span> <strong id="ev-score"></strong>/100</p>
         </div>
+        <p id="ev-summary" class="ev-summary secondary-text"></p>
+        <button type="button" id="ev-summary-more" class="ev-more hidden" aria-controls="ev-summary" aria-expanded="false"></button>
         <button type="button" id="ev-new" class="btn-ghost" data-i18n="ev.new_cv">Upload a new CV</button>
       </div>
 
@@ -75,7 +77,6 @@
             <ol id="ev-recs" class="recommendations-list ev-recs"></ol>
             <button type="button" id="ev-recs-more" class="ev-more hidden" aria-controls="ev-recs" aria-expanded="false"></button>
           </div>
-          <div class="panel"><h2 data-i18n="ev.summary">Summary</h2><p id="ev-summary" class="secondary-text"></p></div>
           <div class="ev-folds">
             <details class="panel ev-fold">
               <summary><span data-i18n="ev.strengths">Strengths</span> <span id="ev-strengths-count" class="ev-count"></span></summary>
