@@ -415,10 +415,13 @@ ruff check .
 | 4.7 | Pricing: layout centrado, cards alineadas, badge flotante | ✅ mergeada |
 | 4.8 | Features: tile de vidrio con volumen (HTML/CSS; reemplazó un intento con three.js) | ✅ mergeada |
 | 4.9 | Evaluator: resultados con las mejoras primero; adapter y jobs en una columna fija al costado | ✅ mergeada |
-| 4.10 | Actualizar CLAUDE.md (4.7–4.9) | 🔄 PR abierto |
+| 4.10 | Actualizar CLAUDE.md (4.7–4.9) | ✅ mergeada |
+| 4.11 | Features: sin kicker, título alineado arriba con el tile, "Try it" con `.btn-gradient`; sin temblor al cargar ni al cambiar de página | ✅ mergeada |
+| 4.12 | "Improve my CV" y "Sign up" se encienden ~1 s cada 7 s (`cta-glow` en `app.css`); "for every job." queda quieto | ✅ mergeada |
+| 4.13 | Actualizar CLAUDE.md (4.10–4.12) | 🔄 PR abierto |
 
-**Último release**: `main` al día con `develop` hasta la 4.9 (PR #55, deployado el 2026-10-13).
-Antes: PR #54 (4.8, 2026-10-12) y PR #52 (4.5 y 4.7, 2026-10-10).
+**Último release**: `main` al día con `develop` hasta la 4.12 (PR #60, deployado el 2026-10-13).
+Antes, el mismo día: PR #58 (4.11) y PR #55 (4.9). Antes: PR #54 (4.8, 2026-10-12).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
 No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya está en este archivo).
 
