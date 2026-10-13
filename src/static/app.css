@@ -230,6 +230,7 @@ a.btn-primary, a.btn-secondary { text-decoration: none; }
 .ev-count { margin-left: 6px; padding: 1px 9px; border: 1px solid var(--glass-border); border-radius: var(--radius-pill); color: var(--text-secondary); font-size: 0.8rem; font-weight: 500; }
 .ev-recs-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .ev-adapter-actions { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+.ev-side .job-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .ev-working { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
 .job-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
 .job-mini { display: flex; flex-direction: column; gap: 4px; padding: 14px; border-radius: var(--radius-md); background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-primary); text-decoration: none; }
