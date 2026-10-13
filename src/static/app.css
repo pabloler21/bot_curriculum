@@ -143,7 +143,9 @@ body[data-section="home"] main { display: flex; }
 /* Texto arriba, a la altura del tile: centrado, el título bajaba en las páginas con menos texto. */
 .feature { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; padding-top: 8px; }
 .feature .section-title { margin-top: 0; }
-.feature ul { padding-left: 18px; margin: 12px 0 22px; color: var(--text-secondary); }
+.feature ul { padding-left: 18px; margin: 12px 0 0; color: var(--text-secondary); }
+/* El aire sobre el botón es suyo: el Job board no tiene lista que lo aporte. */
+.feature .btn-gradient { margin-top: 22px; }
 a.btn-primary, a.btn-secondary { text-decoration: none; }
 .feature-visual { position: relative; overflow: hidden; aspect-ratio: 4 / 3; border-radius: var(--radius-lg); background: var(--glass-bg); border: 1px solid var(--glass-border); box-shadow: var(--shadow-card); container-type: inline-size; perspective: 110cqw; }
 /* Tile de vidrio con borde de gradiente, en capas a distinta profundidad (medidas en cqw: escalan con la card).
