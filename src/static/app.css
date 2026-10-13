@@ -114,7 +114,9 @@ body:not(.has-sidebar) .app-main { margin: 0 auto; }
 }
 .nav-dropdown-menu a { padding: 8px 10px; border-radius: var(--radius-sm); }
 .nav-dropdown-menu a:hover { background: var(--glass-bg); }
-.landing-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+/* min-height = alto del botón Login: shell.js lo muestra recién cuando responde Supabase, y sin
+   reservarlo el nav crece 12px en ese momento y la página entera baja (temblor al cargar). */
+.landing-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; min-height: 38px; }
 /* Footer abajo aunque la página sea corta */
 body[data-page="landing"] { display: flex; flex-direction: column; }
 body[data-page="landing"] main { flex: 1; }
