@@ -51,49 +51,53 @@
 
     <!-- Estado 3: resultados -->
     <section id="ev-results" class="hidden" aria-label="Results">
+      <div class="panel ev-profile">
+        <div id="ev-avatar" class="ev-avatar" aria-hidden="true"></div>
+        <div>
+          <h1 id="ev-name" class="ev-name"></h1>
+          <p class="ev-score"><span data-i18n="ev.score">ATS score</span> <strong id="ev-score"></strong>/100</p>
+        </div>
+        <button type="button" id="ev-new" class="btn-ghost" data-i18n="ev.new_cv">Upload a new CV</button>
+      </div>
+
       <div class="ev-grid">
         <div class="ev-main">
-          <div class="panel ev-profile">
-            <div id="ev-avatar" class="ev-avatar" aria-hidden="true"></div>
-            <div>
-              <h1 id="ev-name" class="ev-name"></h1>
-              <p class="ev-score"><span data-i18n="ev.score">ATS score</span> <strong id="ev-score"></strong>/100</p>
+          <div class="panel">
+            <div class="ev-recs-head">
+              <h2 data-i18n="ev.recommendations">Recommendations</h2>
+              <button type="button" id="ev-apply" class="btn-primary btn-sm"><span data-i18n="ev.apply">Apply to my CV</span> · 1🪙</button>
             </div>
-            <button type="button" id="ev-new" class="btn-ghost" data-i18n="ev.new_cv">Upload a new CV</button>
+            <ol id="ev-recs" class="recommendations-list"></ol>
           </div>
           <div class="panel"><h2 data-i18n="ev.summary">Summary</h2><p id="ev-summary" class="secondary-text"></p></div>
           <div class="panel"><h2 data-i18n="ev.strengths">Strengths</h2><ul id="ev-strengths" class="ev-list ev-list--good"></ul></div>
           <div class="panel"><h2 data-i18n="ev.weaknesses">Weaknesses</h2><ul id="ev-weaknesses" class="ev-list ev-list--bad"></ul></div>
         </div>
-        <div class="panel">
-          <div class="ev-recs-head">
-            <h2 data-i18n="ev.recommendations">Recommendations</h2>
-            <button type="button" id="ev-apply" class="btn-primary btn-sm"><span data-i18n="ev.apply">Apply to my CV</span> · 1🪙</button>
+
+        <!-- El adapter es el gancho para pagar: al costado de las mejoras, no debajo de todo -->
+        <aside class="ev-side">
+          <div class="panel ev-adapter">
+            <h2 data-i18n="ev.adapter">Adapter</h2>
+            <label for="ev-job" class="field-label" data-i18n="job.label">Job link or description</label>
+            <textarea id="ev-job" class="jd-textarea" rows="3" placeholder="https://… or paste the job description" data-i18n-placeholder="job.placeholder"></textarea>
+            <div class="ev-adapter-actions">
+              <button type="button" id="ev-cover" class="btn-secondary"><span data-i18n="ev.cover_btn">Generate Cover Letter</span> · 1🪙</button>
+              <button type="button" id="ev-tailor" class="btn-primary"><span data-i18n="ev.tailor_btn">Tailor your CV</span> · 2🪙</button>
+            </div>
+            <p class="ev-adapter-note" data-i18n="ev.tailor_note">Tailor includes the adapted CV and a cover letter.</p>
+            <p id="ev-working" class="ev-working hidden" aria-live="polite"><span class="spinner sm" aria-hidden="true"></span> <span data-i18n="ev.working">Working on it — this can take up to a minute…</span></p>
+            <p id="ev-action-error" class="error-msg hidden" role="alert"></p>
+            <div id="ev-no-credits" class="no-credits-banner hidden" role="alert">
+              <span class="no-credits-banner-icon" aria-hidden="true">⚡</span>
+              <span><span data-i18n="credits.none">You've used all your credits.</span> <a href="settings.html#add-credits" data-i18n="credits.get_more">Get more →</a></span>
+            </div>
           </div>
-          <ol id="ev-recs" class="recommendations-list"></ol>
-        </div>
-      </div>
 
-      <div class="panel ev-adapter">
-        <h2 data-i18n="ev.adapter">Adapter</h2>
-        <label for="ev-job" class="field-label" data-i18n="job.label">Job link or description</label>
-        <textarea id="ev-job" class="jd-textarea" rows="3" placeholder="https://… or paste the job description" data-i18n-placeholder="job.placeholder"></textarea>
-        <div class="ev-adapter-actions">
-          <button type="button" id="ev-cover" class="btn-secondary"><span data-i18n="ev.cover_btn">Generate Cover Letter</span> · 1🪙</button>
-          <button type="button" id="ev-tailor" class="btn-primary"><span data-i18n="ev.tailor_btn">Tailor your CV</span> · 2🪙</button>
-        </div>
-        <p class="ev-adapter-note" data-i18n="ev.tailor_note">Tailor includes the adapted CV and a cover letter.</p>
-        <p id="ev-working" class="ev-working hidden" aria-live="polite"><span class="spinner sm" aria-hidden="true"></span> <span data-i18n="ev.working">Working on it — this can take up to a minute…</span></p>
-        <p id="ev-action-error" class="error-msg hidden" role="alert"></p>
-        <div id="ev-no-credits" class="no-credits-banner hidden" role="alert">
-          <span class="no-credits-banner-icon" aria-hidden="true">⚡</span>
-          <span><span data-i18n="credits.none">You've used all your credits.</span> <a href="settings.html#add-credits" data-i18n="credits.get_more">Get more →</a></span>
-        </div>
-      </div>
-
-      <div class="panel ev-jobs-panel">
-        <h2 data-i18n="ev.jobs">Job recommendations</h2>
-        <div id="ev-jobs" class="job-row"></div>
+          <div class="panel ev-jobs-panel">
+            <h2 data-i18n="ev.jobs">Job recommendations</h2>
+            <div id="ev-jobs" class="job-row"></div>
+          </div>
+        </aside>
       </div>
     </section>
   </main>
