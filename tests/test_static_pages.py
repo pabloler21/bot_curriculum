@@ -92,6 +92,12 @@ def test_evaluator_strengths_and_weaknesses_start_folded():
     assert any('id="ev-weaknesses"' in f for f in folds)
 
 
+def test_evaluator_missing_keywords_lead_the_improvements():
+    html = _evaluator_html()
+    assert 'id="ev-keywords"' in html, "faltan las keywords como chips"
+    assert html.index('id="ev-keywords"') < html.index('id="ev-recs"')
+
+
 def test_pricing_page_has_waitlist(client):
     html = client.get("/pricing.html").text
     assert 'id="waitlist-btn"' in html
