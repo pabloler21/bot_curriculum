@@ -409,9 +409,11 @@ ruff check .
 | 4.6 | Hardening del VPS: `deploy` solo reinicia `botcv`; vps-infra instala como `linuxuser` | ✅ aplicado en el server |
 | 4.7 | Pricing: layout centrado, cards alineadas, badge flotante | ✅ mergeada |
 | 4.8 | Features: tile de vidrio con volumen (HTML/CSS; reemplazó un intento con three.js) | ✅ mergeada |
+| 4.9 | Evaluator: resultados con las mejoras primero; adapter y jobs en una columna fija al costado | ✅ mergeada |
+| 4.10 | Actualizar CLAUDE.md (4.7–4.9) | 🔄 PR abierto |
 
-**Último release**: `main` al día con `develop` hasta la 4.8 (PR #54, deployado el 2026-10-12;
-el anterior, PR #52 del 2026-10-10, llevó la 4.5 y la 4.7).
+**Último release**: `main` al día con `develop` hasta la 4.9 (PR #55, deployado el 2026-10-13).
+Antes: PR #54 (4.8, 2026-10-12) y PR #52 (4.5 y 4.7, 2026-10-10).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
 No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya está en este archivo).
 
