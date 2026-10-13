@@ -282,6 +282,12 @@ a.btn-primary, a.btn-secondary { text-decoration: none; }
   /* Cada sección es una página: los links bajan a una segunda fila en vez de esconderse */
   .landing-nav { flex-wrap: wrap; row-gap: 10px; }
   .landing-links { order: 3; width: 100%; }
+  .ev-side { position: static; }
+  .ev-folds { grid-template-columns: 1fr; }
+  /* La tira del perfil: avatar, nombre y botón arriba; el resumen abajo, a lo ancho */
+  .ev-profile { flex-wrap: wrap; }
+  .ev-summary { order: 3; flex-basis: 100%; }
+  #ev-summary-more { order: 4; }
   .ev-adapter-actions { justify-content: stretch; }
   .ev-adapter-actions button { flex: 1; }
 }
