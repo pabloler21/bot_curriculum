@@ -52,6 +52,14 @@ def test_landing_nav_links_to_pages_not_anchors():
     assert not re.search(r'href="/?#', shell), "el nav todavía usa anclas"
 
 
+def test_landing_nav_height_does_not_wait_for_auth():
+    """shell.js muestra Login/Sign up recién cuando responde Supabase. Si el nav no reserva su
+    alto, crece 12px en ese momento y toda la página baja: el "temblor" al cargar."""
+    css = (STATIC / "app.css").read_text(encoding="utf-8")
+    rule = re.search(r"\.landing-actions \{([^}]*)\}", css)
+    assert rule and "min-height" in rule.group(1)
+
+
 FEATURE_PAGES = ["features-evaluator.html", "features-adapter.html", "features-jobs.html"]
 
 
