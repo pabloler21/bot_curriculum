@@ -89,6 +89,17 @@ function initials(name) {
 
 function listHtml(items) { return items.map((i) => `<li>${esc(i)}</li>`).join(''); }
 
+const RECS_SHOWN = 5;  // el resto queda detrás de "Show all"
+
+function showAllRecs(all) {
+  const items = [...$('ev-recs').children];
+  items.forEach((li, i) => li.classList.toggle('hidden', !all && i >= RECS_SHOWN));
+  const btn = $('ev-recs-more');
+  btn.classList.toggle('hidden', items.length <= RECS_SHOWN);
+  btn.textContent = all ? t('ev.recs_less', 'Show fewer') : `${t('ev.recs_all', 'Show all recommendations')} (${items.length})`;
+  btn.setAttribute('aria-expanded', String(all));
+}
+
 function fillFold(id, items) {
   $(id).innerHTML = listHtml(items);
   $(`${id}-count`).textContent = items.length;
@@ -106,6 +117,7 @@ function renderResults(ev) {
   $('ev-kw-block').classList.toggle('hidden', !kws.length);
   fillFold('ev-weaknesses', [...(ev.weaknesses || []), ...(ev.formatting_issues || [])]);
   $('ev-recs').innerHTML = listHtml(ev.recommendations || []);
+  showAllRecs(false);
   $('ev-apply').disabled = !(ev.recommendations || []).length;
   hide($('ev-intake'));
   show($('ev-results'));
@@ -222,6 +234,7 @@ $drop.addEventListener('drop', (e) => {
 });
 $('ev-file').addEventListener('change', () => { uploadAndEvaluate($('ev-file').files[0]); $('ev-file').value = ''; });
 $('ev-new').addEventListener('click', showIntake);
+$('ev-recs-more').addEventListener('click', (e) => showAllRecs(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
 $('ev-apply').addEventListener('click', () => runAction('improve', { recommendations: ((evaluation && evaluation.recommendations) || []).slice(0, 20) }));
 $('ev-cover').addEventListener('click', () => runAction('cover', { job_input: $('ev-job').value.trim() }));
 $('ev-tailor').addEventListener('click', () => runAction('tailor', { job_input: $('ev-job').value.trim() }));
