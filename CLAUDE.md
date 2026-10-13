@@ -169,7 +169,10 @@ src/
     about.html      # Landing: About
     features-evaluator.html / features-adapter.html / features-jobs.html  # Landing: una página por feature
     pricing.html    # Landing: Free/Pro + waitlist (landing.js)
-    evaluator.html  # ATS evaluator (anónimo) + evaluator.js
+    evaluator.html  # ATS evaluator (anónimo) + evaluator.js. Resultados (4.9): a la izquierda
+                    # "What to fix" (keywords faltantes + top 5 recomendaciones); a la derecha el
+                    # adapter y 4 jobs en una columna sticky, porque el adapter es el gancho para
+                    # pagar; fortalezas y debilidades plegadas. Se aparta del Excalidraw a propósito.
     tailor.html     # Adaptar CV a un JD (texto o URL) + tailor.js
     cover.html      # Cover letter + cover.js
     jobs.html       # Job board: My Jobs + Recommended + jobs.js
@@ -229,7 +232,8 @@ tests/
   test_job_fetch.py        # backend/job_fetch.py — anti-SSRF, deadline, tope de tamaño
   test_static_backend_url.py # el frontend no hardcodea la URL del backend
   test_static_pages.py     # páginas cargan el shell; landing en páginas; Cache-Control; redirects;
-                           # tile de vidrio en las páginas de features, sin three.js
+                           # tile de vidrio en las páginas de features, sin three.js; layout de
+                           # resultados del evaluator (adapter al costado, pliegues, keywords primero)
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -279,7 +283,8 @@ Todas las funciones son **no-op seguros** cuando `_supabase is None` (dev sin cr
 ## Flujo del usuario (happy path)
 
 ```
-index.html (landing) → CTA → evaluator.html (anónimo: sube CV, ve score/strengths/weaknesses)
+index.html (landing) → CTA → evaluator.html (anónimo: sube CV, ve score, keywords faltantes y
+  recomendaciones; al costado, sin scroll, el adapter y los jobs)
 → acción paga (Tailor, Cover, Improve) → modal de signup (magic link o Google)
 → la acción pendiente se guarda (aurea_pending_action) y se ejecuta al volver logueado
 → bono de 5 créditos → resultado (CV adaptado + gaps + cover + PDF) → queda en /history
@@ -407,9 +412,13 @@ ruff check .
 | 4.4 | UI fixes: el home entra sin scroll (no desborda ni tiembla) | ✅ mergeada |
 | 4.5 | Actualizar CLAUDE.md (estado post-4.4, runbook de deploy, deuda de mails) | ✅ mergeada |
 | 4.6 | Hardening del VPS: `deploy` solo reinicia `botcv`; vps-infra instala como `linuxuser` | ✅ aplicado en el server |
-| 4.8 | Features: tile de vidrio con volumen (HTML/CSS; reemplazó un intento con three.js) | 🔄 PR abierto |
+| 4.7 | Pricing: layout centrado, cards alineadas, badge flotante | ✅ mergeada |
+| 4.8 | Features: tile de vidrio con volumen (HTML/CSS; reemplazó un intento con three.js) | ✅ mergeada |
+| 4.9 | Evaluator: resultados con las mejoras primero; adapter y jobs en una columna fija al costado | ✅ mergeada |
+| 4.10 | Actualizar CLAUDE.md (4.7–4.9) | 🔄 PR abierto |
 
-**Último release**: `main` al día con `develop` hasta la 4.4 (PR #49, deployado el 2026-10-08).
+**Último release**: `main` al día con `develop` hasta la 4.9 (PR #55, deployado el 2026-10-13).
+Antes: PR #54 (4.8, 2026-10-12) y PR #52 (4.5 y 4.7, 2026-10-10).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
 No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya está en este archivo).
 
