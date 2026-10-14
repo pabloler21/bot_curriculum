@@ -139,7 +139,19 @@ body[data-section="home"] main { display: flex; }
   background-image: linear-gradient(90deg, var(--accent), var(--warning) 50%, var(--aqua));
 }
 .hero-sub { max-width: 620px; margin: 0 auto 32px; color: var(--text-secondary); font-size: 1.15rem; }
-.hero-cta { font-size: 1.1rem; padding: 16px 32px; }
+.hero-cta {
+  font-size: 1.1rem; padding: 16px 32px; background: var(--gradient-brand); color: var(--bg-base); border-color: transparent;
+  box-shadow: 0 8px 28px rgba(255,122,92,0.35), inset 0 1px 0 0 rgba(255,255,255,0.30);
+}
+/* El hover de .btn-primary pone fondo de vidrio: el CTA conserva el tornasol y solo se aclara. */
+.hero-cta:hover:not(:disabled) { background: var(--gradient-brand); filter: brightness(1.08); }
+/* Sign up (nav de la landing y barra de la app): vidrio con borde tornasolado, como el tile de features. */
+[data-open-auth="signup"].btn-primary { position: relative; border-color: transparent; }
+[data-open-auth="signup"].btn-primary::after {
+  content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: var(--gradient-brand); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
 .hero-note { margin-top: 14px; color: var(--text-tertiary); font-size: 0.9rem; }
 /* Entrada de la home (calcada de heliasoils.com): el fondo se enciende, el título sube por tramos
    rotando apenas y lo siguen subtítulo, CTA y nota. Cuelga de :has(> .ambient-bg) porque hasta que
