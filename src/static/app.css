@@ -137,15 +137,6 @@ body[data-section="home"] main { display: flex; }
 .hero-title em { font-style: normal; color: var(--accent); }
 .hero-sub { max-width: 620px; margin: 0 auto 32px; color: var(--text-secondary); font-size: 1.15rem; }
 .hero-cta { font-size: 1.1rem; padding: 16px 32px; }
-/* Los CTA se encienden ~1 s cada 7 s. Sign up va desfasado para no encenderse junto a "Improve my CV".
-   Sin corte por prefers-reduced-motion: no mueve nada, solo cambia luz y color (y Windows con las
-   animaciones apagadas reporta reduce, que lo escondería en muchas PCs). */
-.hero-cta, [data-open-auth="signup"].btn-primary { animation: cta-glow 7s ease-in-out 1.5s infinite; }
-[data-open-auth="signup"].btn-primary { animation-delay: 5s; }
-@keyframes cta-glow {
-  0%, 82%, 100% { box-shadow: none; }
-  90% { border-color: var(--accent-border); background: var(--accent-subtle); box-shadow: 0 0 26px var(--accent-glow), inset 0 0 14px rgba(255,165,144,0.18); }
-}
 .hero-note { margin-top: 14px; color: var(--text-tertiary); font-size: 0.9rem; }
 /* Entrada de la home (calcada de heliasoils.com): el fondo se enciende, el título sube por tramos
    rotando apenas y lo siguen subtítulo, CTA y nota. Cuelga de :has(> .ambient-bg) porque hasta que
@@ -156,7 +147,7 @@ body[data-section="home"] main { display: flex; }
   body:has(> .ambient-bg) .hero-title > * { display: inline-block; transform-origin: 0 100%; animation: hero-line 1s cubic-bezier(.215,.61,.355,1) 0.15s backwards; }
   body:has(> .ambient-bg) .hero-title > em { animation-delay: 0.25s; }
   body:has(> .ambient-bg) .hero-sub { animation: hero-rise 0.9s cubic-bezier(.215,.61,.355,1) 0.4s backwards; }
-  body:has(> .ambient-bg) .hero-cta { animation: hero-rise 0.9s cubic-bezier(.215,.61,.355,1) 0.5s backwards, cta-glow 7s ease-in-out 1.5s infinite; }
+  body:has(> .ambient-bg) .hero-cta { animation: hero-rise 0.9s cubic-bezier(.215,.61,.355,1) 0.5s backwards; }
   body:has(> .ambient-bg) .hero-note { animation: hero-rise 0.9s cubic-bezier(.215,.61,.355,1) 0.6s backwards; }
 }
 @keyframes hero-bg { from { opacity: 0; transform: scale(1.08); } }
