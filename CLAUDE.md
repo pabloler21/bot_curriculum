@@ -427,7 +427,7 @@ ruff check .
 | 4.10 | Actualizar CLAUDE.md (4.7–4.9) | ✅ mergeada |
 | 4.11 | Features: sin kicker, título alineado arriba con el tile, "Try it" con `.btn-gradient`; sin temblor al cargar ni al cambiar de página | ✅ mergeada |
 | 4.12 | "Improve my CV" y "Sign up" se encienden ~1 s cada 7 s (`cta-glow` en `app.css`); "for every job." queda quieto | ✅ mergeada |
-| 4.13 | Actualizar CLAUDE.md (4.10–4.12) | 🔄 PR abierto |
+| 4.13 | Actualizar CLAUDE.md (4.10–4.12) | ✅ mergeada |
 
 **Último release**: `main` al día con `develop` hasta la 4.12 (PR #60, deployado el 2026-10-13).
 Antes, el mismo día: PR #58 (4.11) y PR #55 (4.9). Antes: PR #54 (4.8, 2026-10-12).
