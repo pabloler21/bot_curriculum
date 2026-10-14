@@ -22,6 +22,8 @@
   --aqua-subtle: rgba(94,234,212,0.12);
   --aqua-border: rgba(94,234,212,0.32);
 
+  --gradient-brand: linear-gradient(135deg, var(--accent), var(--warning) 50%, var(--aqua));
+
   --success:        #34D399;
   --success-subtle: rgba(52,211,153,0.14);
   --success-border: rgba(52,211,153,0.36);
