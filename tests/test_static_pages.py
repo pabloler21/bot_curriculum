@@ -139,6 +139,12 @@ def test_home_entrance_starts_once_the_shell_is_in():
         assert "body:has(> .ambient-bg)" in selector, f"{selector.strip()} arranca con el body oculto"
 
 
+def test_home_accent_is_iridescent():
+    """"for every job." lleva el tornasol de la marca (coral → ámbar → aqua), no el coral liso."""
+    rule = re.search(r"\.hero-title em \{([^}]*)\}", (STATIC / "app.css").read_text(encoding="utf-8"))
+    assert rule and "background-clip: text" in rule.group(1) and "var(--aqua)" in rule.group(1)
+
+
 def test_ctas_do_not_blink():
     """"Improve my CV" y "Sign up" quedan con el tornasol fijo: se sacó el encendido cada 7 s (4.12)."""
     css = (STATIC / "app.css").read_text(encoding="utf-8")
