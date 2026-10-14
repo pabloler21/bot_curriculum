@@ -353,8 +353,10 @@ Nunca juntar dos arreglos no relacionados en un commit, ni "aprovechar" un commi
 uv sync   # o: pip install -e .
 
 # Correr localmente
-uvicorn src.main:app --reload
-# → http://localhost:8000/adapt.html
+uv run uvicorn src.main:app --reload
+# → http://localhost:8000/
+# WinError 10013 al arrancar = el puerto ya está ocupado (suele ser un uvicorn viejo que quedó
+# prendido). Usar otro (--port 8001) o cerrar el que lo tiene.
 
 # Tests
 pytest tests/ -v
