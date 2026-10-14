@@ -117,6 +117,60 @@ def test_home_cta_goes_to_evaluator(client):
     assert 'href="evaluator.html"' in client.get("/").text
 
 
+def _home_entrance_css() -> str:
+    """Bloque de app.css con la entrada animada de la home: solo corre sin reduced-motion."""
+    css = (STATIC / "app.css").read_text(encoding="utf-8")
+    start = css.find("@media (prefers-reduced-motion: no-preference) {")
+    assert start != -1, "la entrada de la home no está bajo prefers-reduced-motion: no-preference"
+    depth, i = 0, css.index("{", start)
+    for i in range(i, len(css)):
+        depth += {"{": 1, "}": -1}.get(css[i], 0)
+        if depth == 0:
+            break
+    return css[start:i]
+
+
+def test_home_entrance_starts_once_the_shell_is_in():
+    """El body está oculto hasta que shell.js inserta el fondo: si la entrada arrancara antes,
+    correría sin verse y la home aparecería con la animación por la mitad."""
+    hero_rules = re.findall(r"^\s*([^{}@]*\.hero[^{]*)\{", _home_entrance_css(), re.M)
+    assert hero_rules, "la entrada no anima la hero"
+    for selector in hero_rules:
+        assert "body:has(> .ambient-bg)" in selector, f"{selector.strip()} arranca con el body oculto"
+
+
+def test_home_accent_is_iridescent():
+    """"for every job." lleva el tornasol de la marca (coral → ámbar → aqua), no el coral liso."""
+    rule = re.search(r"\.hero-title em \{([^}]*)\}", (STATIC / "app.css").read_text(encoding="utf-8"))
+    assert rule and "background-clip: text" in rule.group(1) and "var(--aqua)" in rule.group(1)
+
+
+def _app_css_rule(selector: str) -> str:
+    rule = re.search(re.escape(selector) + r" \{([^}]*)\}", (STATIC / "app.css").read_text(encoding="utf-8"))
+    return rule.group(1) if rule else ""
+
+
+def test_ctas_wear_the_brand_gradient():
+    """"Improve my CV" va relleno con el tornasol y "Sign up" lleva el borde tornasolado."""
+    assert "--gradient-brand:" in (STATIC / "style.css").read_text(encoding="utf-8")
+    assert "var(--gradient-brand)" in _app_css_rule(".hero-cta")
+    assert "var(--gradient-brand)" in _app_css_rule('[data-open-auth="signup"].btn-primary::after')
+
+
+def test_hero_cta_keeps_its_gradient_on_hover():
+    """El hover de .btn-primary pone fondo de vidrio: sin un hover propio, el CTA se vuelve gris."""
+    assert "var(--gradient-brand)" in _app_css_rule(".hero-cta:hover:not(:disabled)")
+
+
+def test_ctas_do_not_blink():
+    """"Improve my CV" y "Sign up" quedan con el tornasol fijo: se sacó el encendido cada 7 s (4.12)."""
+    css = (STATIC / "app.css").read_text(encoding="utf-8")
+    assert "cta-glow" not in css
+    cta_rule = r'([^{}]*(?:\.hero-cta|data-open-auth="signup")[^{}]*)\{([^}]*)\}'
+    for selector, body in re.findall(cta_rule, css.replace(_home_entrance_css(), "")):
+        assert "animation" not in body, f"{selector.strip()} sigue animado"
+
+
 def _evaluator_html() -> str:
     return (STATIC / "evaluator.html").read_text(encoding="utf-8")
 

@@ -165,7 +165,9 @@ src/
     waitlist.py     # POST /waitlist — registra interés en plan Pro
   static/
     index.html      # Landing: Home (hero + CTA). Cada sección es su propia página,
-                    # con body data-page="landing" data-section="…"; el nav y el footer los pone shell.js
+                    # con body data-page="landing" data-section="…"; el nav y el footer los pone shell.js.
+                    # Entra animada (4.14, app.css); el nav queda quieto porque es igual en toda la landing.
+                    # "for every job." y "Improve my CV" llevan el tornasol de la marca; "Sign up", el borde
     about.html      # Landing: About
     features-evaluator.html / features-adapter.html / features-jobs.html  # Landing: una página por feature
     pricing.html    # Landing: Free/Pro + waitlist (landing.js)
@@ -187,7 +189,8 @@ src/
     app.css         # Estilos del shell y las páginas nuevas
     style.css       # Design system base (lo cargan todas las páginas). Oculta el body hasta que
                     # shell.js inserta fondo y nav (si no, el contenido saltaba 67px al cambiar
-                    # de página); si shell.js no carga, lo muestra igual a los 2 s
+                    # de página); si shell.js no carga, lo muestra igual a los 2 s. Token
+                    # --gradient-brand: el tornasol coral → ámbar → aqua
     jobs.css        # Estilos de job-detail.html (no borrar)
     adapt.html      # Redirect (meta refresh) → tailor.html
 
@@ -237,7 +240,9 @@ tests/
                            # body oculto hasta el shell y alto del nav reservado (sin temblor);
                            # features: tile de vidrio sin three.js, sin kicker, título alineado,
                            # "Try it" con gradiente; layout de resultados del evaluator (adapter
-                           # al costado, pliegues, keywords primero)
+                           # al costado, pliegues, keywords primero); entrada de la home (espera
+                           # al shell, sin reduced-motion); acento y CTA tornasolados, sin titilar,
+                           # y el CTA conserva el gradiente en hover
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -368,10 +373,14 @@ ruff check .
 - Frontend: vanilla JS, sin frameworks, sin build steps
 - Seguridad JS: todo dato de API pasa por `escHtml()` antes de tocar el DOM
 - **Animaciones y `prefers-reduced-motion`**: se apagan con esa media query las que desplazan
-  cosas (tile de features); las que solo cambian luz o color (brillo de los CTA) quedan. Al
+  cosas (tile de features, entrada de la home); las que solo cambian luz o color quedan. Al
   verificar: la PC de desarrollo tiene apagados los efectos de animación de Windows, así que
   Chrome (también headless) reporta `reduce` y no muestra las animaciones apagadas.
   Chequear `matchMedia('(prefers-reduced-motion: reduce)')` antes de concluir que algo no anda.
+  Para verlas por CDP: `Emulation.setEmulatedMedia` con `prefers-reduced-motion: no-preference`.
+- **Animaciones de entrada**: van colgadas de `body:has(> .ambient-bg)`. Hasta que shell.js
+  inserta el fondo el body está oculto (`style.css`), y una animación que arranque antes corre
+  sin verse. Si un elemento ya tiene `animation`, la de entrada la reemplaza: hay que listar las dos.
 - **Patch location en tests**: siempre parchear en el lugar de importación, no en la definición:
   - ✅ `patch("src.routes.adapt.ensure_user")`
   - ❌ `patch("backend.credits.ensure_user")`
@@ -426,8 +435,9 @@ ruff check .
 | 4.9 | Evaluator: resultados con las mejoras primero; adapter y jobs en una columna fija al costado | ✅ mergeada |
 | 4.10 | Actualizar CLAUDE.md (4.7–4.9) | ✅ mergeada |
 | 4.11 | Features: sin kicker, título alineado arriba con el tile, "Try it" con `.btn-gradient`; sin temblor al cargar ni al cambiar de página | ✅ mergeada |
-| 4.12 | "Improve my CV" y "Sign up" se encienden ~1 s cada 7 s (`cta-glow` en `app.css`); "for every job." queda quieto | ✅ mergeada |
-| 4.13 | Actualizar CLAUDE.md (4.10–4.12) | 🔄 PR abierto |
+| 4.12 | "Improve my CV" y "Sign up" se encienden ~1 s cada 7 s (`cta-glow` en `app.css`); "for every job." queda quieto. Lo sacó la 4.14 | ✅ mergeada |
+| 4.13 | Actualizar CLAUDE.md (4.10–4.12) | ✅ mergeada |
+| 4.14 | La home entra fluida (calcada de heliasoils.com): fondo, título que emerge por tramos y resto escalonado; CSS puro en `app.css`. Además: "for every job." y "Improve my CV" tornasolados, "Sign up" con borde tornasolado, sin titilar | 🔄 PR abierto |
 
 **Último release**: `main` al día con `develop` hasta la 4.12 (PR #60, deployado el 2026-10-13).
 Antes, el mismo día: PR #58 (4.11) y PR #55 (4.9). Antes: PR #54 (4.8, 2026-10-12).
