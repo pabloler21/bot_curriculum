@@ -145,6 +145,23 @@ def test_home_accent_is_iridescent():
     assert rule and "background-clip: text" in rule.group(1) and "var(--aqua)" in rule.group(1)
 
 
+def _app_css_rule(selector: str) -> str:
+    rule = re.search(re.escape(selector) + r" \{([^}]*)\}", (STATIC / "app.css").read_text(encoding="utf-8"))
+    return rule.group(1) if rule else ""
+
+
+def test_ctas_wear_the_brand_gradient():
+    """"Improve my CV" va relleno con el tornasol y "Sign up" lleva el borde tornasolado."""
+    assert "--gradient-brand:" in (STATIC / "style.css").read_text(encoding="utf-8")
+    assert "var(--gradient-brand)" in _app_css_rule(".hero-cta")
+    assert "var(--gradient-brand)" in _app_css_rule('[data-open-auth="signup"].btn-primary::after')
+
+
+def test_hero_cta_keeps_its_gradient_on_hover():
+    """El hover de .btn-primary pone fondo de vidrio: sin un hover propio, el CTA se vuelve gris."""
+    assert "var(--gradient-brand)" in _app_css_rule(".hero-cta:hover:not(:disabled)")
+
+
 def test_ctas_do_not_blink():
     """"Improve my CV" y "Sign up" quedan con el tornasol fijo: se sacó el encendido cada 7 s (4.12)."""
     css = (STATIC / "app.css").read_text(encoding="utf-8")
