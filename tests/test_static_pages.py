@@ -117,6 +117,34 @@ def test_home_cta_goes_to_evaluator(client):
     assert 'href="evaluator.html"' in client.get("/").text
 
 
+def _home_entrance_css() -> str:
+    """Bloque de app.css con la entrada animada de la home: solo corre sin reduced-motion."""
+    css = (STATIC / "app.css").read_text(encoding="utf-8")
+    start = css.find("@media (prefers-reduced-motion: no-preference) {")
+    assert start != -1, "la entrada de la home no está bajo prefers-reduced-motion: no-preference"
+    depth, i = 0, css.index("{", start)
+    for i in range(i, len(css)):
+        depth += {"{": 1, "}": -1}.get(css[i], 0)
+        if depth == 0:
+            break
+    return css[start:i]
+
+
+def test_home_entrance_starts_once_the_shell_is_in():
+    """El body está oculto hasta que shell.js inserta el fondo: si la entrada arrancara antes,
+    correría sin verse y la home aparecería con la animación por la mitad."""
+    hero_rules = re.findall(r"^\s*([^{}@]*\.hero[^{]*)\{", _home_entrance_css(), re.M)
+    assert hero_rules, "la entrada no anima la hero"
+    for selector in hero_rules:
+        assert "body:has(> .ambient-bg)" in selector, f"{selector.strip()} arranca con el body oculto"
+
+
+def test_home_entrance_keeps_the_cta_glow():
+    """La entrada del CTA reemplaza su animation: sin repetir cta-glow, deja de encenderse."""
+    rule = re.search(r"\.hero-cta \{([^}]*)\}", _home_entrance_css())
+    assert rule and "cta-glow" in rule.group(1)
+
+
 def _evaluator_html() -> str:
     return (STATIC / "evaluator.html").read_text(encoding="utf-8")
 
