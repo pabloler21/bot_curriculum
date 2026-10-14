@@ -166,8 +166,8 @@ def test_ctas_do_not_blink():
     """"Improve my CV" y "Sign up" quedan con el tornasol fijo: se sacó el encendido cada 7 s (4.12)."""
     css = (STATIC / "app.css").read_text(encoding="utf-8")
     assert "cta-glow" not in css
-    rules = re.findall(r'([^{}]*(?:\.hero-cta|data-open-auth="signup")[^{}]*)\{([^}]*)\}', css.replace(_home_entrance_css(), ""))
-    for selector, body in rules:
+    cta_rule = r'([^{}]*(?:\.hero-cta|data-open-auth="signup")[^{}]*)\{([^}]*)\}'
+    for selector, body in re.findall(cta_rule, css.replace(_home_entrance_css(), "")):
         assert "animation" not in body, f"{selector.strip()} sigue animado"
 
 
