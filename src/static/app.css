@@ -147,6 +147,26 @@ body[data-section="home"] main { display: flex; }
   90% { border-color: var(--accent-border); background: var(--accent-subtle); box-shadow: 0 0 26px var(--accent-glow), inset 0 0 14px rgba(255,165,144,0.18); }
 }
 .hero-note { margin-top: 14px; color: var(--text-tertiary); font-size: 0.9rem; }
+/* Entrada de la home (calcada de heliasoils.com): el fondo se enciende, el título sube por tramos
+   rotando apenas y lo siguen subtítulo, CTA y nota. Cuelga de :has(> .ambient-bg) porque hasta que
+   shell.js inserta el fondo el body está oculto y correría sin verse. El nav no se mueve: es el
+   mismo en toda la landing. Desplaza cosas, así que con reduced-motion no corre. */
+@media (prefers-reduced-motion: no-preference) {
+  body[data-section="home"] > .ambient-bg { animation: hero-bg 1.4s cubic-bezier(.215,.61,.355,1) backwards; }
+  body:has(> .ambient-bg) .hero-title > * { display: inline-block; transform-origin: 0 100%; animation: hero-line 1s cubic-bezier(.215,.61,.355,1) 0.15s backwards; }
+  body:has(> .ambient-bg) .hero-title > em { animation-delay: 0.25s; }
+  body:has(> .ambient-bg) .hero-sub { animation: hero-rise 0.9s cubic-bezier(.215,.61,.355,1) 0.4s backwards; }
+  body:has(> .ambient-bg) .hero-cta { animation: hero-rise 0.9s cubic-bezier(.215,.61,.355,1) 0.5s backwards, cta-glow 7s ease-in-out 1.5s infinite; }
+  body:has(> .ambient-bg) .hero-note { animation: hero-rise 0.9s cubic-bezier(.215,.61,.355,1) 0.6s backwards; }
+}
+@keyframes hero-bg { from { opacity: 0; transform: scale(1.08); } }
+/* El clip hace de máscara: el tramo emerge de una línea fija 20% por debajo del suyo (aire para las
+   descendentes). Recorrido y clip van en proporción (140% = 120% + 20%) para que esa línea no se mueva. */
+@keyframes hero-line {
+  from { opacity: 0; transform: translateY(140%) rotate(4deg); clip-path: inset(-20% -5% 120% -5%); }
+  to { clip-path: inset(-20% -5% -20% -5%); }
+}
+@keyframes hero-rise { from { opacity: 0; transform: translateY(18px) rotate(1.2deg); } }
 .section-kicker { color: var(--accent-light); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.8rem; }
 .section-title { font-size: clamp(1.7rem, 3.4vw, 2.5rem); margin: 8px 0 16px; }
 /* Texto arriba, a la altura del tile: centrado, el título bajaba en las páginas con menos texto. */
