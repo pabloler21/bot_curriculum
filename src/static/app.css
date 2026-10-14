@@ -134,7 +134,10 @@ body[data-page="landing"] main { flex: 1; }
 body[data-section="home"] main { display: flex; }
 .hero { flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .hero-title { font-size: clamp(2.2rem, 5.5vw, 4rem); line-height: 1.05; letter-spacing: -0.03em; margin: 0 0 18px; }
-.hero-title em { font-style: normal; color: var(--accent); }
+.hero-title em {
+  font-style: normal; color: transparent; -webkit-background-clip: text; background-clip: text;
+  background-image: linear-gradient(90deg, var(--accent), var(--warning) 50%, var(--aqua));
+}
 .hero-sub { max-width: 620px; margin: 0 auto 32px; color: var(--text-secondary); font-size: 1.15rem; }
 .hero-cta { font-size: 1.1rem; padding: 16px 32px; }
 .hero-note { margin-top: 14px; color: var(--text-tertiary); font-size: 0.9rem; }
