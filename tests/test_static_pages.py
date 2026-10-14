@@ -139,10 +139,13 @@ def test_home_entrance_starts_once_the_shell_is_in():
         assert "body:has(> .ambient-bg)" in selector, f"{selector.strip()} arranca con el body oculto"
 
 
-def test_home_entrance_keeps_the_cta_glow():
-    """La entrada del CTA reemplaza su animation: sin repetir cta-glow, deja de encenderse."""
-    rule = re.search(r"\.hero-cta \{([^}]*)\}", _home_entrance_css())
-    assert rule and "cta-glow" in rule.group(1)
+def test_ctas_do_not_blink():
+    """"Improve my CV" y "Sign up" quedan con el tornasol fijo: se sacó el encendido cada 7 s (4.12)."""
+    css = (STATIC / "app.css").read_text(encoding="utf-8")
+    assert "cta-glow" not in css
+    rules = re.findall(r'([^{}]*(?:\.hero-cta|data-open-auth="signup")[^{}]*)\{([^}]*)\}', css.replace(_home_entrance_css(), ""))
+    for selector, body in rules:
+        assert "animation" not in body, f"{selector.strip()} sigue animado"
 
 
 def _evaluator_html() -> str:
