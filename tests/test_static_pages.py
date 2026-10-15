@@ -245,6 +245,21 @@ def test_app_nav_follows_the_session():
     assert "renderAppChrome(!!aurea.session)" in after_auth
 
 
+def test_app_nav_is_chosen_before_supabase_answers():
+    """Esperar a Supabase para elegir el nav lo hacía saltar: con sesión, el nav del sitio se
+    cambiaba por el topbar y el contenido se corría 184px al llegar el sidebar."""
+    init = _shell_function("init")
+    before_auth = init[:init.index("await initSupabase()")]
+    assert "renderAppChrome(requiresAuth || hasStoredSession())" in before_auth
+
+
+def test_stored_session_hint_uses_the_supabase_key():
+    """supabase-js 2 guarda la sesión en localStorage como sb-<proyecto>-auth-token."""
+    hint = _shell_function("hasStoredSession")
+    assert "localStorage" in hint
+    assert "-auth-token" in hint
+
+
 @pytest.mark.parametrize("path", ["/", "/about.html", "/shell.js", "/app.css"])
 def test_static_files_are_revalidated(client, path):
     """Sin esto el navegador mezcla un HTML viejo con un shell.js nuevo tras cada deploy."""
