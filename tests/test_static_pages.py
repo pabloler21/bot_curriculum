@@ -225,6 +225,33 @@ def test_ambient_background_lives_in_shell():
         assert "ambient-bg" not in html.read_text(encoding="utf-8"), f"{html.name} repite el fondo ambiental"
 
 
+def test_guest_sees_the_app_sidebar():
+    """Sin sesión el evaluator no tenía menú: el visitante quedaba encerrado en el escaneo.
+    El sidebar se dibuja antes de consultar Supabase, haya sesión o no."""
+    shell = (STATIC / "shell.js").read_text(encoding="utf-8")
+    init = shell[shell.index("async function init()"):]
+    assert init.index("sidebarHtml()") < init.index("await initSupabase()")
+
+
+def test_guest_sidebar_links_back_to_the_site():
+    shell = (STATIC / "shell.js").read_text(encoding="utf-8")
+    sidebar = shell[shell.index("function sidebarHtml()"):shell.index("function modalHtml()")]
+    assert re.search(r'<a href="/"[^>]*data-auth="guest"', sidebar)
+
+
+def _nav_entries() -> dict[str, str]:
+    shell = (STATIC / "shell.js").read_text(encoding="utf-8")
+    return {m.group(1): m.group(0) for m in re.finditer(r"\{ page: '(\w+)'[^}]*\}", shell)}
+
+
+def test_account_items_wait_for_a_session():
+    nav = _nav_entries()
+    for page in ("cv", "settings"):
+        assert "userOnly: true" in nav[page], f"{page} aparece sin sesión"
+    shell = (STATIC / "shell.js").read_text(encoding="utf-8")
+    assert re.search(r'id="shell-logout"[^>]*data-auth="user"', shell)
+
+
 @pytest.mark.parametrize("path", ["/", "/about.html", "/shell.js", "/app.css"])
 def test_static_files_are_revalidated(client, path):
     """Sin esto el navegador mezcla un HTML viejo con un shell.js nuevo tras cada deploy."""
