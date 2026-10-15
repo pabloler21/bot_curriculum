@@ -32,6 +32,14 @@
   function store(key, value) { try { value === null ? localStorage.removeItem(key) : localStorage.setItem(key, value); } catch (_) {} }
   function load(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }
 
+  // supabase-js guarda la sesión como sb-<proyecto>-auth-token: alcanza para elegir el nav sin
+  // esperar a Supabase. Si estaba vencida, init() lo corrige cuando Supabase responde.
+  function hasStoredSession() {
+    try {
+      return Object.keys(localStorage).some((k) => /^sb-.+-auth-token$/.test(k));
+    } catch (_) { return false; }
+  }
+
   const lang = load(LANG_KEY) === 'es' ? 'es' : 'en';
 
   function escHtml(value) {
@@ -363,7 +371,7 @@
       body.insertAdjacentHTML('afterbegin', landingNavHtml());
       body.insertAdjacentHTML('beforeend', '<footer class="landing-footer">© Aurea</footer>');
     } else {
-      renderAppChrome(requiresAuth);
+      renderAppChrome(requiresAuth || hasStoredSession());
     }
     body.insertAdjacentHTML('beforeend', modalHtml());
     wire();
