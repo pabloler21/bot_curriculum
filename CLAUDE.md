@@ -440,10 +440,12 @@ ruff check .
 | 4.12 | "Improve my CV" y "Sign up" se encienden ~1 s cada 7 s (`cta-glow` en `app.css`); "for every job." queda quieto. Lo sacó la 4.14 | ✅ mergeada |
 | 4.13 | Actualizar CLAUDE.md (4.10–4.12) | ✅ mergeada |
 | 4.14 | La home entra fluida (calcada de heliasoils.com): fondo, título que emerge por tramos y resto escalonado; CSS puro en `app.css`. Además: "for every job." y "Improve my CV" tornasolados, "Sign up" con borde tornasolado, sin titilar | ✅ mergeada |
-| 4.15 | Actualizar CLAUDE.md (4.14) | 🔄 PR abierto |
+| 4.15 | Actualizar CLAUDE.md (4.14) | ✅ mergeada |
+| 4.16 | En la app el visitante ve el mismo nav que en la landing (antes el evaluator no tenía menú: quien tocaba "Try it" quedaba encerrado). Con sesión, topbar y sidebar, elegidos antes de que responda Supabase: sin salto. Un primer intento con sidebar y candados para el visitante se descartó | ✅ mergeada |
+| 4.17 | Actualizar CLAUDE.md (4.15–4.16) + regla: CLAUDE.md se actualiza al cerrar cada tarea | 🔄 PR abierto |
 
-**Último release**: `main` al día con `develop` hasta la 4.14 (PR #64, deployado el 2026-10-14).
-Antes, el mismo día: PR #62 (4.13). Antes: PR #60 (4.12, 2026-10-13), PR #58 (4.11) y PR #55 (4.9).
+**Último release**: `main` al día con `develop` hasta la 4.16 (PR #67, deployado el 2026-10-15).
+Antes: PR #64 (4.14, 2026-10-14), PR #62 (4.13), PR #60 (4.12, 2026-10-13) y PR #58 (4.11).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
 No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya está en este archivo).
 
