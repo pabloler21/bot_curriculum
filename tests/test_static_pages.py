@@ -267,6 +267,12 @@ def test_signup_from_a_lock_returns_to_that_tool():
     assert "emailRedirectTo: authRedirect" in shell
 
 
+def test_offer_bar_clears_the_sidebar():
+    """La barra de oferta del evaluator va en el flujo; el sidebar es fixed y la tapaba."""
+    css = (STATIC / "app.css").read_text(encoding="utf-8")
+    assert re.search(r"body\.has-sidebar \.offer-bar \{[^}]*margin-left: var\(--sidebar-w\)", css)
+
+
 @pytest.mark.parametrize("path", ["/", "/about.html", "/shell.js", "/app.css"])
 def test_static_files_are_revalidated(client, path):
     """Sin esto el navegador mezcla un HTML viejo con un shell.js nuevo tras cada deploy."""
