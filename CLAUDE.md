@@ -353,8 +353,10 @@ Nunca juntar dos arreglos no relacionados en un commit, ni "aprovechar" un commi
 uv sync   # o: pip install -e .
 
 # Correr localmente
-uvicorn src.main:app --reload
-# → http://localhost:8000/adapt.html
+uv run uvicorn src.main:app --reload
+# → http://localhost:8000/
+# WinError 10013 al arrancar = el puerto ya está ocupado (suele ser un uvicorn viejo que quedó
+# prendido). Usar otro (--port 8001) o cerrar el que lo tiene.
 
 # Tests
 pytest tests/ -v
@@ -437,10 +439,11 @@ ruff check .
 | 4.11 | Features: sin kicker, título alineado arriba con el tile, "Try it" con `.btn-gradient`; sin temblor al cargar ni al cambiar de página | ✅ mergeada |
 | 4.12 | "Improve my CV" y "Sign up" se encienden ~1 s cada 7 s (`cta-glow` en `app.css`); "for every job." queda quieto. Lo sacó la 4.14 | ✅ mergeada |
 | 4.13 | Actualizar CLAUDE.md (4.10–4.12) | ✅ mergeada |
-| 4.14 | La home entra fluida (calcada de heliasoils.com): fondo, título que emerge por tramos y resto escalonado; CSS puro en `app.css`. Además: "for every job." y "Improve my CV" tornasolados, "Sign up" con borde tornasolado, sin titilar | 🔄 PR abierto |
+| 4.14 | La home entra fluida (calcada de heliasoils.com): fondo, título que emerge por tramos y resto escalonado; CSS puro en `app.css`. Además: "for every job." y "Improve my CV" tornasolados, "Sign up" con borde tornasolado, sin titilar | ✅ mergeada |
+| 4.15 | Actualizar CLAUDE.md (4.14) | 🔄 PR abierto |
 
-**Último release**: `main` al día con `develop` hasta la 4.12 (PR #60, deployado el 2026-10-13).
-Antes, el mismo día: PR #58 (4.11) y PR #55 (4.9). Antes: PR #54 (4.8, 2026-10-12).
+**Último release**: `main` al día con `develop` hasta la 4.14 (PR #64, deployado el 2026-10-14).
+Antes, el mismo día: PR #62 (4.13). Antes: PR #60 (4.12, 2026-10-13), PR #58 (4.11) y PR #55 (4.9).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
 No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya está en este archivo).
 
