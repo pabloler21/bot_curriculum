@@ -83,7 +83,7 @@ body[data-requires-auth="true"]:not(.shell-ready) .app-main { visibility: hidden
 .sidebar-item:hover { color: var(--text-primary); background: var(--glass-bg); }
 .sidebar-item.active { color: var(--text-primary); background: var(--accent-subtle); box-shadow: inset 2px 0 0 var(--accent); }
 .sidebar-icon { width: 18px; text-align: center; }
-.sidebar-logout { margin-top: auto; }
+.sidebar-bottom { margin-top: auto; }
 body.has-sidebar .app-main { margin-left: var(--sidebar-w); }
 .app-main { padding: 28px clamp(16px, 3vw, 40px) 64px; max-width: 1240px; }
 body:not(.has-sidebar) .app-main { margin: 0 auto; }

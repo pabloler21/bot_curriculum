@@ -10,13 +10,14 @@
   const CLAIMED_KEY = 'aurea_claimed_token';
   const LANG_KEY = 'aurea_lang';
 
+  // userOnly: sin sesión no se ve.
   const NAV = [
     { page: 'evaluator', href: 'evaluator.html', key: 'nav.evaluator', label: 'Evaluator', icon: '◎' },
     { page: 'tailor', href: 'tailor.html', key: 'nav.tailor', label: 'Tailor', icon: '✦' },
     { page: 'cover', href: 'cover.html', key: 'nav.cover', label: 'Cover', icon: '✉' },
     { page: 'jobs', href: 'jobs.html', key: 'nav.jobs', label: 'Jobs', icon: '▤' },
-    { page: 'cv', href: 'cv.html', key: 'nav.cv', label: 'CV', icon: '⎙' },
-    { page: 'settings', href: 'settings.html', key: 'nav.settings', label: 'Settings', icon: '⚙' },
+    { page: 'cv', href: 'cv.html', key: 'nav.cv', label: 'CV', icon: '⎙', userOnly: true },
+    { page: 'settings', href: 'settings.html', key: 'nav.settings', label: 'Settings', icon: '⚙', userOnly: true },
   ];
 
   const body = document.body;
@@ -137,7 +138,7 @@
   function topbarHtml() {
     return `
     <header class="topbar">
-      <button type="button" class="topbar-menu hidden" id="shell-menu" aria-label="${escHtml(t('shell.menu', 'Open menu'))}" aria-controls="shell-sidebar" aria-expanded="false">☰</button>
+      <button type="button" class="topbar-menu" id="shell-menu" aria-label="${escHtml(t('shell.menu', 'Open menu'))}" aria-controls="shell-sidebar" aria-expanded="false">☰</button>
       <a href="/" class="brand"><div class="brand-mark">✦</div><span class="brand-name">Aurea</span></a>
       <div class="topbar-right">
         <div class="ui-lang" role="group" aria-label="Language">
@@ -157,16 +158,22 @@
     </div>`;
   }
 
+  // Se dibuja antes de saber si hay sesión: lo que depende de ella (data-auth) arranca oculto.
   function sidebarHtml() {
     const items = NAV.map((n) => {
       const active = n.page === page;
-      return `<a href="${n.href}" class="sidebar-item${active ? ' active' : ''}"${active ? ' aria-current="page"' : ''}>
+      const cls = `sidebar-item${active ? ' active' : ''}${n.userOnly ? ' hidden' : ''}`;
+      const attrs = (n.userOnly ? ' data-auth="user"' : '') + (active ? ' aria-current="page"' : '');
+      return `<a href="${n.href}" class="${cls}"${attrs}>
         <span class="sidebar-icon" aria-hidden="true">${n.icon}</span><span data-i18n="${n.key}">${n.label}</span></a>`;
     }).join('');
     return `
     <nav class="sidebar" id="shell-sidebar" aria-label="App">
       ${items}
-      <button type="button" class="sidebar-item sidebar-logout" id="shell-logout">
+      <a href="/" class="sidebar-item sidebar-bottom hidden" data-auth="guest">
+        <span class="sidebar-icon" aria-hidden="true">←</span><span data-i18n="nav.back_to_site">Back to site</span>
+      </a>
+      <button type="button" class="sidebar-item sidebar-bottom hidden" id="shell-logout" data-auth="user">
         <span class="sidebar-icon" aria-hidden="true">⎋</span><span data-i18n="nav.logout">Log out</span>
       </button>
     </nav>`;
@@ -353,7 +360,8 @@
       body.insertAdjacentHTML('afterbegin', landingNavHtml());
       body.insertAdjacentHTML('beforeend', '<footer class="landing-footer">© Aurea</footer>');
     } else {
-      body.insertAdjacentHTML('afterbegin', topbarHtml() + (page === 'evaluator' ? offerBarHtml() : ''));
+      body.insertAdjacentHTML('afterbegin', topbarHtml() + (page === 'evaluator' ? offerBarHtml() : '') + sidebarHtml());
+      body.classList.add('has-sidebar');
     }
     body.insertAdjacentHTML('beforeend', modalHtml());
     wire();
@@ -363,11 +371,6 @@
 
     if (requiresAuth && !aurea.session) { window.location.replace('evaluator.html'); return; }
 
-    if (aurea.session && !isLanding) {
-      body.insertAdjacentHTML('afterbegin', sidebarHtml());
-      body.classList.add('has-sidebar');
-      $('shell-menu').classList.remove('hidden');
-    }
     applyAuthVisibility();
     if (window.applyI18n) window.applyI18n(document, lang);
     markLang();
