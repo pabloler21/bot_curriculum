@@ -244,12 +244,27 @@ def _nav_entries() -> dict[str, str]:
     return {m.group(1): m.group(0) for m in re.finditer(r"\{ page: '(\w+)'[^}]*\}", shell)}
 
 
+def test_paid_tools_are_locked_for_guests():
+    nav = _nav_entries()
+    assert "locked: true" not in nav["evaluator"]
+    for page in ("tailor", "cover", "jobs"):
+        assert "locked: true" in nav[page], f"{page} no lleva candado"
+
+
 def test_account_items_wait_for_a_session():
     nav = _nav_entries()
     for page in ("cv", "settings"):
         assert "userOnly: true" in nav[page], f"{page} aparece sin sesión"
     shell = (STATIC / "shell.js").read_text(encoding="utf-8")
     assert re.search(r'id="shell-logout"[^>]*data-auth="user"', shell)
+
+
+def test_signup_from_a_lock_returns_to_that_tool():
+    """El magic link y Google vuelven a la herramienta del candado, no a la página donde se tocó."""
+    shell = (STATIC / "shell.js").read_text(encoding="utf-8")
+    assert "openAuthModal('signup', locked.href)" in shell
+    assert "redirectTo: authRedirect" in shell
+    assert "emailRedirectTo: authRedirect" in shell
 
 
 @pytest.mark.parametrize("path", ["/", "/about.html", "/shell.js", "/app.css"])
