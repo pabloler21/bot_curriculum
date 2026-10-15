@@ -255,7 +255,8 @@ tests/
                            # al costado, pliegues, keywords primero); entrada de la home (espera
                            # al shell, sin reduced-motion); acento y CTA tornasolados, sin titilar,
                            # y el CTA conserva el gradiente en hover; en la app el visitante ve el
-                           # nav del sitio, elegido antes de que responda Supabase
+                           # nav del sitio, elegido antes de que responda Supabase; resultados del
+                           # evaluator plegados sin padding abajo (no scrollean a espacio vacío)
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -474,7 +475,8 @@ ruff check .
 | 4.14 | La home entra fluida (calcada de heliasoils.com): fondo, título que emerge por tramos y resto escalonado; CSS puro en `app.css`. Además: "for every job." y "Improve my CV" tornasolados, "Sign up" con borde tornasolado, sin titilar | ✅ mergeada |
 | 4.15 | Actualizar CLAUDE.md (4.14) | ✅ mergeada |
 | 4.16 | En la app el visitante ve el mismo nav que en la landing (antes el evaluator no tenía menú: quien tocaba "Try it" quedaba encerrado). Con sesión, topbar y sidebar, elegidos antes de que responda Supabase: sin salto. Un primer intento con sidebar y candados para el visitante se descartó | ✅ mergeada |
-| 4.17 | Actualizar CLAUDE.md (4.15–4.16) + regla: CLAUDE.md se actualiza al cerrar cada tarea. Rescata los docs de SSH, sudoers y "repo público" que habían quedado fuera del PR #50 | ✅ en `develop` sin PR; sube con el próximo push |
+| 4.17 | Actualizar CLAUDE.md (4.15–4.16) + regla: CLAUDE.md se actualiza al cerrar cada tarea. Rescata los docs de SSH, sudoers y "repo público" que habían quedado fuera del PR #50 | ✅ commiteada en `develop`; sube a GitHub con el PR de la 4.18 |
+| 4.18 | Evaluator: con los resultados plegados no se puede scrollear a espacio vacío. Los 64px de padding de `.app-main` llevaban la página a 993px aunque el último panel termine en 929; en una ventana de 945px (1080p con las barras de Chrome) el scroll no mostraba nada. El padding vuelve al desplegar algo; en una columna no cambia | 🔄 PR abierto |
 
 **Último release**: `main` al día con `develop` hasta la 4.16 (PR #67, deployado el 2026-10-15).
 Antes: PR #64 (4.14, 2026-10-14), PR #62 (4.13), PR #60 (4.12, 2026-10-13) y PR #58 (4.11).
