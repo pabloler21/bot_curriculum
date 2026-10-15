@@ -32,6 +32,14 @@
   function store(key, value) { try { value === null ? localStorage.removeItem(key) : localStorage.setItem(key, value); } catch (_) {} }
   function load(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }
 
+  // supabase-js guarda la sesión como sb-<proyecto>-auth-token: alcanza para elegir el nav sin
+  // esperar a Supabase. Si estaba vencida, init() lo corrige cuando Supabase responde.
+  function hasStoredSession() {
+    try {
+      return Object.keys(localStorage).some((k) => /^sb-.+-auth-token$/.test(k));
+    } catch (_) { return false; }
+  }
+
   const lang = load(LANG_KEY) === 'es' ? 'es' : 'en';
 
   function escHtml(value) {
@@ -137,7 +145,7 @@
   function topbarHtml() {
     return `
     <header class="topbar">
-      <button type="button" class="topbar-menu hidden" id="shell-menu" aria-label="${escHtml(t('shell.menu', 'Open menu'))}" aria-controls="shell-sidebar" aria-expanded="false">☰</button>
+      <button type="button" class="topbar-menu" id="shell-menu" aria-label="${escHtml(t('shell.menu', 'Open menu'))}" aria-controls="shell-sidebar" aria-expanded="false">☰</button>
       <a href="/" class="brand"><div class="brand-mark">✦</div><span class="brand-name">Aurea</span></a>
       <div class="topbar-right">
         <div class="ui-lang" role="group" aria-label="Language">
@@ -170,6 +178,16 @@
         <span class="sidebar-icon" aria-hidden="true">⎋</span><span data-i18n="nav.logout">Log out</span>
       </button>
     </nav>`;
+  }
+
+  // Páginas de la app: el visitante ve el nav del sitio, como en la landing (llegó desde "Try it");
+  // con sesión, topbar y sidebar. Se puede llamar de nuevo para cambiar uno por otro.
+  function renderAppChrome(loggedIn) {
+    document.querySelectorAll('.topbar, .sidebar, .landing-nav, .offer-bar').forEach((el) => el.remove());
+    body.insertAdjacentHTML('afterbegin', loggedIn
+      ? topbarHtml() + sidebarHtml()
+      : landingNavHtml() + (page === 'evaluator' ? offerBarHtml() : ''));
+    body.classList.toggle('has-sidebar', loggedIn);
   }
 
   function modalHtml() {
@@ -353,7 +371,7 @@
       body.insertAdjacentHTML('afterbegin', landingNavHtml());
       body.insertAdjacentHTML('beforeend', '<footer class="landing-footer">© Aurea</footer>');
     } else {
-      body.insertAdjacentHTML('afterbegin', topbarHtml() + (page === 'evaluator' ? offerBarHtml() : ''));
+      renderAppChrome(requiresAuth || hasStoredSession());
     }
     body.insertAdjacentHTML('beforeend', modalHtml());
     wire();
@@ -363,11 +381,7 @@
 
     if (requiresAuth && !aurea.session) { window.location.replace('evaluator.html'); return; }
 
-    if (aurea.session && !isLanding) {
-      body.insertAdjacentHTML('afterbegin', sidebarHtml());
-      body.classList.add('has-sidebar');
-      $('shell-menu').classList.remove('hidden');
-    }
+    if (!isLanding && body.classList.contains('has-sidebar') !== !!aurea.session) renderAppChrome(!!aurea.session);
     applyAuthVisibility();
     if (window.applyI18n) window.applyI18n(document, lang);
     markLang();
