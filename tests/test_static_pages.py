@@ -225,6 +225,41 @@ def test_ambient_background_lives_in_shell():
         assert "ambient-bg" not in html.read_text(encoding="utf-8"), f"{html.name} repite el fondo ambiental"
 
 
+def _shell_function(name: str) -> str:
+    shell = (STATIC / "shell.js").read_text(encoding="utf-8")
+    body = shell[shell.index(f"function {name}("):]
+    return body[:body.index("\n  }\n")]
+
+
+def test_guest_app_pages_show_the_site_nav():
+    """Al tocar "Try it" el visitante pasaba del nav del sitio a un evaluator sin menú: sin forma
+    de volver ni de ver las otras herramientas. En la app ve el mismo nav que en la landing."""
+    chrome = _shell_function("renderAppChrome")
+    assert "landingNavHtml()" in chrome
+    assert "topbarHtml() + sidebarHtml()" in chrome
+
+
+def test_app_nav_follows_the_session():
+    init = _shell_function("init")
+    after_auth = init[init.index("await initSupabase()"):]
+    assert "renderAppChrome(!!aurea.session)" in after_auth
+
+
+def test_app_nav_is_chosen_before_supabase_answers():
+    """Esperar a Supabase para elegir el nav lo hacía saltar: con sesión, el nav del sitio se
+    cambiaba por el topbar y el contenido se corría 184px al llegar el sidebar."""
+    init = _shell_function("init")
+    before_auth = init[:init.index("await initSupabase()")]
+    assert "renderAppChrome(requiresAuth || hasStoredSession())" in before_auth
+
+
+def test_stored_session_hint_uses_the_supabase_key():
+    """supabase-js 2 guarda la sesión en localStorage como sb-<proyecto>-auth-token."""
+    hint = _shell_function("hasStoredSession")
+    assert "localStorage" in hint
+    assert "-auth-token" in hint
+
+
 @pytest.mark.parametrize("path", ["/", "/about.html", "/shell.js", "/app.css"])
 def test_static_files_are_revalidated(client, path):
     """Sin esto el navegador mezcla un HTML viejo con un shell.js nuevo tras cada deploy."""
