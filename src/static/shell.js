@@ -10,14 +10,13 @@
   const CLAIMED_KEY = 'aurea_claimed_token';
   const LANG_KEY = 'aurea_lang';
 
-  // locked: sin sesión se ve con candado y abre el registro; userOnly: sin sesión no se ve.
   const NAV = [
     { page: 'evaluator', href: 'evaluator.html', key: 'nav.evaluator', label: 'Evaluator', icon: '◎' },
-    { page: 'tailor', href: 'tailor.html', key: 'nav.tailor', label: 'Tailor', icon: '✦', locked: true },
-    { page: 'cover', href: 'cover.html', key: 'nav.cover', label: 'Cover', icon: '✉', locked: true },
-    { page: 'jobs', href: 'jobs.html', key: 'nav.jobs', label: 'Jobs', icon: '▤', locked: true },
-    { page: 'cv', href: 'cv.html', key: 'nav.cv', label: 'CV', icon: '⎙', userOnly: true },
-    { page: 'settings', href: 'settings.html', key: 'nav.settings', label: 'Settings', icon: '⚙', userOnly: true },
+    { page: 'tailor', href: 'tailor.html', key: 'nav.tailor', label: 'Tailor', icon: '✦' },
+    { page: 'cover', href: 'cover.html', key: 'nav.cover', label: 'Cover', icon: '✉' },
+    { page: 'jobs', href: 'jobs.html', key: 'nav.jobs', label: 'Jobs', icon: '▤' },
+    { page: 'cv', href: 'cv.html', key: 'nav.cv', label: 'CV', icon: '⎙' },
+    { page: 'settings', href: 'settings.html', key: 'nav.settings', label: 'Settings', icon: '⚙' },
   ];
 
   const body = document.body;
@@ -26,7 +25,6 @@
   const requiresAuth = body.dataset.requiresAuth === 'true';
 
   let client = null;
-  let authRedirect = null;
   let ready = false;
   let signingOut = false;
   const readyCallbacks = [];
@@ -139,7 +137,7 @@
   function topbarHtml() {
     return `
     <header class="topbar">
-      <button type="button" class="topbar-menu" id="shell-menu" aria-label="${escHtml(t('shell.menu', 'Open menu'))}" aria-controls="shell-sidebar" aria-expanded="false">☰</button>
+      <button type="button" class="topbar-menu hidden" id="shell-menu" aria-label="${escHtml(t('shell.menu', 'Open menu'))}" aria-controls="shell-sidebar" aria-expanded="false">☰</button>
       <a href="/" class="brand"><div class="brand-mark">✦</div><span class="brand-name">Aurea</span></a>
       <div class="topbar-right">
         <div class="ui-lang" role="group" aria-label="Language">
@@ -159,23 +157,16 @@
     </div>`;
   }
 
-  // Se dibuja antes de saber si hay sesión: lo que depende de ella (data-auth) arranca oculto.
   function sidebarHtml() {
-    const lock = `<span class="sidebar-lock hidden" data-auth="guest" role="img" aria-label="${escHtml(t('nav.locked', 'Requires an account'))}">🔒</span>`;
     const items = NAV.map((n) => {
       const active = n.page === page;
-      const cls = `sidebar-item${active ? ' active' : ''}${n.userOnly ? ' hidden' : ''}`;
-      const attrs = (n.userOnly ? ' data-auth="user"' : '') + (n.locked ? ' data-locked' : '') + (active ? ' aria-current="page"' : '');
-      return `<a href="${n.href}" class="${cls}"${attrs}>
-        <span class="sidebar-icon" aria-hidden="true">${n.icon}</span><span data-i18n="${n.key}">${n.label}</span>${n.locked ? lock : ''}</a>`;
+      return `<a href="${n.href}" class="sidebar-item${active ? ' active' : ''}"${active ? ' aria-current="page"' : ''}>
+        <span class="sidebar-icon" aria-hidden="true">${n.icon}</span><span data-i18n="${n.key}">${n.label}</span></a>`;
     }).join('');
     return `
     <nav class="sidebar" id="shell-sidebar" aria-label="App">
       ${items}
-      <a href="/" class="sidebar-item sidebar-bottom hidden" data-auth="guest">
-        <span class="sidebar-icon" aria-hidden="true">←</span><span data-i18n="nav.back_to_site">Back to site</span>
-      </a>
-      <button type="button" class="sidebar-item sidebar-bottom hidden" id="shell-logout" data-auth="user">
+      <button type="button" class="sidebar-item sidebar-logout" id="shell-logout">
         <span class="sidebar-icon" aria-hidden="true">⎋</span><span data-i18n="nav.logout">Log out</span>
       </button>
     </nav>`;
@@ -217,9 +208,7 @@
     el.classList.remove('hidden');
   }
 
-  // redirect: adónde vuelve el login (un candado del sidebar manda a su herramienta).
-  function openAuthModal(mode, redirect) {
-    authRedirect = redirect || currentUrl();
+  function openAuthModal(mode) {
     const signup = mode !== 'login';
     $('auth-offer').classList.toggle('hidden', !signup);
     $('auth-modal-title').textContent = signup ? t('auth.title', 'Create your account') : t('auth.title_login', 'Log in to Aurea');
@@ -242,7 +231,7 @@
 
   async function signInWithGoogle() {
     if (!client) return showAuthError(t('auth.unavailable', 'Auth service unavailable — reload the page.'));
-    const { error } = await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: authRedirect } });
+    const { error } = await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: currentUrl() } });
     if (error) showAuthError(error.message);
   }
 
@@ -254,7 +243,7 @@
     btn.disabled = true;
     btn.textContent = t('auth.sending', 'Sending…');
     try {
-      const { error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: authRedirect } });
+      const { error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: currentUrl() } });
       if (error) throw error;
       $('auth-sent-email').textContent = email;
       $('auth-form').classList.add('hidden');
@@ -341,9 +330,6 @@
       if (dropdown && !dropdown.contains(e.target)) dropdown.open = false;
       const langBtn = e.target.closest('[data-set-lang]');
       if (langBtn) { store(LANG_KEY, langBtn.dataset.setLang); window.location.reload(); return; }
-      // Hasta saber si hay sesión el link navega normal: si no la hay, esa página redirige al evaluator.
-      const locked = e.target.closest('[data-locked]');
-      if (locked && ready && !aurea.session) { e.preventDefault(); openAuthModal('signup', locked.href); return; }
       const openBtn = e.target.closest('[data-open-auth]');
       if (openBtn) { openAuthModal(openBtn.dataset.openAuth); return; }
       if (e.target.closest('[data-close-auth]')) { closeAuthModal(); return; }
@@ -367,8 +353,7 @@
       body.insertAdjacentHTML('afterbegin', landingNavHtml());
       body.insertAdjacentHTML('beforeend', '<footer class="landing-footer">© Aurea</footer>');
     } else {
-      body.insertAdjacentHTML('afterbegin', topbarHtml() + (page === 'evaluator' ? offerBarHtml() : '') + sidebarHtml());
-      body.classList.add('has-sidebar');
+      body.insertAdjacentHTML('afterbegin', topbarHtml() + (page === 'evaluator' ? offerBarHtml() : ''));
     }
     body.insertAdjacentHTML('beforeend', modalHtml());
     wire();
@@ -378,6 +363,11 @@
 
     if (requiresAuth && !aurea.session) { window.location.replace('evaluator.html'); return; }
 
+    if (aurea.session && !isLanding) {
+      body.insertAdjacentHTML('afterbegin', sidebarHtml());
+      body.classList.add('has-sidebar');
+      $('shell-menu').classList.remove('hidden');
+    }
     applyAuthVisibility();
     if (window.applyI18n) window.applyI18n(document, lang);
     markLang();

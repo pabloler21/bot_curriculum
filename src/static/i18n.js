@@ -17,8 +17,6 @@ window.I18N_ES = {
   'nav.cv': 'CV',
   'nav.settings': 'Ajustes',
   'nav.logout': 'Cerrar sesión',
-  'nav.back_to_site': 'Volver al sitio',
-  'nav.locked': 'Requiere cuenta',
   'shell.menu': 'Abrir menú',
   'shell.signup': 'Registrarme',
   'shell.offer': '¡Oferta! Registrate ahora y llevate 5 créditos',

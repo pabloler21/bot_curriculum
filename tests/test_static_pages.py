@@ -225,54 +225,6 @@ def test_ambient_background_lives_in_shell():
         assert "ambient-bg" not in html.read_text(encoding="utf-8"), f"{html.name} repite el fondo ambiental"
 
 
-def test_guest_sees_the_app_sidebar():
-    """Sin sesión el evaluator no tenía menú: el visitante quedaba encerrado en el escaneo.
-    El sidebar se dibuja antes de consultar Supabase, haya sesión o no."""
-    shell = (STATIC / "shell.js").read_text(encoding="utf-8")
-    init = shell[shell.index("async function init()"):]
-    assert init.index("sidebarHtml()") < init.index("await initSupabase()")
-
-
-def test_guest_sidebar_links_back_to_the_site():
-    shell = (STATIC / "shell.js").read_text(encoding="utf-8")
-    sidebar = shell[shell.index("function sidebarHtml()"):shell.index("function modalHtml()")]
-    assert re.search(r'<a href="/"[^>]*data-auth="guest"', sidebar)
-
-
-def _nav_entries() -> dict[str, str]:
-    shell = (STATIC / "shell.js").read_text(encoding="utf-8")
-    return {m.group(1): m.group(0) for m in re.finditer(r"\{ page: '(\w+)'[^}]*\}", shell)}
-
-
-def test_paid_tools_are_locked_for_guests():
-    nav = _nav_entries()
-    assert "locked: true" not in nav["evaluator"]
-    for page in ("tailor", "cover", "jobs"):
-        assert "locked: true" in nav[page], f"{page} no lleva candado"
-
-
-def test_account_items_wait_for_a_session():
-    nav = _nav_entries()
-    for page in ("cv", "settings"):
-        assert "userOnly: true" in nav[page], f"{page} aparece sin sesión"
-    shell = (STATIC / "shell.js").read_text(encoding="utf-8")
-    assert re.search(r'id="shell-logout"[^>]*data-auth="user"', shell)
-
-
-def test_signup_from_a_lock_returns_to_that_tool():
-    """El magic link y Google vuelven a la herramienta del candado, no a la página donde se tocó."""
-    shell = (STATIC / "shell.js").read_text(encoding="utf-8")
-    assert "openAuthModal('signup', locked.href)" in shell
-    assert "redirectTo: authRedirect" in shell
-    assert "emailRedirectTo: authRedirect" in shell
-
-
-def test_offer_bar_clears_the_sidebar():
-    """La barra de oferta del evaluator va en el flujo; el sidebar es fixed y la tapaba."""
-    css = (STATIC / "app.css").read_text(encoding="utf-8")
-    assert re.search(r"body\.has-sidebar \.offer-bar \{[^}]*margin-left: var\(--sidebar-w\)", css)
-
-
 @pytest.mark.parametrize("path", ["/", "/about.html", "/shell.js", "/app.css"])
 def test_static_files_are_revalidated(client, path):
     """Sin esto el navegador mezcla un HTML viejo con un shell.js nuevo tras cada deploy."""
