@@ -344,6 +344,7 @@ git pull origin develop
 git checkout -b feature/task-N-N-descripcion
 
 # 2. Implementar (commits atómicos)
+# 2b. Al terminar: actualizar CLAUDE.md (commit docs: propio) y avisarle al usuario
 # 3. Abrir PR
 git push origin feature/task-N-N-descripcion
 gh pr create --base develop --title "..." --body "..."
@@ -357,7 +358,18 @@ gh pr create --base develop --title "..." --body "..."
 cada test y cada cambio de docs va en su propio commit, aunque viajen en la misma rama o PR.
 Nunca juntar dos arreglos no relacionados en un commit, ni "aprovechar" un commit para otra cosa.
 
-**Nunca trabajar directo en `develop` ni en `main`.**
+**Al terminar cada tarea, Claude actualiza CLAUDE.md sin que se lo pidan y avisa en su mensaje
+final que lo actualizó y qué cambió.** La tarea termina cuando el código está verificado (tests,
+ruff y, si toca la UI, probado en el navegador), antes de abrir el PR. Va en un commit `docs:`
+propio en la misma rama: la fila de la tarea en "Estado actual de tareas" (🔄 PR abierto) y lo
+que la tarea haya cambiado de estructura, tests, flujo, convenciones o deuda. Lo que pasa después
+(merge, release, deploy) se anota al cerrar la tarea siguiente. Por eso ya no hay tareas sueltas
+de "Actualizar CLAUDE.md" (la última fue la 4.17).
+
+**Nunca trabajar directo en `develop` ni en `main`.** Única excepción: un cambio que es solo de
+CLAUDE.md, sin tarea de código detrás, se commitea directo en `develop` (sin rama ni PR) y sube
+con el próximo push. El `git pull origin develop` del paso 1 lo mezcla con lo que haya en GitHub
+(`pull.rebase=false`), y la rama de la tarea siguiente ya sale con esos commits adentro.
 **No usamos worktrees.** Se trabaja directamente en el repo clonado.
 
 ## Comandos
@@ -462,7 +474,7 @@ ruff check .
 | 4.14 | La home entra fluida (calcada de heliasoils.com): fondo, título que emerge por tramos y resto escalonado; CSS puro en `app.css`. Además: "for every job." y "Improve my CV" tornasolados, "Sign up" con borde tornasolado, sin titilar | ✅ mergeada |
 | 4.15 | Actualizar CLAUDE.md (4.14) | ✅ mergeada |
 | 4.16 | En la app el visitante ve el mismo nav que en la landing (antes el evaluator no tenía menú: quien tocaba "Try it" quedaba encerrado). Con sesión, topbar y sidebar, elegidos antes de que responda Supabase: sin salto. Un primer intento con sidebar y candados para el visitante se descartó | ✅ mergeada |
-| 4.17 | Actualizar CLAUDE.md (4.15–4.16) + regla: CLAUDE.md se actualiza al cerrar cada tarea | 🔄 PR abierto |
+| 4.17 | Actualizar CLAUDE.md (4.15–4.16) + regla: CLAUDE.md se actualiza al cerrar cada tarea. Rescata los docs de SSH, sudoers y "repo público" que habían quedado fuera del PR #50 | ✅ en `develop` sin PR; sube con el próximo push |
 
 **Último release**: `main` al día con `develop` hasta la 4.16 (PR #67, deployado el 2026-10-15).
 Antes: PR #64 (4.14, 2026-10-14), PR #62 (4.13), PR #60 (4.12, 2026-10-13) y PR #58 (4.11).
