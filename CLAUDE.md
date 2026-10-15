@@ -181,7 +181,11 @@ src/
     job-detail.html # Detalle de oferta (dentro del shell) + job-detail.js
     cv.html         # CV base: ver y reemplazar (upload) + cv.js
     settings.html   # Cuenta, idioma, historial, paquetes, borrar cuenta + settings.js
-    shell.js        # window.aurea: header, auth, créditos, escHtml, helpers de fetch
+    shell.js        # window.aurea: header, auth, créditos, escHtml, helpers de fetch.
+                    # Nav (renderAppChrome): en la landing y para el visitante en la app, el del
+                    # sitio; con sesión, topbar + sidebar. Se elige antes de que responda Supabase
+                    # mirando si hay sb-<proyecto>-auth-token en localStorage (lo deja supabase-js);
+                    # si la sesión estaba vencida, se corrige cuando Supabase responde
     i18n.js         # I18N_ES — traducciones (UI en inglés por default, data-i18n)
     render.js       # window.aureaRender — render de CV/resultados
     job-form.js     # input de JD compartido (texto o URL)
@@ -242,7 +246,8 @@ tests/
                            # "Try it" con gradiente; layout de resultados del evaluator (adapter
                            # al costado, pliegues, keywords primero); entrada de la home (espera
                            # al shell, sin reduced-motion); acento y CTA tornasolados, sin titilar,
-                           # y el CTA conserva el gradiente en hover
+                           # y el CTA conserva el gradiente en hover; en la app el visitante ve el
+                           # nav del sitio, elegido antes de que responda Supabase
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -292,8 +297,9 @@ Todas las funciones son **no-op seguros** cuando `_supabase is None` (dev sin cr
 ## Flujo del usuario (happy path)
 
 ```
-index.html (landing) → CTA → evaluator.html (anónimo: sube CV, ve score, keywords faltantes y
-  recomendaciones; al costado, sin scroll, el adapter y los jobs)
+index.html (landing) → CTA o "Try it" de una feature → evaluator.html (anónimo, con el mismo nav
+  del sitio: sube CV, ve score, keywords faltantes y recomendaciones; al costado, sin scroll, el
+  adapter y los jobs)
 → acción paga (Tailor, Cover, Improve) → modal de signup (magic link o Google)
 → la acción pendiente se guarda (aurea_pending_action) y se ejecuta al volver logueado
 → bono de 5 créditos → resultado (CV adaptado + gaps + cover + PDF) → queda en /history
@@ -383,6 +389,9 @@ ruff check .
 - **Animaciones de entrada**: van colgadas de `body:has(> .ambient-bg)`. Hasta que shell.js
   inserta el fondo el body está oculto (`style.css`), y una animación que arranque antes corre
   sin verse. Si un elemento ya tiene `animation`, la de entrada la reemplaza: hay que listar las dos.
+- **Navegación del visitante**: en la app ve el mismo nav que en el sitio, arriba. No cambiarla de
+  lugar entre el sitio y la app: en la 4.16 se probó un sidebar con candados y se descartó porque
+  "cambia todo el manejo de la página". Antes de decidir navegación, probarla andando.
 - **Patch location en tests**: siempre parchear en el lugar de importación, no en la definición:
   - ✅ `patch("src.routes.adapt.ensure_user")`
   - ❌ `patch("backend.credits.ensure_user")`
