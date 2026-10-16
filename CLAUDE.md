@@ -57,6 +57,7 @@ el runner con reintentos. Si no responde, el workflow falla — no hay rollback 
   la contraseña bloqueada. Un bug en la app queda en `deploy`, no es root del VPS. **No
   ampliarlo**: lo que necesite más va por `linuxuser` (la cuenta de administración; vps-infra
   ya instala con ella). Verificar con `sudo -l -U deploy`: tiene que listar ese único comando.
+  La regla anterior (`NOPASSWD:ALL`) quedó guardada en `/root/sudoers.deploy.bak`.
 - Secrets del repo: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`.
 - El script nunca hace `git clean`: el `.env` vive en ese directorio y no está trackeado.
 - **Si GitHub Actions está caído** (ver githubstatus.com), los jobs quedan en cola ~15 min y
@@ -75,6 +76,13 @@ exit; exit
 
 El script imprime `[deploy] now at <commit>`: tiene que ser el último commit de `origin/main`.
 Si no, el fetch no trajo lo esperado — no seguir sin entender por qué.
+
+**Acceso SSH.** El server solo acepta clave (`publickey`), nunca contraseña. La clave personal
+(`id_ed25519`, la misma que usa GitHub) tiene passphrase desde 2026-10-09:
+- PowerShell: la aporta el `ssh-agent` de Windows (servicio en Automatic), no pide nada.
+  git también lo usa, vía `core.sshCommand = C:/Windows/System32/OpenSSH/ssh.exe`.
+- Git Bash: su `ssh` (`/usr/bin/ssh`) no ve ese agente y pide la passphrase en cada conexión.
+  Por eso un `ssh` **no interactivo** desde Git Bash falla: para automatizar, usar PowerShell.
 
 Render.com (`render.yaml`) quedó sin usar.
 
@@ -181,7 +189,11 @@ src/
     job-detail.html # Detalle de oferta (dentro del shell) + job-detail.js
     cv.html         # CV base: ver y reemplazar (upload) + cv.js
     settings.html   # Cuenta, idioma, historial, paquetes, borrar cuenta + settings.js
-    shell.js        # window.aurea: header, auth, créditos, escHtml, helpers de fetch
+    shell.js        # window.aurea: header, auth, créditos, escHtml, helpers de fetch.
+                    # Nav (renderAppChrome): en la landing y para el visitante en la app, el del
+                    # sitio; con sesión, topbar + sidebar. Se elige antes de que responda Supabase
+                    # mirando si hay sb-<proyecto>-auth-token en localStorage (lo deja supabase-js);
+                    # si la sesión estaba vencida, se corrige cuando Supabase responde
     i18n.js         # I18N_ES — traducciones (UI en inglés por default, data-i18n)
     render.js       # window.aureaRender — render de CV/resultados
     job-form.js     # input de JD compartido (texto o URL)
@@ -242,7 +254,9 @@ tests/
                            # "Try it" con gradiente; layout de resultados del evaluator (adapter
                            # al costado, pliegues, keywords primero); entrada de la home (espera
                            # al shell, sin reduced-motion); acento y CTA tornasolados, sin titilar,
-                           # y el CTA conserva el gradiente en hover
+                           # y el CTA conserva el gradiente en hover; en la app el visitante ve el
+                           # nav del sitio, elegido antes de que responda Supabase; resultados del
+                           # evaluator plegados sin padding abajo (no scrollean a espacio vacío)
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -292,8 +306,9 @@ Todas las funciones son **no-op seguros** cuando `_supabase is None` (dev sin cr
 ## Flujo del usuario (happy path)
 
 ```
-index.html (landing) → CTA → evaluator.html (anónimo: sube CV, ve score, keywords faltantes y
-  recomendaciones; al costado, sin scroll, el adapter y los jobs)
+index.html (landing) → CTA o "Try it" de una feature → evaluator.html (anónimo, con el mismo nav
+  del sitio: sube CV, ve score, keywords faltantes y recomendaciones; al costado, sin scroll, el
+  adapter y los jobs)
 → acción paga (Tailor, Cover, Improve) → modal de signup (magic link o Google)
 → la acción pendiente se guarda (aurea_pending_action) y se ejecuta al volver logueado
 → bono de 5 créditos → resultado (CV adaptado + gaps + cover + PDF) → queda en /history
@@ -330,6 +345,7 @@ git pull origin develop
 git checkout -b feature/task-N-N-descripcion
 
 # 2. Implementar (commits atómicos)
+# 2b. Al terminar: actualizar CLAUDE.md (commit docs: propio) y avisarle al usuario
 # 3. Abrir PR
 git push origin feature/task-N-N-descripcion
 gh pr create --base develop --title "..." --body "..."
@@ -343,7 +359,18 @@ gh pr create --base develop --title "..." --body "..."
 cada test y cada cambio de docs va en su propio commit, aunque viajen en la misma rama o PR.
 Nunca juntar dos arreglos no relacionados en un commit, ni "aprovechar" un commit para otra cosa.
 
-**Nunca trabajar directo en `develop` ni en `main`.**
+**Al terminar cada tarea, Claude actualiza CLAUDE.md sin que se lo pidan y avisa en su mensaje
+final que lo actualizó y qué cambió.** La tarea termina cuando el código está verificado (tests,
+ruff y, si toca la UI, probado en el navegador), antes de abrir el PR. Va en un commit `docs:`
+propio en la misma rama: la fila de la tarea en "Estado actual de tareas" (🔄 PR abierto) y lo
+que la tarea haya cambiado de estructura, tests, flujo, convenciones o deuda. Lo que pasa después
+(merge, release, deploy) se anota al cerrar la tarea siguiente. Por eso ya no hay tareas sueltas
+de "Actualizar CLAUDE.md" (la última fue la 4.17).
+
+**Nunca trabajar directo en `develop` ni en `main`.** Única excepción: un cambio que es solo de
+CLAUDE.md, sin tarea de código detrás, se commitea directo en `develop` (sin rama ni PR) y sube
+con el próximo push. El `git pull origin develop` del paso 1 lo mezcla con lo que haya en GitHub
+(`pull.rebase=false`), y la rama de la tarea siguiente ya sale con esos commits adentro.
 **No usamos worktrees.** Se trabaja directamente en el repo clonado.
 
 ## Comandos
@@ -383,12 +410,18 @@ ruff check .
 - **Animaciones de entrada**: van colgadas de `body:has(> .ambient-bg)`. Hasta que shell.js
   inserta el fondo el body está oculto (`style.css`), y una animación que arranque antes corre
   sin verse. Si un elemento ya tiene `animation`, la de entrada la reemplaza: hay que listar las dos.
+- **Navegación del visitante**: en la app ve el mismo nav que en el sitio, arriba. No cambiarla de
+  lugar entre el sitio y la app: en la 4.16 se probó un sidebar con candados y se descartó porque
+  "cambia todo el manejo de la página". Antes de decidir navegación, probarla andando.
 - **Patch location en tests**: siempre parchear en el lugar de importación, no en la definición:
   - ✅ `patch("src.routes.adapt.ensure_user")`
   - ❌ `patch("backend.credits.ensure_user")`
 - **Patch de `OptionalUser`**: como `Depends(get_current_user)` guarda la referencia directa, parchear `backend.auth._supabase`, no `backend.auth.get_current_user`
 - **`.mcp.json` no se versiona** (está en `.gitignore`): contiene el access token de Supabase.
   Tampoco versionar `*.traineddata` ni ningún otro binario grande.
+- **El repo es público**: CLAUDE.md, README y commits nunca llevan secretos (tokens, claves
+  privadas, contenido del `.env`). Datos de infraestructura (IP, usuarios, rutas, cómo se
+  deploya) sí pueden ir: sin la clave SSH no dan acceso. Lo que protege es la clave, no ocultar el mapa.
 
 ## Estado actual de tareas
 
@@ -431,7 +464,7 @@ ruff check .
 | 4.3 | Landing en páginas separadas (Home, About, 3 Features, Pricing) + `Cache-Control: no-cache` | ✅ mergeada |
 | 4.4 | UI fixes: el home entra sin scroll (no desborda ni tiembla) | ✅ mergeada |
 | 4.5 | Actualizar CLAUDE.md (estado post-4.4, runbook de deploy, deuda de mails) | ✅ mergeada |
-| 4.6 | Hardening del VPS: `deploy` solo reinicia `botcv`; vps-infra instala como `linuxuser` | ✅ aplicado en el server |
+| 4.6 | Hardening del VPS: `deploy` solo reinicia `botcv`; vps-infra instala como `linuxuser`; clave SSH con passphrase | ✅ aplicado en el server |
 | 4.7 | Pricing: layout centrado, cards alineadas, badge flotante | ✅ mergeada |
 | 4.8 | Features: tile de vidrio con volumen (HTML/CSS; reemplazó un intento con three.js) | ✅ mergeada |
 | 4.9 | Evaluator: resultados con las mejoras primero; adapter y jobs en una columna fija al costado | ✅ mergeada |
@@ -440,10 +473,13 @@ ruff check .
 | 4.12 | "Improve my CV" y "Sign up" se encienden ~1 s cada 7 s (`cta-glow` en `app.css`); "for every job." queda quieto. Lo sacó la 4.14 | ✅ mergeada |
 | 4.13 | Actualizar CLAUDE.md (4.10–4.12) | ✅ mergeada |
 | 4.14 | La home entra fluida (calcada de heliasoils.com): fondo, título que emerge por tramos y resto escalonado; CSS puro en `app.css`. Además: "for every job." y "Improve my CV" tornasolados, "Sign up" con borde tornasolado, sin titilar | ✅ mergeada |
-| 4.15 | Actualizar CLAUDE.md (4.14) | 🔄 PR abierto |
+| 4.15 | Actualizar CLAUDE.md (4.14) | ✅ mergeada |
+| 4.16 | En la app el visitante ve el mismo nav que en la landing (antes el evaluator no tenía menú: quien tocaba "Try it" quedaba encerrado). Con sesión, topbar y sidebar, elegidos antes de que responda Supabase: sin salto. Un primer intento con sidebar y candados para el visitante se descartó | ✅ mergeada |
+| 4.17 | Actualizar CLAUDE.md (4.15–4.16) + regla: CLAUDE.md se actualiza al cerrar cada tarea. Rescata los docs de SSH, sudoers y "repo público" que habían quedado fuera del PR #50 | ✅ commiteada en `develop`; sube a GitHub con el PR de la 4.18 |
+| 4.18 | Evaluator: con los resultados plegados no se puede scrollear a espacio vacío. Los 64px de padding de `.app-main` llevaban la página a 993px aunque el último panel termine en 929; en una ventana de 945px (1080p con las barras de Chrome) el scroll no mostraba nada. El padding vuelve al desplegar algo; en una columna no cambia | 🔄 PR abierto |
 
-**Último release**: `main` al día con `develop` hasta la 4.14 (PR #64, deployado el 2026-10-14).
-Antes, el mismo día: PR #62 (4.13). Antes: PR #60 (4.12, 2026-10-13), PR #58 (4.11) y PR #55 (4.9).
+**Último release**: `main` al día con `develop` hasta la 4.16 (PR #67, deployado el 2026-10-15).
+Antes: PR #64 (4.14, 2026-10-14), PR #62 (4.13), PR #60 (4.12, 2026-10-13) y PR #58 (4.11).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
 No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya está en este archivo).
 
