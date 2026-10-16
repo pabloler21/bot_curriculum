@@ -256,6 +256,11 @@ a.btn-primary, a.btn-secondary { text-decoration: none; }
 .ev-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 20px; margin-top: 20px; align-items: start; }
 .ev-main, .ev-side { display: flex; flex-direction: column; gap: 20px; }
 .ev-side { position: sticky; top: calc(var(--topbar-h) + 20px); }  /* el adapter no se va al abrir las recomendaciones */
+/* Todo plegado, la página termina en el último panel: el padding de abajo era scroll vacío. Vuelve al
+   desplegar algo, porque ahí sí hay contenido debajo. En una columna la página es larga igual. */
+@media (min-width: 861px) {
+  .app-main:has(> .ev-results:not(.hidden)):not(:has([open], [aria-expanded="true"])) { padding-bottom: 0; }
+}
 .ev-profile { display: flex; align-items: center; gap: 20px; }
 .ev-profile .btn-ghost { margin-left: auto; }
 .ev-who, .ev-profile button { flex-shrink: 0; }

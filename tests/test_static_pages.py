@@ -189,6 +189,12 @@ def test_evaluator_strengths_and_weaknesses_start_folded():
     assert any('id="ev-weaknesses"' in f for f in folds)
 
 
+def test_evaluator_results_end_at_the_last_panel_while_folded():
+    """Todo plegado, los 64px de padding de abajo de .app-main eran scroll vacío: no había nada debajo."""
+    rule = _app_css_rule('.app-main:has(> .ev-results:not(.hidden)):not(:has([open], [aria-expanded="true"]))')
+    assert "padding-bottom: 0" in rule
+
+
 def test_evaluator_missing_keywords_lead_the_improvements():
     html = _evaluator_html()
     assert 'id="ev-keywords"' in html, "faltan las keywords como chips"
