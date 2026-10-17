@@ -11,7 +11,7 @@ El proyecto también incluye un **job board** (herramienta secundaria, pre-exist
 ### Backend
 - **Python 3.13**, `uv` como package manager
 - **FastAPI** + uvicorn, rate limiting con slowapi (3/min por IP en `/adapt`, `/evaluate`, `/improve` e `/interview`)
-- **AI**: `claude-haiku-4-5` vía LangChain con structured output (Pydantic)
+- **AI**: `claude-haiku-5-5` vía LangChain, con structured outputs (`method="json_schema"`) validados con Pydantic
 - **Auth**: Supabase magic link + Google OAuth (`shell.js`) → JWT validado en cada request con `supabase.auth.get_user(token)`
 - **DB**: Supabase (PostgreSQL) — tablas `credits`, `waitlist`, `user_cvs` y `generations` (más `cv_sessions`/`pipeline_runs`, legacy; ver abajo)
 - **Extracción de texto**: pdfplumber (PDFs, filtra texto oculto) + liteparse (DOCX y OCR de escaneos)
@@ -99,14 +99,18 @@ SUPABASE_KEY               # opcional — SI se setea, sessions.py persiste los 
                            #   a propósito: esa tabla tiene RLS deshabilitada.
 FRONTEND_BASE_URL          # para CORS (default: http://localhost:3000)
 
-AUREA_EXTRACT_MODEL        # opcional — modelo etapa 1 (default: claude-haiku-4-5)
-AUREA_ADAPT_MODEL          # opcional — modelo etapa 2 (default: claude-haiku-4-5)
-AUREA_COVER_MODEL          # opcional — modelo cover letter (default: claude-haiku-4-5)
-AUREA_INTERVIEW_MODEL      # opcional — modelo interview prep (default: claude-haiku-4-5)
-AUREA_IMPROVE_MODEL        # opcional — modelo de /improve (default: claude-haiku-4-5)
+AUREA_EXTRACT_MODEL        # opcional — modelo etapa 1 (default: claude-haiku-5-5)
+AUREA_ADAPT_MODEL          # opcional — modelo etapa 2 (default: claude-haiku-5-5)
+AUREA_COVER_MODEL          # opcional — modelo cover letter (default: claude-haiku-5-5)
+AUREA_INTERVIEW_MODEL      # opcional — modelo interview prep (default: claude-haiku-5-5)
+AUREA_IMPROVE_MODEL        # opcional — modelo de /improve (default: claude-haiku-5-5)
+AUREA_EVALUATE_MODEL       # opcional — modelo del ATS evaluator (default: claude-haiku-5-5)
+AUREA_SCORE_MODEL          # opcional — modelo del scoring de jobs (default: claude-haiku-5-5)
 ```
 
-El mapeo stage → modelo vive en `backend/models.py` (`model_for(stage)`).
+El mapeo stage → modelo vive en `backend/models.py` (`model_for(stage)`); todo lo que llama a
+Claude pasa por ahí. `model_for` fija `max_tokens=16000`: `langchain-anthropic` 1.4 no conoce
+Haiku 5.5 y usaría 4096, poco para un CV en JSON; por encima de ~21k el SDK exige streaming.
 
 ## Estructura de archivos
 
@@ -227,12 +231,14 @@ tests/
   test_auth.py             # get_current_user() dependency + /adapt auth gate
   test_credits.py          # backend/credits.py — todas las funciones
   test_credits_route.py    # GET /credits
+  test_cover_letter.py     # backend/adapter/cover_letter.py — lee el texto aunque venga un bloque de thinking
   test_evaluate.py         # POST /evaluate con session token
   test_interview.py        # backend/adapter/interview.py
   test_interview_route.py  # POST /interview
   test_extractor.py        # backend/extractor.py — filtrado de texto oculto e invisible
   test_jobs.py             # Job board backend
-  test_models.py           # backend/models.py — model_for(stage) y defaults
+  test_models.py           # backend/models.py — model_for(stage), defaults y max_tokens; evaluator y
+                           # scorer usan su etapa; toda salida estructurada usa structured outputs
   test_ranker.py
   test_scorer.py
   test_sessions.py
@@ -411,6 +417,12 @@ ruff check .
 - **Navegación del visitante**: en la app ve el mismo nav que en el sitio, arriba. No cambiarla de
   lugar entre el sitio y la app: en la 4.16 se probó un sidebar con candados y se descartó porque
   "cambia todo el manejo de la página". Antes de decidir navegación, probarla andando.
+- **Llamadas a Claude**: el modelo sale siempre de `model_for(stage)`. La salida estructurada va con
+  `with_structured_output(X, method="json_schema")`: con el default (tool forzada) la respuesta no
+  queda atada al schema; Haiku 5.5 devolvía objetos anidados como string y Haiku 4.5 omitía `gaps`
+  sin que fallara nada. Una respuesta de texto se lee con `.text`, no `.content`: Haiku 5.5 piensa
+  por defecto y `.content` es una lista de bloques. Los tests mockean el modelo, así que un cambio de
+  modelo se verifica con una corrida real de cada etapa (centavos), como en la 4.20.
 - **Patch location en tests**: siempre parchear en el lugar de importación, no en la definición:
   - ✅ `patch("src.routes.adapt.ensure_user")`
   - ❌ `patch("backend.credits.ensure_user")`
@@ -480,6 +492,7 @@ ruff check .
 | 4.17 | Actualizar CLAUDE.md (4.15–4.16) + regla: CLAUDE.md se actualiza al cerrar cada tarea. Rescata los docs de SSH, sudoers y "repo público" que habían quedado fuera del PR #50 | ✅ commiteada en `develop`; sube a GitHub con el PR de la 4.18 |
 | 4.18 | Evaluator: con los resultados plegados no se puede scrollear a espacio vacío. Los 64px de padding de `.app-main` llevaban la página a 993px aunque el último panel termine en 929; en una ventana de 945px (1080p con las barras de Chrome) el scroll no mostraba nada. El padding vuelve al desplegar algo; en una columna no cambia | 🔄 PR abierto |
 | 4.19 | README reescrito: el anterior describía la app de abril (evaluator + job board en Render). Ahora cubre features y créditos, pipeline, seguridad, stack, API, setup local y deploy al VPS. Se borró `render.yaml`, que ya no se usaba. Sale de la rama de la 4.18: mergear el #68 primero | 🔄 PR abierto |
+| 4.20 | Haiku 4.5 → Haiku 5.5 en todas las etapas (evaluator y scorer pasan por `model_for`). Arreglos que pidió el cambio: `max_tokens` explícito, la carta se lee con `.text`, y toda salida estructurada usa structured outputs: el adapter fallaba siempre con Haiku 5.5 y con Haiku 4.5 devolvía `gaps` vacío. Verificado con una corrida real de las 7 etapas. Sale de la rama de la 4.19: mergear #68 y #69 primero | 🔄 PR abierto |
 
 **Último release**: `main` al día con `develop` hasta la 4.16 (PR #67, deployado el 2026-10-15).
 Antes: PR #64 (4.14, 2026-10-14), PR #62 (4.13), PR #60 (4.12, 2026-10-13) y PR #58 (4.11).
