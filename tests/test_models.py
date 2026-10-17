@@ -1,5 +1,7 @@
 # tests/test_models.py
 """Tests for backend/models.py — stage → model lookup and defaults."""
+import importlib
+
 import pytest
 
 from backend import models
@@ -39,6 +41,22 @@ def test_scorer_uses_its_stage():
     from backend import scorer
     assert scorer._model.model == models._STAGE_MODELS["score"]
     assert scorer._model.max_tokens == 16000
+
+
+@pytest.mark.parametrize("module, attr", [
+    ("backend.adapter.adapter", "_structured_model"),
+    ("backend.adapter.extractor", "_structured_model"),
+    ("backend.adapter.improver", "_chain"),
+    ("backend.adapter.interview", "_structured_model"),
+    ("backend.evaluator", "structured_model"),
+    ("backend.scorer", "_structured_model"),
+])
+def test_structured_stages_use_structured_outputs(module, attr):
+    # Con la tool forzada, Haiku 5.5 devolvía objetos anidados como string
+    # (y Haiku 4.5 omitía campos): output_config.format restringe al schema.
+    runnable = getattr(importlib.import_module(module), attr)
+    kwargs = next(step.kwargs for step in runnable.steps if hasattr(step, "kwargs"))
+    assert kwargs["output_config"]["format"]["type"] == "json_schema"
 
 
 def test_unknown_stage_raises():
