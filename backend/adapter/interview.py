@@ -39,7 +39,7 @@ class _InterviewOutput(BaseModel):
 
 
 _model = model_for("interview")
-_structured_model = _model.with_structured_output(_InterviewOutput)
+_structured_model = _model.with_structured_output(_InterviewOutput, method="json_schema")
 
 _chain = ChatPromptTemplate.from_messages(
     [
