@@ -12,6 +12,9 @@ from langchain_anthropic import ChatAnthropic
 load_dotenv()
 
 _DEFAULT = "claude-haiku-5-5"
+# Explícito: langchain-anthropic no conoce Haiku 5.5 y usaría 4096, poco para un CV
+# en JSON. Por encima de ~21k el SDK de Anthropic exige streaming.
+_MAX_TOKENS = 16000
 
 _STAGE_MODELS = {
     "extract": os.getenv("AUREA_EXTRACT_MODEL", _DEFAULT),
@@ -24,4 +27,4 @@ _STAGE_MODELS = {
 
 def model_for(stage: str) -> ChatAnthropic:
     """Return the ChatAnthropic client configured for the given pipeline stage."""
-    return ChatAnthropic(model=_STAGE_MODELS[stage])
+    return ChatAnthropic(model=_STAGE_MODELS[stage], max_tokens=_MAX_TOKENS)
