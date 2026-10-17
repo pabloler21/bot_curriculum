@@ -12,10 +12,12 @@ def test_defaults_are_haiku():
         "cover": "claude-haiku-5-5",
         "interview": "claude-haiku-5-5",
         "improve": "claude-haiku-5-5",
+        "evaluate": "claude-haiku-5-5",
+        "score": "claude-haiku-5-5",
     }
 
 
-@pytest.mark.parametrize("stage", ["extract", "adapt", "cover", "interview", "improve"])
+@pytest.mark.parametrize("stage", ["extract", "adapt", "cover", "interview", "improve", "evaluate", "score"])
 def test_model_for_returns_configured_model(monkeypatch, stage):
     monkeypatch.setitem(models._STAGE_MODELS, stage, "claude-sonnet-4-5")
     assert models.model_for(stage).model == "claude-sonnet-4-5"
