@@ -7,11 +7,11 @@ from backend import models
 
 def test_defaults_are_haiku():
     assert models._STAGE_MODELS == {
-        "extract": "claude-haiku-4-5",
-        "adapt": "claude-haiku-4-5",
-        "cover": "claude-haiku-4-5",
-        "interview": "claude-haiku-4-5",
-        "improve": "claude-haiku-4-5",
+        "extract": "claude-haiku-5-5",
+        "adapt": "claude-haiku-5-5",
+        "cover": "claude-haiku-5-5",
+        "interview": "claude-haiku-5-5",
+        "improve": "claude-haiku-5-5",
     }
 
 
