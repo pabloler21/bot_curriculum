@@ -42,7 +42,7 @@ class ResumeEvaluation(BaseModel):
 model = model_for("evaluate")
 
 # forzamos estructura de ResumeEvaluation
-structured_model = model.with_structured_output(ResumeEvaluation)
+structured_model = model.with_structured_output(ResumeEvaluation, method="json_schema")
 
 # leemos el skill como prompt (path absoluto para evitar problemas con el cwd en producción)
 _prompt_path = pathlib.Path(__file__).parent / "prompts" / "ats_skill.md"

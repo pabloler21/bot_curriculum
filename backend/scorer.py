@@ -29,7 +29,7 @@ class JobMatch(BaseModel):
 
 
 _model = model_for("score")
-_structured_model = _model.with_structured_output(JobMatch)
+_structured_model = _model.with_structured_output(JobMatch, method="json_schema")
 
 _prompt = ChatPromptTemplate.from_messages([
     (
