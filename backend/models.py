@@ -2,7 +2,7 @@
 """
 Centralized model configuration for the adaptation pipeline.
 
-Each stage resolves its model from an env var, defaulting to claude-haiku-4-5.
+Each stage resolves its model from an env var, defaulting to claude-haiku-5-5.
 """
 import os
 
@@ -11,7 +11,7 @@ from langchain_anthropic import ChatAnthropic
 
 load_dotenv()
 
-_DEFAULT = "claude-haiku-4-5"
+_DEFAULT = "claude-haiku-5-5"
 
 _STAGE_MODELS = {
     "extract": os.getenv("AUREA_EXTRACT_MODEL", _DEFAULT),
