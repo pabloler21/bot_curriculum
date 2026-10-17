@@ -1,6 +1,6 @@
 # backend/models.py
 """
-Centralized model configuration for the adaptation pipeline.
+Centralized model configuration for every stage that calls Claude.
 
 Each stage resolves its model from an env var, defaulting to claude-haiku-5-5.
 """
