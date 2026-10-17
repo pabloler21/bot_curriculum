@@ -61,6 +61,6 @@ async def generate_cover_letter(
         }
     )
 
-    text = result.content if hasattr(result, "content") else str(result)
+    text = result.text  # solo los bloques de texto: Haiku 5.5 antepone uno de thinking
     logger.info("[cover_letter] Generated %d chars", len(text))
     return text.strip()

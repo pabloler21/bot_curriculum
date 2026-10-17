@@ -24,7 +24,7 @@ with open(_PROMPT_PATH, encoding="utf-8") as f:
     _SYSTEM_PROMPT = f.read()
 
 _model = model_for("extract")
-_structured_model = _model.with_structured_output(CVSchema)
+_structured_model = _model.with_structured_output(CVSchema, method="json_schema")
 
 _chain = ChatPromptTemplate.from_messages(
     [

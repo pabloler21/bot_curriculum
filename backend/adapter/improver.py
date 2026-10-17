@@ -25,7 +25,7 @@ _chain = ChatPromptTemplate.from_messages(
         ("system", _SYSTEM_TEMPLATE),
         ("human", "Apply the recommendations and return the improved CV schema."),
     ]
-) | model_for("improve").with_structured_output(CVSchema)
+) | model_for("improve").with_structured_output(CVSchema, method="json_schema")
 
 
 async def improve_cv(schema: CVSchema, recommendations: list[str]) -> CVSchema:

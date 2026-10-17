@@ -33,7 +33,7 @@ class _AdaptationOutput(BaseModel):
 
 
 _model = model_for("adapt")
-_structured_model = _model.with_structured_output(_AdaptationOutput)
+_structured_model = _model.with_structured_output(_AdaptationOutput, method="json_schema")
 
 _prompt = ChatPromptTemplate.from_messages(
     [
