@@ -21,6 +21,12 @@ def test_model_for_returns_configured_model(monkeypatch, stage):
     assert models.model_for(stage).model == "claude-sonnet-4-5"
 
 
+def test_model_for_sets_max_tokens():
+    # langchain-anthropic no conoce claude-haiku-5-5 y caería en 4096: un CV largo
+    # en JSON se cortaría. Más de ~21k el SDK exige streaming.
+    assert models.model_for("extract").max_tokens == 16000
+
+
 def test_unknown_stage_raises():
     with pytest.raises(KeyError):
         models.model_for("nope")
