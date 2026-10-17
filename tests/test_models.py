@@ -35,6 +35,12 @@ def test_evaluator_uses_its_stage():
     assert evaluator.model.max_tokens == 16000  # sale de model_for, no de un ChatAnthropic propio
 
 
+def test_scorer_uses_its_stage():
+    from backend import scorer
+    assert scorer._model.model == models._STAGE_MODELS["score"]
+    assert scorer._model.max_tokens == 16000
+
+
 def test_unknown_stage_raises():
     with pytest.raises(KeyError):
         models.model_for("nope")
