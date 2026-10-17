@@ -5,7 +5,7 @@
 [![CI](https://github.com/pabloler21/bot_curriculum/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pabloler21/bot_curriculum/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.13-blue?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
-![Claude](https://img.shields.io/badge/Claude-Haiku_4.5-D97757?logo=anthropic&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude-Haiku_5.5-D97757?logo=anthropic&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?logo=supabase&logoColor=white)
 
 **Live:** https://aurea.pablolerner.dev
@@ -69,7 +69,7 @@ job description ────────┤   (or a link: the page is fetched fi
 | Layer | Technology |
 |---|---|
 | Backend | Python 3.13, FastAPI, uvicorn, [uv](https://docs.astral.sh/uv/) |
-| AI | Claude Haiku 4.5 via LangChain (`langchain-anthropic`), structured output with Pydantic |
+| AI | Claude Haiku 5.5 via LangChain (`langchain-anthropic`), structured outputs validated with Pydantic |
 | Auth and database | Supabase: email magic link and Postgres. Google sign-in is built in but not enabled yet |
 | CV parsing | pdfplumber for PDFs, LiteParse for DOCX and for scanned PDFs (OCR) |
 | Embeddings | fastembed (`all-MiniLM-L6-v2`, runs locally on CPU) + Zvec vector store |
@@ -161,7 +161,7 @@ To set up Supabase, run the files in `supabase/migrations/` in order, either in 
 | `SUPABASE_SERVICE_ROLE_KEY` | For accounts | Credits, saved CV, history and account deletion. Without it those features do nothing, and `DELETE /account` returns `503` |
 | `SUPABASE_KEY` | No | Stores job-board CV sessions in Postgres instead of memory. Production leaves it unset |
 | `FRONTEND_BASE_URL` | No | Allowed CORS origin (default `http://localhost:3000`) |
-| `AUREA_EXTRACT_MODEL`, `AUREA_ADAPT_MODEL`, `AUREA_COVER_MODEL`, `AUREA_INTERVIEW_MODEL`, `AUREA_IMPROVE_MODEL` | No | Claude model for each stage (default `claude-haiku-4-5`) |
+| `AUREA_EXTRACT_MODEL`, `AUREA_ADAPT_MODEL`, `AUREA_COVER_MODEL`, `AUREA_INTERVIEW_MODEL`, `AUREA_IMPROVE_MODEL`, `AUREA_EVALUATE_MODEL`, `AUREA_SCORE_MODEL` | No | Claude model for each stage (default `claude-haiku-5-5`) |
 
 ---
 
