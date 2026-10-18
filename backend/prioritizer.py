@@ -28,9 +28,10 @@ RECOMMENDATION_LEVELS = [
 ]
 _JOB = "If `job_description` is not null, judge against it."
 
-# ponytail: umbrales fijos sobre el score 0–2; si Jev cambia de calibración, ajustarlos con CVs reales
-_ESSENTIAL = 1.5
-_IMPORTANT = 0.5
+# ponytail: umbrales fijos sobre el score 0–2, calibrados con 3 CVs reales (Jev deja casi todo entre
+# 0.8 y 1.7). Si Jev cambia de calibración o todo cae en un nivel, re-medirlos con más CVs.
+_ESSENTIAL = 1.3
+_IMPORTANT = 0.95
 
 
 def level_for(score: float) -> str:
