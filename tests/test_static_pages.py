@@ -281,3 +281,17 @@ def test_adapt_redirects_to_tailor(client):
 @pytest.mark.parametrize("gone", ["adapt.js", "app.js", "pricing.js", "feature-3d.js"])
 def test_old_scripts_removed(client, gone):
     assert client.get(f"/{gone}").status_code == 404
+
+
+def test_evaluator_keywords_are_not_red():
+    # El color queda para los botones pagos: las keywords faltantes ya no van en rojo.
+    assert "tag missing" not in (STATIC / "evaluator.js").read_text(encoding="utf-8")
+    assert ".tag.missing" not in (STATIC / "style.css").read_text(encoding="utf-8")
+
+
+def test_evaluator_draws_priority_bars_with_a_legend():
+    js = (STATIC / "evaluator.js").read_text(encoding="utf-8")
+    assert "keywords_missing_priority" in js and "recommendations_priority" in js
+    html = _evaluator_html()
+    for key in ("ev.prio_essential", "ev.prio_important", "ev.prio_optional"):
+        assert f'data-i18n="{key}"' in html
