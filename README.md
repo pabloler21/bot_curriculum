@@ -18,7 +18,7 @@
 
 | Feature | Account | Cost |
 |---|---|---|
-| **ATS Evaluator**: score, missing keywords and the top fixes for your CV | No | Free |
+| **ATS Evaluator**: score, plus the missing keywords and fixes for your CV, ranked from essential to nice to have | No | Free |
 | **Tailor**: your CV rewritten for one job, with skill gaps and a PDF | Yes | 1 credit |
 | **Cover letter** for the same job | Yes | 1 credit, or 2 together with the tailored CV |
 | **Improve my CV**: applies the evaluator's fixes to your saved CV | Yes | 1 credit |
@@ -70,6 +70,7 @@ job description ────────┤   (or a link: the page is fetched fi
 |---|---|
 | Backend | Python 3.13, FastAPI, uvicorn, [uv](https://docs.astral.sh/uv/) |
 | AI | Claude Haiku 5.5 via LangChain (`langchain-anthropic`), structured outputs validated with Pydantic |
+| Prioritization | [Jev](https://docs.typesafe.ai) (TypeSafe): one `Score` question per missing keyword and fix. The CV itself is never sent |
 | Auth and database | Supabase: email magic link and Postgres. Google sign-in is built in but not enabled yet |
 | CV parsing | pdfplumber for PDFs, LiteParse for DOCX and for scanned PDFs (OCR) |
 | Embeddings | fastembed (`all-MiniLM-L6-v2`, runs locally on CPU) + Zvec vector store |
@@ -140,6 +141,9 @@ ANTHROPIC_API_KEY=sk-ant-...
 SUPABASE_URL=https://<project>.supabase.co
 SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
+
+# Optional: ranks the evaluator's keywords and fixes by priority
+TYPESAFE_API_KEY=...
 ```
 
 ```bash
@@ -161,6 +165,7 @@ To set up Supabase, run the files in `supabase/migrations/` in order, either in 
 | `SUPABASE_SERVICE_ROLE_KEY` | For accounts | Credits, saved CV, history and account deletion. Without it those features do nothing, and `DELETE /account` returns `503` |
 | `SUPABASE_KEY` | No | Stores job-board CV sessions in Postgres instead of memory. Production leaves it unset |
 | `FRONTEND_BASE_URL` | No | Allowed CORS origin (default `http://localhost:3000`) |
+| `TYPESAFE_API_KEY` | No | Jev ranks the evaluator's missing keywords and fixes. Without it, or if Jev fails, they show in the model's order, without priority bars |
 | `AUREA_EXTRACT_MODEL`, `AUREA_ADAPT_MODEL`, `AUREA_COVER_MODEL`, `AUREA_INTERVIEW_MODEL`, `AUREA_IMPROVE_MODEL`, `AUREA_EVALUATE_MODEL`, `AUREA_SCORE_MODEL` | No | Claude model for each stage (default `claude-haiku-5-5`) |
 
 ---
