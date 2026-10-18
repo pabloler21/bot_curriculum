@@ -159,6 +159,10 @@ def test_resume_evaluation_has_strengths_and_weaknesses():
     assert "strengths" in fields and "weaknesses" in fields
 
 
+def test_resume_evaluation_has_target_role():
+    assert "target_role" in ResumeEvaluation.model_fields
+
+
 def _session_token():
     token = str(_uuid.uuid4())
     _sessions.cv_sessions[token] = _CVSession(
