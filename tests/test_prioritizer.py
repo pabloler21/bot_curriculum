@@ -16,7 +16,8 @@ from backend.prioritizer import (
 
 
 def test_level_thresholds():
-    assert [level_for(s) for s in (2.0, 1.5, 1.49, 0.5, 0.49, 0.0)] == [
+    # Calibrados con 3 CVs reales (4.21): Jev deja casi todo entre 0.8 y 1.7, y con 1.5/0.5 todo era "important".
+    assert [level_for(s) for s in (2.0, 1.3, 1.29, 0.95, 0.94, 0.0)] == [
         "essential", "essential", "important", "important", "optional", "optional"]
 
 
