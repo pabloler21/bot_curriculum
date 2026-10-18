@@ -5,10 +5,13 @@ Prioridad de las keywords faltantes y las recomendaciones del evaluator, con Jev
 Una pregunta Score por ítem, de 0 (optional) a 2 (essential); el orden y el nivel salen del score.
 """
 import logging
+import os
 
-from typesafe_sdk import Score
+from typesafe_sdk import AsyncTypeSafeClient, Score, TypeSafeError
 
 logger = logging.getLogger(__name__)
+
+_TIMEOUT = 5.0  # si Jev tarda más, la evaluación sale sin prioridades
 
 # Criterios de menor a mayor, como los pide Score. El ítem se referencia con un path del state.
 KEYWORD_LEVELS = [
@@ -62,3 +65,37 @@ def build_questions(n_keywords: int, n_recommendations: int) -> dict[str, Score]
         for i in range(n_recommendations)
     })
     return questions
+
+
+async def _ask_jev(state: dict, questions: dict[str, Score]) -> dict[str, float]:
+    async with AsyncTypeSafeClient(timeout=_TIMEOUT) as client:
+        response = await client.system_one(state, questions)
+    return {name: response.scores[name].score for name in questions}
+
+
+async def prioritize(evaluation: dict, job_context: str | None = None) -> dict:
+    """Copia de la evaluación con las listas ordenadas y sus niveles; sin cambios si Jev no está o falla."""
+    keywords = evaluation.get("keywords_missing") or []
+    recommendations = evaluation.get("recommendations") or []
+    if not os.getenv("TYPESAFE_API_KEY") or not (keywords or recommendations):
+        return evaluation
+
+    # El CV no va: es input no confiable y, según la doc de Jev, el contenido de más distrae.
+    state = {
+        "target_role": evaluation.get("target_role", ""),
+        "job_description": job_context,
+        "missing_keywords": keywords,
+        "recommendations": recommendations,
+    }
+    try:
+        scores = await _ask_jev(state, build_questions(len(keywords), len(recommendations)))
+        keyword_scores = [scores[f"kw_{i}"] for i in range(len(keywords))]
+        recommendation_scores = [scores[f"rec_{i}"] for i in range(len(recommendations))]
+    except (TypeSafeError, KeyError) as exc:
+        logger.warning("[prioritizer] Jev failed, evaluation goes out without priorities: %r", exc)
+        return evaluation
+
+    result = dict(evaluation)
+    result["keywords_missing"], result["keywords_missing_priority"] = rank(keywords, keyword_scores)
+    result["recommendations"], result["recommendations_priority"] = rank(recommendations, recommendation_scores)
+    return result
