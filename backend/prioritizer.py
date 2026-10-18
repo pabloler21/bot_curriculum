@@ -4,10 +4,11 @@ Prioridad de las keywords faltantes y las recomendaciones del evaluator, con Jev
 
 Una pregunta Score por ítem, de 0 (optional) a 2 (essential); el orden y el nivel salen del score.
 """
+import asyncio
 import logging
 import os
 
-from typesafe_sdk import AsyncTypeSafeClient, Score, TypeSafeError
+from typesafe_sdk import AsyncTypeSafeClient, RetryPolicy, Score, TypeSafeError
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,11 @@ def build_questions(n_keywords: int, n_recommendations: int) -> dict[str, Score]
 
 
 async def _ask_jev(state: dict, questions: dict[str, Score]) -> dict[str, float]:
-    async with AsyncTypeSafeClient(timeout=_TIMEOUT) as client:
+    # Tope para todo el pedido: el timeout del cliente es por operación HTTP, y los reintentos por
+    # defecto del SDK (2, con backoff) lo estiraban a ~16 s.
+    async with asyncio.timeout(_TIMEOUT), AsyncTypeSafeClient(
+        timeout=_TIMEOUT, retry=RetryPolicy(max_retries=0)
+    ) as client:
         response = await client.system_one(state, questions)
     return {name: response.scores[name].score for name in questions}
 
@@ -92,7 +97,7 @@ async def prioritize(evaluation: dict, job_context: str | None = None) -> dict:
         scores = await _ask_jev(state, build_questions(len(keywords), len(recommendations)))
         keyword_scores = [scores[f"kw_{i}"] for i in range(len(keywords))]
         recommendation_scores = [scores[f"rec_{i}"] for i in range(len(recommendations))]
-    except (TypeSafeError, KeyError) as exc:
+    except (TypeSafeError, KeyError, TimeoutError) as exc:
         logger.warning("[prioritizer] Jev failed, evaluation goes out without priorities: %r", exc)
         return evaluation
 
