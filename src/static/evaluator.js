@@ -89,6 +89,43 @@ function initials(name) {
 
 function listHtml(items) { return items.map((i) => `<li>${esc(i)}</li>`).join(''); }
 
+// Prioridad de Jev: barras de señal en gris (sin color: el color es de los botones pagos).
+const PRIO = { essential: [3, 'Essential'], important: [2, 'Important'], optional: [1, 'Nice to have'] };
+
+// Solo si vienen completos: una evaluación vieja o con un largo distinto se ve sin barras.
+function levelsFor(items, levels) {
+  return Array.isArray(levels) && levels.length === items.length ? levels : null;
+}
+
+function prioLevel(level) { return PRIO[level] ? level : 'optional'; }
+
+function barsHtml(level) {
+  const lv = prioLevel(level);
+  const [bars, name] = PRIO[lv];
+  return `<span class="bars l${bars}" aria-label="${esc(t(`ev.prio_${lv}`, name))}"><b></b><b></b><b></b></span>`;
+}
+
+function renderPriorities(ev) {
+  const kws = ev.keywords_missing || [];
+  const kwLevels = levelsFor(kws, ev.keywords_missing_priority);
+  $('ev-keywords').innerHTML = kws.map((k, i) => (kwLevels
+    ? `<span class="tag ev-kw is-${prioLevel(kwLevels[i])}">${barsHtml(kwLevels[i])}${esc(k)}</span>`
+    : `<span class="tag ev-kw">${esc(k)}</span>`)).join('');
+  $('ev-kw-count').textContent = kws.length;
+  $('ev-kw-block').classList.toggle('hidden', !kws.length);
+
+  const recs = ev.recommendations || [];
+  const recLevels = levelsFor(recs, ev.recommendations_priority);
+  $('ev-recs').innerHTML = recs.map((r, i) =>
+    `<li><span class="rec-text">${esc(r)}</span>${recLevels ? barsHtml(recLevels[i]) : ''}</li>`).join('');
+
+  // La leyenda va con las keywords; si no hay keywords, con las recomendaciones.
+  const legend = $('ev-legend');
+  const label = kwLevels && kws.length ? $('ev-kw-label') : recLevels && recs.length ? $('ev-recs-label') : null;
+  legend.classList.toggle('hidden', !label);
+  if (label) label.append(legend);
+}
+
 function openSummary(open) {
   $('ev-summary').classList.toggle('is-open', open);
   const btn = $('ev-summary-more');
@@ -118,12 +155,8 @@ function renderResults(ev) {
   $('ev-score').textContent = ev.overall_score ?? '–';
   $('ev-summary').textContent = ev.summary || '';
   fillFold('ev-strengths', ev.strengths || []);
-  const kws = ev.keywords_missing || [];
-  $('ev-keywords').innerHTML = kws.map((k) => `<span class="tag missing">${esc(k)}</span>`).join('');
-  $('ev-kw-count').textContent = kws.length;
-  $('ev-kw-block').classList.toggle('hidden', !kws.length);
   fillFold('ev-weaknesses', [...(ev.weaknesses || []), ...(ev.formatting_issues || [])]);
-  $('ev-recs').innerHTML = listHtml(ev.recommendations || []);
+  renderPriorities(ev);
   showAllRecs(false);
   $('ev-apply').disabled = !(ev.recommendations || []).length;
   hide($('ev-intake'));

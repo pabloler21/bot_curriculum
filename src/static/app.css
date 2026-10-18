@@ -275,9 +275,24 @@ a.btn-primary, a.btn-secondary { text-decoration: none; }
 .ev-list--bad li::marker { color: var(--danger); }
 .ev-recs { gap: 12px; }
 .ev-recs li { font-size: 14.5px; }
-.ev-recs li::before { width: 30px; height: 30px; font-size: 13px; border-radius: 10px; }
+.ev-recs li::before { width: 30px; height: 30px; font-size: 13px; border-radius: 10px; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.10); color: var(--text-secondary); }
 .ev-more { background: none; border: 0; color: var(--accent-light); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
 .ev-more:hover { text-decoration: underline; }
+/* Prioridad (4.21): todo en gris, el color es de los botones pagos. Las barras no cambian el alto del panel. */
+.ev-kw { gap: 7px; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.14); color: var(--text-secondary); }
+.ev-kw.is-essential { color: var(--text-primary); }
+.bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 9px; flex-shrink: 0; }
+.bars b { width: 3px; border-radius: 1px; background: rgba(255,255,255,0.16); }
+.bars b:nth-child(1) { height: 3px; }
+.bars b:nth-child(2) { height: 6px; }
+.bars b:nth-child(3) { height: 9px; }
+.bars.l3 b, .bars.l2 b:nth-child(-n+2), .bars.l1 b:nth-child(1) { background: rgba(255,255,255,0.80); }
+.ev-recs .rec-text { flex: 1; }
+.ev-recs li .bars { margin-top: 7px; }
+#ev-recs-more { color: var(--text-secondary); }
+#ev-recs-more:hover { color: var(--text-primary); }
+.ev-legend { display: inline-flex; gap: 12px; margin-left: 10px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+.ev-legend > span { display: inline-flex; align-items: center; gap: 5px; }
 .ev-label { margin-bottom: 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-tertiary); }
 .ev-folds { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
 .ev-fold summary { cursor: pointer; font-weight: 600; }
