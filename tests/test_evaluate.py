@@ -1,6 +1,6 @@
 import io
 from datetime import date, datetime, timezone
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
@@ -159,6 +159,10 @@ def test_resume_evaluation_has_strengths_and_weaknesses():
     assert "strengths" in fields and "weaknesses" in fields
 
 
+def test_resume_evaluation_has_target_role():
+    assert "target_role" in ResumeEvaluation.model_fields
+
+
 def _session_token():
     token = str(_uuid.uuid4())
     _sessions.cv_sessions[token] = _CVSession(
@@ -199,3 +203,25 @@ def test_evaluate_uses_base_cv_when_logged_in_without_input(client, as_user):
 def test_evaluate_without_any_cv_is_400(client, as_user):
     with _patch("src.routes.evaluate.get_cv", return_value=None):
         assert client.post("/evaluate", data={}).status_code == 400
+
+
+def test_evaluate_returns_and_saves_the_prioritized_evaluation(client, as_user):
+    prioritized = {**_EVAL, "recommendations_priority": ["essential"]}
+    token = _session_token()
+    with _patch("src.routes.evaluate.evaluate_cv", return_value=_EVAL), \
+         _patch("src.routes.evaluate.prioritize", new_callable=AsyncMock, return_value=prioritized) as prio, \
+         _patch("src.routes.evaluate.save_evaluation") as save:
+        res = client.post("/evaluate", headers={"X-CV-Session-Token": token}, data={})
+    assert res.json()["recommendations_priority"] == ["essential"]
+    save.assert_called_once_with(as_user, prioritized)
+    assert prio.await_args.args[0] == _EVAL
+
+
+def test_evaluate_passes_the_job_context_to_prioritize():
+    jobs_cache["data"] = ([make_job("42")], datetime.now(timezone.utc))
+    with patch("src.routes.evaluate.evaluate_cv", return_value=MOCK_EVAL), \
+         patch("src.routes.evaluate.extract_text", return_value="My Python CV"), \
+         patch("src.routes.evaluate.prioritize", new_callable=AsyncMock, return_value=MOCK_EVAL) as prio:
+        eval_client.post("/evaluate", data={"job_id": "42"},
+                         files={"file": ("cv.pdf", io.BytesIO(b"data"), "application/pdf")})
+    assert "Python FastAPI developer" in prio.await_args.args[1]

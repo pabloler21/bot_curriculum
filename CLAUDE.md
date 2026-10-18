@@ -11,7 +11,9 @@ El proyecto también incluye un **job board** (herramienta secundaria, pre-exist
 ### Backend
 - **Python 3.13**, `uv` como package manager
 - **FastAPI** + uvicorn, rate limiting con slowapi (3/min por IP en `/adapt`, `/evaluate`, `/improve` e `/interview`)
-- **AI**: `claude-haiku-4-5` vía LangChain con structured output (Pydantic)
+- **AI**: `claude-haiku-5-5` vía LangChain, con structured outputs (`method="json_schema"`) validados con Pydantic
+- **Prioridad del evaluator**: Jev (TypeSafe, `typesafe-sdk`) — una pregunta `Score` por keyword
+  faltante y por recomendación (`backend/prioritizer.py`)
 - **Auth**: Supabase magic link + Google OAuth (`shell.js`) → JWT validado en cada request con `supabase.auth.get_user(token)`
 - **DB**: Supabase (PostgreSQL) — tablas `credits`, `waitlist`, `user_cvs` y `generations` (más `cv_sessions`/`pipeline_runs`, legacy; ver abajo)
 - **Extracción de texto**: pdfplumber (PDFs, filtra texto oculto) + liteparse (DOCX y OCR de escaneos)
@@ -98,15 +100,22 @@ SUPABASE_KEY               # opcional — SI se setea, sessions.py persiste los 
                            #   cv_sessions en vez de usar memoria. Hoy NO se setea en prod
                            #   a propósito: esa tabla tiene RLS deshabilitada.
 FRONTEND_BASE_URL          # para CORS (default: http://localhost:3000)
+TYPESAFE_API_KEY           # opcional — Jev ordena keywords y recomendaciones del evaluator.
+                           #   Sin ella (o si Jev falla) salen en el orden de Haiku, sin barras.
+                           #   Hay que agregarla al .env del VPS al deployar la 4.21.
 
-AUREA_EXTRACT_MODEL        # opcional — modelo etapa 1 (default: claude-haiku-4-5)
-AUREA_ADAPT_MODEL          # opcional — modelo etapa 2 (default: claude-haiku-4-5)
-AUREA_COVER_MODEL          # opcional — modelo cover letter (default: claude-haiku-4-5)
-AUREA_INTERVIEW_MODEL      # opcional — modelo interview prep (default: claude-haiku-4-5)
-AUREA_IMPROVE_MODEL        # opcional — modelo de /improve (default: claude-haiku-4-5)
+AUREA_EXTRACT_MODEL        # opcional — modelo etapa 1 (default: claude-haiku-5-5)
+AUREA_ADAPT_MODEL          # opcional — modelo etapa 2 (default: claude-haiku-5-5)
+AUREA_COVER_MODEL          # opcional — modelo cover letter (default: claude-haiku-5-5)
+AUREA_INTERVIEW_MODEL      # opcional — modelo interview prep (default: claude-haiku-5-5)
+AUREA_IMPROVE_MODEL        # opcional — modelo de /improve (default: claude-haiku-5-5)
+AUREA_EVALUATE_MODEL       # opcional — modelo del ATS evaluator (default: claude-haiku-5-5)
+AUREA_SCORE_MODEL          # opcional — modelo del scoring de jobs (default: claude-haiku-5-5)
 ```
 
-El mapeo stage → modelo vive en `backend/models.py` (`model_for(stage)`).
+El mapeo stage → modelo vive en `backend/models.py` (`model_for(stage)`); todo lo que llama a
+Claude pasa por ahí. `model_for` fija `max_tokens=16000`: `langchain-anthropic` 1.4 no conoce
+Haiku 5.5 y usaría 4096, poco para un CV en JSON; por encima de ~21k el SDK exige streaming.
 
 ## Estructura de archivos
 
@@ -133,7 +142,10 @@ backend/
                     # (on-demand desde POST /interview, fuera de run_pipeline)
     renderer.py     # Genera PDF del CV adaptado
     logger.py       # Logging compartido del pipeline
-  evaluator.py      # ATS evaluator (producto secundario)
+  evaluator.py      # ATS evaluator (producto secundario); devuelve también target_role
+  prioritizer.py    # prioritize(): Jev puntúa cada keyword/recomendación (0–2), ordena y agrega
+                    # keywords_missing_priority / recommendations_priority (essential ≥1.3,
+                    # important ≥0.95). El CV no va a Jev. Timeout 5 s; si falla, sin prioridades
   extractor.py      # extract_text() — descarta texto invisible (color/tamaño/posición
                     # + caracteres zero-width); usado en /adapt, /evaluate y /session
   jobs.py           # Job model, fetch_jobs(), caché 15 min (job board)
@@ -215,9 +227,11 @@ supabase/
     20260930000003_revoke_credit_functions.sql # REVOKE EXECUTE de increment/decrement_credits a anon/authenticated
 
 tests/
-  conftest.py              # fixture client (TestClient de FastAPI) + fixture autouse que
-                           # fuerza sesiones en memoria — sin eso la suite pega contra la
-                           # Supabase real cuando hay SUPABASE_URL + SUPABASE_KEY en el env
+  conftest.py              # fixture client (TestClient de FastAPI) + fixtures autouse que
+                           # fuerzan sesiones en memoria (sin eso la suite pega contra la
+                           # Supabase real cuando hay SUPABASE_URL + SUPABASE_KEY en el env)
+                           # y borran TYPESAFE_API_KEY (la suite nunca llama a Jev)
+  test_prioritizer.py      # backend/prioritizer.py — umbrales, orden estable, preguntas, fallbacks
   test_adapt_route.py      # POST /adapt y GET /adapt/{run_id}/pdf
   test_adapter_adapter.py  # backend/adapter/adapter.py
   test_adapter_extractor.py
@@ -227,12 +241,14 @@ tests/
   test_auth.py             # get_current_user() dependency + /adapt auth gate
   test_credits.py          # backend/credits.py — todas las funciones
   test_credits_route.py    # GET /credits
+  test_cover_letter.py     # backend/adapter/cover_letter.py — lee el texto aunque venga un bloque de thinking
   test_evaluate.py         # POST /evaluate con session token
   test_interview.py        # backend/adapter/interview.py
   test_interview_route.py  # POST /interview
   test_extractor.py        # backend/extractor.py — filtrado de texto oculto e invisible
   test_jobs.py             # Job board backend
-  test_models.py           # backend/models.py — model_for(stage) y defaults
+  test_models.py           # backend/models.py — model_for(stage), defaults y max_tokens; evaluator y
+                           # scorer usan su etapa; toda salida estructurada usa structured outputs
   test_ranker.py
   test_scorer.py
   test_sessions.py
@@ -254,7 +270,8 @@ tests/
                            # al shell, sin reduced-motion); acento y CTA tornasolados, sin titilar,
                            # y el CTA conserva el gradiente en hover; en la app el visitante ve el
                            # nav del sitio, elegido antes de que responda Supabase; resultados del
-                           # evaluator plegados sin padding abajo (no scrollean a espacio vacío)
+                           # evaluator plegados sin padding abajo (no scrollean a espacio vacío);
+                           # keywords sin rojo y barras de prioridad con leyenda traducida
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -305,8 +322,8 @@ Todas las funciones son **no-op seguros** cuando `_supabase is None` (dev sin cr
 
 ```
 index.html (landing) → CTA o "Try it" de una feature → evaluator.html (anónimo, con el mismo nav
-  del sitio: sube CV, ve score, keywords faltantes y recomendaciones; al costado, sin scroll, el
-  adapter y los jobs)
+  del sitio: sube CV, ve score, keywords faltantes y recomendaciones ordenadas por prioridad, con
+  barras de señal en gris (Jev); al costado, sin scroll, el adapter y los jobs)
 → acción paga (Tailor, Cover, Improve) → modal de signup (magic link o Google)
 → la acción pendiente se guarda (aurea_pending_action) y se ejecuta al volver logueado
 → bono de 5 créditos → resultado (CV adaptado + gaps + cover + PDF) → queda en /history
@@ -382,6 +399,8 @@ uv run uvicorn src.main:app --reload
 # → http://localhost:8000/
 # WinError 10013 al arrancar = el puerto ya está ocupado (suele ser un uvicorn viejo que quedó
 # prendido). Usar otro (--port 8001) o cerrar el que lo tiene.
+# POST /session da 500 con "getaddrinfo failed" = el .env local tiene SUPABASE_KEY y Supabase no
+# responde. Arrancar como prod, sin esa variable: SUPABASE_KEY= uv run uvicorn src.main:app --reload
 
 # Tests
 pytest tests/ -v
@@ -408,9 +427,19 @@ ruff check .
 - **Animaciones de entrada**: van colgadas de `body:has(> .ambient-bg)`. Hasta que shell.js
   inserta el fondo el body está oculto (`style.css`), y una animación que arranque antes corre
   sin verse. Si un elemento ya tiene `animation`, la de entrada la reemplaza: hay que listar las dos.
+- **Color en la app**: el coral (y el tornasol) es de los botones pagos ("Generate Cover Letter",
+  "Tailor your CV"). Lo informativo va en grises y vidrio, para no competir con ellos: por eso la
+  prioridad del evaluator son barras grises (4.21) y no colores. Tampoco cambiar el alto de los
+  paneles del evaluator al agregar algo: medirlo (571 px el de "What to fix" en 1920×945).
 - **Navegación del visitante**: en la app ve el mismo nav que en el sitio, arriba. No cambiarla de
   lugar entre el sitio y la app: en la 4.16 se probó un sidebar con candados y se descartó porque
   "cambia todo el manejo de la página". Antes de decidir navegación, probarla andando.
+- **Llamadas a Claude**: el modelo sale siempre de `model_for(stage)`. La salida estructurada va con
+  `with_structured_output(X, method="json_schema")`: con el default (tool forzada) la respuesta no
+  queda atada al schema; Haiku 5.5 devolvía objetos anidados como string y Haiku 4.5 omitía `gaps`
+  sin que fallara nada. Una respuesta de texto se lee con `.text`, no `.content`: Haiku 5.5 piensa
+  por defecto y `.content` es una lista de bloques. Los tests mockean el modelo, así que un cambio de
+  modelo se verifica con una corrida real de cada etapa (centavos), como en la 4.20.
 - **Patch location en tests**: siempre parchear en el lugar de importación, no en la definición:
   - ✅ `patch("src.routes.adapt.ensure_user")`
   - ❌ `patch("backend.credits.ensure_user")`
@@ -480,6 +509,8 @@ ruff check .
 | 4.17 | Actualizar CLAUDE.md (4.15–4.16) + regla: CLAUDE.md se actualiza al cerrar cada tarea. Rescata los docs de SSH, sudoers y "repo público" que habían quedado fuera del PR #50 | ✅ commiteada en `develop`; sube a GitHub con el PR de la 4.18 |
 | 4.18 | Evaluator: con los resultados plegados no se puede scrollear a espacio vacío. Los 64px de padding de `.app-main` llevaban la página a 993px aunque el último panel termine en 929; en una ventana de 945px (1080p con las barras de Chrome) el scroll no mostraba nada. El padding vuelve al desplegar algo; en una columna no cambia | 🔄 PR abierto |
 | 4.19 | README reescrito: el anterior describía la app de abril (evaluator + job board en Render). Ahora cubre features y créditos, pipeline, seguridad, stack, API, setup local y deploy al VPS. Se borró `render.yaml`, que ya no se usaba. Sale de la rama de la 4.18: mergear el #68 primero | 🔄 PR abierto |
+| 4.20 | Haiku 4.5 → Haiku 5.5 en todas las etapas (evaluator y scorer pasan por `model_for`). Arreglos que pidió el cambio: `max_tokens` explícito, la carta se lee con `.text`, y toda salida estructurada usa structured outputs: el adapter fallaba siempre con Haiku 5.5 y con Haiku 4.5 devolvía `gaps` vacío. Verificado con una corrida real de las 7 etapas. Sale de la rama de la 4.19: mergear #68 y #69 primero | 🔄 PR abierto |
+| 4.21 | "What to fix" ordenado de imprescindible a opcional: Jev puntúa cada keyword y recomendación, y el evaluator lo muestra con barras de señal en gris (sin color, mismo alto de panel; el rojo se fue). El usuario descartó 8 variantes en el companion antes de elegir. Umbrales calibrados con 3 CVs reales. Spec y plan en `docs/superpowers/`. Sale de la rama de la 4.20: mergear #68 → #69 → #71 primero; al deployar, `TYPESAFE_API_KEY` en el `.env` del VPS | 🔄 PR abierto |
 
 **Último release**: `main` al día con `develop` hasta la 4.16 (PR #67, deployado el 2026-10-15).
 Antes: PR #64 (4.14, 2026-10-14), PR #62 (4.13), PR #60 (4.12, 2026-10-13) y PR #58 (4.11).

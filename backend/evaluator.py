@@ -3,9 +3,10 @@ import pathlib
 from typing import List
 
 from dotenv import load_dotenv
-from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
+
+from backend.models import model_for
 
 load_dotenv()
 
@@ -16,6 +17,9 @@ logger = logging.getLogger(__name__)
 class ResumeEvaluation(BaseModel):
     # cada campo tiene una descripcion para que Claude entienda que poner
     candidate_name: str = Field(description="Full name of the candidate")
+    target_role: str = Field(
+        description="The job title this resume targets, inferred from the resume, e.g. 'Data Analyst'"
+    )
     overall_score: int = Field(description="ATS compatibility score from 0 to 100")
     approved: bool = Field(description="True if score is 80 or above")
     formatting_issues: List[str] = Field(
@@ -38,10 +42,10 @@ class ResumeEvaluation(BaseModel):
 
 
 # creamos el modelo de Claude con LangChain
-model = ChatAnthropic(model="claude-haiku-4-5")
+model = model_for("evaluate")
 
 # forzamos estructura de ResumeEvaluation
-structured_model = model.with_structured_output(ResumeEvaluation)
+structured_model = model.with_structured_output(ResumeEvaluation, method="json_schema")
 
 # leemos el skill como prompt (path absoluto para evitar problemas con el cwd en producción)
 _prompt_path = pathlib.Path(__file__).parent / "prompts" / "ats_skill.md"
@@ -64,7 +68,7 @@ EVALUATION CRITERIA
 {ats_skill}
 
 RESPONSE FORMAT
-Return a structured evaluation with: candidate name, overall score (0-100),
+Return a structured evaluation with: candidate name, target role, overall score (0-100),
 approved (true if score >= 80), formatting issues, keywords found,
 keywords missing, recommendations, strengths, weaknesses, and a brief summary.
 Strengths and weaknesses are about the content (impact, clarity, relevance),
