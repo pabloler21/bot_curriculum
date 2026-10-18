@@ -22,6 +22,7 @@ dependencies = [
     "reportlab>=4.0",
     "supabase>=2.0",
     "pdfplumber>=0.11.10",
+    "typesafe-sdk>=0.7.5",
 ]
 
 [dependency-groups]

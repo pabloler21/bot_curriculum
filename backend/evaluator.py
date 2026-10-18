@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 class ResumeEvaluation(BaseModel):
     # cada campo tiene una descripcion para que Claude entienda que poner
     candidate_name: str = Field(description="Full name of the candidate")
+    target_role: str = Field(
+        description="The job title this resume targets, inferred from the resume, e.g. 'Data Analyst'"
+    )
     overall_score: int = Field(description="ATS compatibility score from 0 to 100")
     approved: bool = Field(description="True if score is 80 or above")
     formatting_issues: List[str] = Field(
@@ -65,7 +68,7 @@ EVALUATION CRITERIA
 {ats_skill}
 
 RESPONSE FORMAT
-Return a structured evaluation with: candidate name, overall score (0-100),
+Return a structured evaluation with: candidate name, target role, overall score (0-100),
 approved (true if score >= 80), formatting issues, keywords found,
 keywords missing, recommendations, strengths, weaknesses, and a brief summary.
 Strengths and weaknesses are about the content (impact, clarity, relevance),

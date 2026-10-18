@@ -10,6 +10,7 @@ from backend.auth import OptionalUser
 from backend.evaluator import evaluate_cv
 from backend.extractor import extract_text
 from backend.jobs import _cache as jobs_cache
+from backend.prioritizer import prioritize
 from backend.user_cv import get_cv, save_evaluation
 from src.routes.cv_input import read_session
 
@@ -81,6 +82,7 @@ async def evaluate_resume(
                     )
 
         result = evaluate_cv(cv_text, job_context=job_context)
+        result = await prioritize(result, job_context)
         logger.info("[evaluate] Evaluation complete")
 
         if user_id:

@@ -19,6 +19,12 @@ def _in_memory_sessions(monkeypatch):
     sessions.cv_sessions.clear()
 
 
+@pytest.fixture(autouse=True)
+def _no_real_jev(monkeypatch):
+    """La suite nunca llama a Jev: sin la key, prioritize() no hace nada. El .env puede tenerla."""
+    monkeypatch.delenv("TYPESAFE_API_KEY", raising=False)
+
+
 @pytest.fixture
 def client():
     with TestClient(app) as c:

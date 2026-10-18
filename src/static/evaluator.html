@@ -70,10 +70,16 @@
               <button type="button" id="ev-apply" class="btn-primary btn-sm"><span data-i18n="ev.apply">Apply to my CV</span> · 1🪙</button>
             </div>
             <div id="ev-kw-block">
-              <p class="ev-label"><span data-i18n="ev.missing_kws">Missing keywords</span> · <span id="ev-kw-count"></span></p>
+              <p id="ev-kw-label" class="ev-label"><span data-i18n="ev.missing_kws">Missing keywords</span> · <span id="ev-kw-count"></span></p>
               <div id="ev-keywords" class="tag-cloud"></div>
             </div>
-            <p class="ev-label" data-i18n="ev.recommendations">Recommendations</p>
+            <p id="ev-recs-label" class="ev-label"><span data-i18n="ev.recommendations">Recommendations</span></p>
+            <!-- Leyenda de las barras: evaluator.js la pone en el label de keywords, o en el de recomendaciones si no hay keywords -->
+            <span id="ev-legend" class="ev-legend hidden">
+              <span><span class="bars l3" aria-hidden="true"><b></b><b></b><b></b></span><span data-i18n="ev.prio_essential">Essential</span></span>
+              <span><span class="bars l2" aria-hidden="true"><b></b><b></b><b></b></span><span data-i18n="ev.prio_important">Important</span></span>
+              <span><span class="bars l1" aria-hidden="true"><b></b><b></b><b></b></span><span data-i18n="ev.prio_optional">Nice to have</span></span>
+            </span>
             <ol id="ev-recs" class="recommendations-list ev-recs"></ol>
             <button type="button" id="ev-recs-more" class="ev-more hidden" aria-controls="ev-recs" aria-expanded="false"></button>
           </div>
