@@ -295,3 +295,8 @@ def test_evaluator_draws_priority_bars_with_a_legend():
     html = _evaluator_html()
     for key in ("ev.prio_essential", "ev.prio_important", "ev.prio_optional"):
         assert f'data-i18n="{key}"' in html
+
+
+def test_evaluator_priority_bars_are_announced_to_screen_readers():
+    # Un aria-label en un <span> genérico lo ignoran muchos lectores: sin role="img" la prioridad no se oye.
+    assert 'class="bars l${bars}" role="img"' in (STATIC / "evaluator.js").read_text(encoding="utf-8")
