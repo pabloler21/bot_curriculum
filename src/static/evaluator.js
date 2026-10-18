@@ -102,7 +102,7 @@ function prioLevel(level) { return PRIO[level] ? level : 'optional'; }
 function barsHtml(level) {
   const lv = prioLevel(level);
   const [bars, name] = PRIO[lv];
-  return `<span class="bars l${bars}" aria-label="${esc(t(`ev.prio_${lv}`, name))}"><b></b><b></b><b></b></span>`;
+  return `<span class="bars l${bars}" role="img" aria-label="${esc(t(`ev.prio_${lv}`, name))}"><b></b><b></b><b></b></span>`;
 }
 
 function renderPriorities(ev) {
