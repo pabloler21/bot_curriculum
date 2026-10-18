@@ -1,10 +1,13 @@
 # tests/test_prioritizer.py
 """Tests for backend/prioritizer.py — prioridad de keywords y recomendaciones con Jev."""
+import asyncio
+import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from typesafe_sdk import TypeSafeAPIConnectionError, TypeSafeAPITimeoutError, TypeSafeError
 
+from backend import prioritizer
 from backend.prioritizer import (
     KEYWORD_LEVELS,
     RECOMMENDATION_LEVELS,
@@ -95,3 +98,40 @@ async def test_prioritize_treats_a_missing_answer_as_a_failure(monkeypatch):
     monkeypatch.setenv("TYPESAFE_API_KEY", "test")
     with patch(ASK, new_callable=AsyncMock, return_value={"kw_0": 1.0}):
         assert await prioritize(EV) == EV
+
+
+class _FakeClient:
+    """Reemplaza a AsyncTypeSafeClient: guarda cómo se construyó y tarda `delay` en responder."""
+    kwargs: dict = {}
+    delay = 0.0
+
+    def __init__(self, **kwargs):
+        _FakeClient.kwargs = kwargs
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        return False
+
+    async def system_one(self, state, questions):
+        await asyncio.sleep(self.delay)
+        raise TypeSafeError("fake")
+
+
+async def test_prioritize_gives_up_on_a_hung_jev_within_the_deadline(monkeypatch):
+    monkeypatch.setenv("TYPESAFE_API_KEY", "test")
+    monkeypatch.setattr(prioritizer, "_TIMEOUT", 0.05)
+    monkeypatch.setattr(_FakeClient, "delay", 3.0)
+    monkeypatch.setattr(prioritizer, "AsyncTypeSafeClient", _FakeClient)
+    started = time.monotonic()
+    assert await prioritize(EV) == EV
+    assert time.monotonic() - started < 1.0
+
+
+async def test_prioritize_does_not_let_the_sdk_retry(monkeypatch):
+    # Los reintentos por defecto del SDK (2, con backoff) estiraban el tope de 5 s a ~16 s.
+    monkeypatch.setenv("TYPESAFE_API_KEY", "test")
+    monkeypatch.setattr(prioritizer, "AsyncTypeSafeClient", _FakeClient)
+    await prioritize(EV)
+    assert _FakeClient.kwargs["retry"].max_retries == 0
