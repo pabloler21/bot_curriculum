@@ -2,7 +2,6 @@ import io
 from datetime import date, datetime, timezone
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
 
 from backend.jobs import Job
@@ -229,7 +228,9 @@ def test_evaluate_passes_the_job_context_to_prioritize():
 
 
 # ── Task 4.22: el análisis sale en el idioma de la página ─────────────────────
-from backend.evaluator import EvaluationText, evaluate_cv, translate_evaluation
+from types import SimpleNamespace
+
+from backend.evaluator import _translation_schema, evaluate_cv, translate_evaluation
 
 
 def _fake_evaluation(**overrides) -> ResumeEvaluation:
@@ -278,18 +279,22 @@ _SAVED = {
     "recommendations_priority": ["important"], "formatting_issues": ["Odd date"],
     "language": "en", "evaluated_at": "2026-10-20T10:00:00+00:00",
 }
-_SPANISH = EvaluationText(
-    summary="bien", keywords_found=[], keywords_missing=["Docker"], recommendations=["Agregá métricas"],
-    strengths=["Estructura clara"], weaknesses=["Sin métricas"], formatting_issues=["Fecha rara"],
+# Un campo por texto, en orden: resumen, keywords faltantes, recomendaciones, fortalezas, debilidades, formato.
+_SPANISH = SimpleNamespace(
+    t0="bien", t1="Docker", t2="Agregá métricas", t3="Estructura clara", t4="Sin métricas", t5="Fecha rara",
 )
 
 
 def test_translate_evaluation_translates_the_text_and_keeps_the_rest():
-    with _patch("backend.evaluator.translate_chain") as chain:
-        chain.invoke.return_value = _SPANISH
+    with _patch("backend.evaluator._translator") as translator:
+        translator.return_value.invoke.return_value = _SPANISH
         out = translate_evaluation(_SAVED, "es")
-    assert "voseo" in chain.invoke.call_args.args[0]["output_language"]
-    assert out["recommendations"] == ["Agregá métricas"] and out["summary"] == "bien"
+    translator.assert_called_once_with(6)
+    sent = translator.return_value.invoke.call_args.args[0]
+    assert "voseo" in sent["output_language"]
+    assert '"t2": "Add metrics"' in sent["texts"]
+    assert out["summary"] == "bien" and out["recommendations"] == ["Agregá métricas"]
+    assert out["strengths"] == ["Estructura clara"] and out["formatting_issues"] == ["Fecha rara"]
     # Lo que no es texto no cambia: mismo puntaje, misma prioridad, misma evaluación.
     assert out["overall_score"] == 72
     assert out["recommendations_priority"] == ["important"]
@@ -297,12 +302,11 @@ def test_translate_evaluation_translates_the_text_and_keeps_the_rest():
     assert out["language"] == "es"
 
 
-def test_translate_evaluation_rejects_a_list_that_changed_length():
-    # Las prioridades van en listas paralelas: una traducción con otro largo las desalinearía.
-    with _patch("backend.evaluator.translate_chain") as chain:
-        chain.invoke.return_value = _SPANISH.model_copy(update={"recommendations": ["Uno", "Dos"]})
-        with pytest.raises(ValueError):
-            translate_evaluation(_SAVED, "es")
+def test_each_text_is_its_own_required_field_of_the_translation():
+    # Con listas, Haiku a veces juntaba o partía recomendaciones y las prioridades (listas paralelas)
+    # quedaban desalineadas: con un campo obligatorio por texto no puede saltear ni agregar ninguno.
+    schema = _translation_schema(3).model_json_schema()
+    assert schema["required"] == ["t0", "t1", "t2"]
 
 
 def test_translate_route_returns_the_translated_evaluation(client):

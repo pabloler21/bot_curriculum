@@ -49,13 +49,20 @@ def test_scorer_uses_its_stage():
     ("backend.adapter.improver", "_chain"),
     ("backend.adapter.interview", "_structured_model"),
     ("backend.evaluator", "structured_model"),
-    ("backend.evaluator", "translate_structured_model"),
     ("backend.scorer", "_structured_model"),
 ])
 def test_structured_stages_use_structured_outputs(module, attr):
     # Con la tool forzada, Haiku 5.5 devolvía objetos anidados como string
     # (y Haiku 4.5 omitía campos): output_config.format restringe al schema.
     runnable = getattr(importlib.import_module(module), attr)
+    kwargs = next(step.kwargs for step in runnable.steps if hasattr(step, "kwargs"))
+    assert kwargs["output_config"]["format"]["type"] == "json_schema"
+
+
+def test_translator_uses_structured_outputs():
+    # Se arma por evaluación (un campo por texto), así que no es un atributo del módulo.
+    from backend import evaluator
+    runnable = evaluator._translator(3)
     kwargs = next(step.kwargs for step in runnable.steps if hasattr(step, "kwargs"))
     assert kwargs["output_config"]["format"]["type"] == "json_schema"
 
