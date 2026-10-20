@@ -1,13 +1,14 @@
 import logging
-from typing import Optional
+from typing import Annotated, Literal, Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from backend.auth import OptionalUser
-from backend.evaluator import evaluate_cv
+from backend.evaluator import evaluate_cv, translate_evaluation
 from backend.extractor import extract_text
 from backend.jobs import _cache as jobs_cache
 from backend.prioritizer import prioritize
@@ -27,6 +28,7 @@ async def evaluate_resume(
     user_id: OptionalUser,
     file: Optional[UploadFile] = File(None),
     job_id: Optional[str] = Form(None),
+    output_language: str = Form("en", pattern="^(es|en)$"),
 ):
     try:
         file_bytes = await file.read() if file is not None else b""
@@ -81,7 +83,7 @@ async def evaluate_resume(
                         job_id,
                     )
 
-        result = evaluate_cv(cv_text, job_context=job_context)
+        result = evaluate_cv(cv_text, job_context=job_context, output_language=output_language)
         result = await prioritize(result, job_context)
         logger.info("[evaluate] Evaluation complete")
 
@@ -101,3 +103,52 @@ async def evaluate_resume(
         raise HTTPException(
             status_code=500, detail=f"Internal server error: {str(e)}"
         )
+
+
+# Una evaluación como la devuelve /evaluate, con topes: el endpoint es anónimo y llama al modelo,
+# no puede servir para traducir textos arbitrarios.
+_Text = Annotated[str, Field(max_length=600)]
+_Items = Annotated[list[_Text], Field(max_length=60)]
+_Levels = Optional[Annotated[list[Literal["essential", "important", "optional"]], Field(max_length=60)]]
+
+
+class SavedEvaluation(BaseModel):
+    candidate_name: str = Field("", max_length=200)
+    target_role: str = Field("", max_length=200)
+    overall_score: Optional[int] = Field(None, ge=0, le=100)
+    approved: bool = False
+    summary: str = Field("", max_length=3000)
+    formatting_issues: _Items = []
+    keywords_found: _Items = []
+    keywords_missing: _Items = []
+    recommendations: _Items = []
+    strengths: _Items = []
+    weaknesses: _Items = []
+    keywords_missing_priority: _Levels = None
+    recommendations_priority: _Levels = None
+    language: Optional[str] = Field(None, max_length=8)
+    evaluated_at: Optional[str] = Field(None, max_length=64)
+
+
+class TranslateRequest(BaseModel):
+    evaluation: SavedEvaluation
+    output_language: Literal["es", "en"]
+
+
+@router.post("/evaluate/translate")
+@limiter.limit("10/minute")
+def translate_saved_evaluation(request: Request, payload: TranslateRequest, user_id: OptionalUser):
+    """Pasa una evaluación ya hecha al idioma de la página: mismo puntaje, mismas prioridades."""
+    try:
+        result = translate_evaluation(payload.evaluation.model_dump(), payload.output_language)
+    except Exception as e:
+        logger.exception("[evaluate] Translation failed: %s", e)
+        raise HTTPException(status_code=502, detail="Could not translate the evaluation")
+
+    if user_id:
+        try:
+            save_evaluation(user_id, result)
+        except Exception as exc:  # no romper la respuesta por un fallo de persistencia
+            logger.warning("[evaluate] Could not save translated evaluation: %s", exc)
+
+    return result

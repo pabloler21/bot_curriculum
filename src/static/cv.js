@@ -32,7 +32,7 @@ async function upload(file) {
     const res = await aurea.authFetch('/cv', { method: 'PUT', body: fd });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(aureaRender.detailText(data.detail, `${t('err.server', 'Server error')} (${res.status})`));
-    try { localStorage.removeItem('aurea_last_evaluation'); } catch (_) { /* sin storage */ }  // evaluación del CV anterior
+    try { ['aurea_last_evaluation', 'aurea_last_evaluation_alt'].forEach((k) => localStorage.removeItem(k)); } catch (_) { /* sin storage */ }  // evaluación del CV anterior
     show($('cvp-ok'));
     await load();
   } catch (e) {

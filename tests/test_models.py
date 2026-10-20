@@ -59,6 +59,14 @@ def test_structured_stages_use_structured_outputs(module, attr):
     assert kwargs["output_config"]["format"]["type"] == "json_schema"
 
 
+def test_translator_uses_structured_outputs():
+    # Se arma por evaluación (un campo por texto), así que no es un atributo del módulo.
+    from backend import evaluator
+    runnable = evaluator._translator(3)
+    kwargs = next(step.kwargs for step in runnable.steps if hasattr(step, "kwargs"))
+    assert kwargs["output_config"]["format"]["type"] == "json_schema"
+
+
 def test_unknown_stage_raises():
     with pytest.raises(KeyError):
         models.model_for("nope")

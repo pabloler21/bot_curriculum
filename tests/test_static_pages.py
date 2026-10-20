@@ -182,17 +182,68 @@ def test_evaluator_adapter_and_jobs_sit_beside_the_improvements():
     assert 'id="ev-job"' in side.group(1) and 'id="ev-jobs"' in side.group(1)
 
 
-def test_evaluator_strengths_and_weaknesses_start_folded():
-    """Lo principal son las mejoras: fortalezas y debilidades quedan a un clic, no empujan todo hacia abajo."""
-    folds = re.findall(r"<details\b(?![^>]*\bopen\b)[^>]*>(.*?)</details>", _evaluator_html(), re.S)
-    assert any('id="ev-strengths"' in f for f in folds)
-    assert any('id="ev-weaknesses"' in f for f in folds)
+def test_evaluator_strengths_and_weaknesses_are_tabs():
+    """4.22: fortalezas y debilidades son pestañas del panel de mejoras; desplegarlas estiraba la página."""
+    html = _evaluator_html()
+    assert "<details" not in html
+    assert 'role="tablist"' in html and html.count('role="tab"') == 3
+    order = ['id="ev-pane-fix"', 'id="ev-recs"', 'id="ev-pane-strengths"', 'id="ev-strengths"',
+             'id="ev-pane-weak"', 'id="ev-weaknesses"', 'id="ev-formatting"']
+    assert [html.index(x) for x in order] == sorted(html.index(x) for x in order)
 
 
-def test_evaluator_results_end_at_the_last_panel_while_folded():
-    """Todo plegado, los 64px de padding de abajo de .app-main eran scroll vacío: no había nada debajo."""
-    rule = _app_css_rule('.app-main:has(> .ev-results:not(.hidden)):not(:has([open], [aria-expanded="true"]))')
-    assert "padding-bottom: 0" in rule
+def test_evaluator_tabs_work_with_the_keyboard():
+    js = (STATIC / "evaluator.js").read_text(encoding="utf-8")
+    assert "ArrowRight" in js and "ArrowLeft" in js
+
+
+def test_evaluator_tabs_are_as_big_as_the_panel_titles():
+    """Las pestañas reemplazan al título "What to fix": miden como "Tailor it to a job" (24 px), no 14."""
+    assert "font-size: 1.5rem" in _app_css_rule('.ev-tabs [role="tab"]')
+
+
+def test_evaluator_panel_takes_the_height_of_the_adapter_column():
+    """En escritorio no hay scroll: el adapter y los jobs fijan el alto, y el panel de mejoras scrollea adentro."""
+    assert "contain: size" in _app_css_rule(".ev-grid > .ev-fix")
+    assert "overflow-y: auto" in _app_css_rule(".ev-pane")
+
+
+def test_evaluator_spacing_is_the_same_everywhere():
+    """La oferta, los paneles y el borde de abajo quedan a 20 px, como entre paneles (arriba eran 28)."""
+    rule = _app_css_rule('body[data-page="evaluator"] .app-main')
+    assert "padding-top: 20px" in rule and "padding-bottom: 20px" in rule
+    assert "gap: 20px" in _app_css_rule(".ev-grid")
+
+
+def test_evaluator_apply_sits_under_the_recommendations():
+    """Al lado de pestañas de 24 px no entraba: "Apply to my CV" va al pie de "What to fix", con "Show all"."""
+    foot = re.search(r'<div id="ev-fix-foot"[^>]*>(.*?)</div>', _evaluator_html(), re.S)
+    assert foot and 'id="ev-apply"' in foot.group(1) and 'id="ev-recs-more"' in foot.group(1)
+
+
+def test_evaluator_shows_four_recommendations_before_show_all():
+    """Con texto de 16 px entran 4 sin scroll en 1920×945; el resto queda detrás de "Show all"."""
+    assert "const RECS_SHOWN = 4;" in (STATIC / "evaluator.js").read_text(encoding="utf-8")
+
+
+def test_evaluator_keywords_are_written_as_they_come():
+    """En mayúsculas de 11 px no se leían: van a 13 px y como las escribe el evaluator."""
+    rule = _app_css_rule(".ev-kw")
+    assert "text-transform: none" in rule and "font-size: 13px" in rule
+
+
+def test_evaluator_asks_for_the_analysis_in_the_page_language():
+    js = (STATIC / "evaluator.js").read_text(encoding="utf-8")
+    evaluate = re.search(r"async function evaluate\(.*?\n\}", js, re.S).group(0)
+    assert "output_language" in evaluate and "aurea.lang" in evaluate
+
+
+def test_evaluator_translates_an_analysis_saved_in_another_language():
+    assert "/evaluate/translate" in (STATIC / "evaluator.js").read_text(encoding="utf-8")
+
+
+def test_sign_out_forgets_the_translated_analysis_too():
+    assert "'aurea_last_evaluation_alt'" in (STATIC / "shell.js").read_text(encoding="utf-8")
 
 
 def test_evaluator_missing_keywords_lead_the_improvements():
@@ -300,3 +351,9 @@ def test_evaluator_draws_priority_bars_with_a_legend():
 def test_evaluator_priority_bars_are_announced_to_screen_readers():
     # Un aria-label en un <span> genérico lo ignoran muchos lectores: sin role="img" la prioridad no se oye.
     assert 'class="bars l${bars}" role="img"' in (STATIC / "evaluator.js").read_text(encoding="utf-8")
+
+
+def test_evaluator_job_cards_do_not_grow_with_the_match_score():
+    """Con un CV subido los jobs vienen con "% match": una línea más por tarjeta llevaba la página a 961 px
+    en 945. En el evaluator no se muestra (está en la página de jobs) y las tarjetas no cambian de alto."""
+    assert "display: none" in _app_css_rule(".ev-side .job-mini-score")

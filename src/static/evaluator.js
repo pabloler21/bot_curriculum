@@ -5,6 +5,7 @@
 const SESSION_KEY = 'cv_session_token';
 const CLAIMED_KEY = 'aurea_claimed_token';
 const EVAL_KEY = 'aurea_last_evaluation';
+const ALT_KEY = 'aurea_last_evaluation_alt';  // la misma evaluación en el otro idioma: volver no pide otra traducción
 const RESULT_KEY = 'aurea_last_result';
 const PENDING_JD_KEY = 'aurea_pending_jd';
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -29,9 +30,11 @@ async function errorDetail(res) {
 }
 
 // ── Estados 1 y 2 ─────────────────────────────────────────────────────────
-function setIntakeBusy(busy) {
+function setIntakeBusy(busy, translating = false) {
   $('ev-drop-idle').classList.toggle('hidden', busy);
   $('ev-drop-busy').classList.toggle('hidden', !busy);
+  $('ev-busy-title').textContent = translating ? t('ev.translating', 'Translating your analysis…') : t('ev.analyzing', 'Analyzing your CV…');
+  $('ev-busy-hint').textContent = translating ? t('ev.translating_hint', 'This takes about 15 seconds.') : t('ev.analyzing_hint', 'This takes about 20 seconds.');
 }
 
 function showIntake() {
@@ -75,11 +78,46 @@ async function uploadAndEvaluate(file) {
 }
 
 async function evaluate(headers) {
-  const res = await aurea.authFetch('/evaluate', { method: 'POST', headers, body: new FormData() });
+  const fd = new FormData();
+  fd.append('output_language', aurea.lang);  // el análisis sale en el idioma de la página
+  const res = await aurea.authFetch('/evaluate', { method: 'POST', headers, body: fd });
   if (!res.ok) throw new Error(await errorDetail(res));
   evaluation = await res.json();
-  try { localStorage.setItem(EVAL_KEY, JSON.stringify(evaluation)); } catch (_) {}
+  try {
+    localStorage.setItem(EVAL_KEY, JSON.stringify(evaluation));
+    localStorage.removeItem(ALT_KEY);
+  } catch (_) {}
   renderResults(evaluation);
+}
+
+// La evaluación guardada puede estar en otro idioma (se cambió EN/ES, o es de antes de la 4.22): se traduce
+// en vez de re-evaluar, que podía cambiar el puntaje. La otra versión queda guardada para volver sin llamar.
+async function inPageLanguage(ev) {
+  if (ev.language === aurea.lang) return ev;
+  let alt = null;
+  try { alt = JSON.parse(localStorage.getItem(ALT_KEY)); } catch (_) {}
+  let out = alt && alt.language === aurea.lang && alt.evaluated_at && alt.evaluated_at === ev.evaluated_at ? alt : null;
+  if (!out) {
+    setIntakeBusy(true, true);
+    try {
+      const res = await aurea.authFetch('/evaluate/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ evaluation: ev, output_language: aurea.lang }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      out = await res.json();
+    } catch (_) {
+      return ev;  // sin traducción se ve en el otro idioma, pero se ve
+    } finally {
+      setIntakeBusy(false);
+    }
+  }
+  try {
+    localStorage.setItem(EVAL_KEY, JSON.stringify(out));
+    localStorage.setItem(ALT_KEY, JSON.stringify(ev));
+  } catch (_) {}
+  return out;
 }
 
 // ── Estado 3 ──────────────────────────────────────────────────────────────
@@ -87,7 +125,10 @@ function initials(name) {
   return (name || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('');
 }
 
-function listHtml(items) { return items.map((i) => `<li>${esc(i)}</li>`).join(''); }
+// Fortalezas y debilidades: filas con un ícono gris, como las recomendaciones numeradas.
+function rowsHtml(items, icon) {
+  return items.map((i) => `<li><span class="ev-ico" aria-hidden="true">${icon}</span><span>${esc(i)}</span></li>`).join('');
+}
 
 // Prioridad de Jev: barras de señal en gris (sin color: el color es de los botones pagos).
 const PRIO = { essential: [3, 'Essential'], important: [2, 'Important'], optional: [1, 'Nice to have'] };
@@ -133,20 +174,62 @@ function openSummary(open) {
   btn.setAttribute('aria-expanded', String(open));
 }
 
-const RECS_SHOWN = 5;  // el resto queda detrás de "Show all"
+const RECS_SHOWN = 4;  // con texto de 16 px entran 4 sin scroll en 1920×945; el resto, detrás de "Show all"
+let recsShown = RECS_SHOWN;
 
 function showAllRecs(all) {
   const items = [...$('ev-recs').children];
-  items.forEach((li, i) => li.classList.toggle('hidden', !all && i >= RECS_SHOWN));
+  items.forEach((li, i) => li.classList.toggle('hidden', !all && i >= recsShown));
   const btn = $('ev-recs-more');
-  btn.classList.toggle('hidden', items.length <= RECS_SHOWN);
+  btn.classList.toggle('hidden', items.length <= recsShown);
   btn.textContent = all ? t('ev.recs_less', 'Show fewer') : `${t('ev.recs_all', 'Show all recommendations')} (${items.length})`;
   btn.setAttribute('aria-expanded', String(all));
+  // En escritorio se despliegan dentro de la pestaña, debajo de lo visible: sin bajar, no se notaba el cambio.
+  // Se mueve solo la pestaña (scrollIntoView también movería la página si tiene scroll).
+  const pane = $('ev-pane-fix');
+  if (all && getComputedStyle(pane).overflowY === 'auto' && items[recsShown]) {
+    pane.scrollTop += items[recsShown].getBoundingClientRect().top - pane.getBoundingClientRect().top;
+  }
 }
 
-function fillFold(id, items) {
-  $(id).innerHTML = listHtml(items);
-  $(`${id}-count`).textContent = items.length;
+// En escritorio la pestaña tiene alto fijo (el de la columna del adapter): se muestran las recomendaciones
+// que entran sin scroll, hasta RECS_SHOWN, porque su largo cambia con el CV y el idioma. Se recalcula
+// cuando cambia el alto (cargan los jobs, cambia la ventana); con "Show all" abierto no se toca.
+function fitRecs() {
+  const pane = $('ev-pane-fix');
+  if (pane.hidden || getComputedStyle(pane).overflowY !== 'auto' || $('ev-recs-more').getAttribute('aria-expanded') === 'true') return;
+  recsShown = RECS_SHOWN;
+  showAllRecs(false);
+  while (recsShown > 1 && pane.scrollHeight > pane.clientHeight) {
+    recsShown -= 1;
+    showAllRecs(false);
+  }
+}
+
+function renderStrengthsAndWeaknesses(ev) {
+  const strengths = ev.strengths || [];
+  const weaknesses = ev.weaknesses || [];
+  const formatting = ev.formatting_issues || [];
+  $('ev-strengths').innerHTML = rowsHtml(strengths, '✓');
+  $('ev-weaknesses').innerHTML = rowsHtml(weaknesses, '!');
+  $('ev-formatting').innerHTML = rowsHtml(formatting, '!');
+  $('ev-formatting-label').classList.toggle('hidden', !formatting.length);
+  $('ev-strengths-count').textContent = strengths.length;
+  $('ev-weak-count').textContent = weaknesses.length + formatting.length;
+}
+
+// ── Pestañas: What to fix / Strengths / Weaknesses ──
+const TABS = [...document.querySelectorAll('.ev-tabs [role="tab"]')];
+
+function selectTab(tab, focus) {
+  TABS.forEach((x) => {
+    const on = x === tab;
+    x.setAttribute('aria-selected', String(on));
+    x.tabIndex = on ? 0 : -1;
+    $(x.getAttribute('aria-controls')).hidden = !on;
+  });
+  $('ev-fix-foot').hidden = tab.id !== 'ev-tab-fix';  // "Show all" y "Apply" son de las recomendaciones
+  if (focus) tab.focus();
 }
 
 function renderResults(ev) {
@@ -154,8 +237,8 @@ function renderResults(ev) {
   $('ev-name').textContent = ev.candidate_name || '';
   $('ev-score').textContent = ev.overall_score ?? '–';
   $('ev-summary').textContent = ev.summary || '';
-  fillFold('ev-strengths', ev.strengths || []);
-  fillFold('ev-weaknesses', [...(ev.weaknesses || []), ...(ev.formatting_issues || [])]);
+  renderStrengthsAndWeaknesses(ev);
+  selectTab(TABS[0]);
   renderPriorities(ev);
   showAllRecs(false);
   $('ev-apply').disabled = !(ev.recommendations || []).length;
@@ -164,6 +247,7 @@ function renderResults(ev) {
   openSummary(false);
   const sum = $('ev-summary');  // se mide ya visible: si entra en 2 líneas, no hace falta "Read more"
   $('ev-summary-more').classList.toggle('hidden', sum.scrollHeight <= sum.clientHeight);
+  fitRecs();
   loadJobs();
 }
 
@@ -251,7 +335,7 @@ async function improve(recommendations) {
     });
     const data = await paidJson(res);
     if (data) {
-      localStorage.removeItem(EVAL_KEY);  // /improve cambió el CV: la evaluación guardada ya es del CV viejo
+      [EVAL_KEY, ALT_KEY].forEach((k) => localStorage.removeItem(k));  // /improve cambió el CV: la evaluación ya es del viejo
       goToResult(data, 'improve', '');
       return;
     }  // navegando: dejar las acciones deshabilitadas
@@ -279,6 +363,15 @@ $('ev-file').addEventListener('change', () => { uploadAndEvaluate($('ev-file').f
 $('ev-new').addEventListener('click', showIntake);
 $('ev-summary-more').addEventListener('click', (e) => openSummary(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
 $('ev-recs-more').addEventListener('click', (e) => showAllRecs(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
+new ResizeObserver(() => fitRecs()).observe($('ev-pane-fix'));
+TABS.forEach((tab) => tab.addEventListener('click', () => selectTab(tab)));
+document.querySelector('.ev-tabs').addEventListener('keydown', (e) => {
+  const i = TABS.indexOf(document.activeElement);
+  const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: TABS.length - 1 }[e.key];
+  if (i < 0 || next === undefined) return;
+  e.preventDefault();
+  selectTab(TABS[(next + TABS.length) % TABS.length], true);
+});
 $('ev-apply').addEventListener('click', () => runAction('improve', { recommendations: ((evaluation && evaluation.recommendations) || []).slice(0, 20) }));
 $('ev-cover').addEventListener('click', () => runAction('cover', { job_input: $('ev-job').value.trim() }));
 $('ev-tailor').addEventListener('click', () => runAction('tailor', { job_input: $('ev-job').value.trim() }));
@@ -308,6 +401,7 @@ aurea.onReady(async () => {
   }
 
   evaluation = await initialEvaluation();
+  if (evaluation) evaluation = await inPageLanguage(evaluation);
   if (evaluation) renderResults(evaluation);
 
   const pending = evaluation ? aurea.takePendingAction() : null;
