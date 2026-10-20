@@ -351,3 +351,9 @@ def test_evaluator_draws_priority_bars_with_a_legend():
 def test_evaluator_priority_bars_are_announced_to_screen_readers():
     # Un aria-label en un <span> genérico lo ignoran muchos lectores: sin role="img" la prioridad no se oye.
     assert 'class="bars l${bars}" role="img"' in (STATIC / "evaluator.js").read_text(encoding="utf-8")
+
+
+def test_evaluator_job_cards_do_not_grow_with_the_match_score():
+    """Con un CV subido los jobs vienen con "% match": una línea más por tarjeta llevaba la página a 961 px
+    en 945. En el evaluator no se muestra (está en la página de jobs) y las tarjetas no cambian de alto."""
+    assert "display: none" in _app_css_rule(".ev-side .job-mini-score")
