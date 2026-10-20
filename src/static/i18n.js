@@ -130,7 +130,8 @@ window.I18N_ES = {
   'ev.recs_less': 'Ver menos',
   'ev.apply': 'Aplicar a mi CV',
   'ev.tailor_title': 'Adaptalo a un empleo',
-  'ev.tailor_pitch': 'Las palabras clave que faltan dependen del puesto. Pegá un empleo y Aurea adapta tu CV a ese rol, con carta de presentación incluida.',
+  // Entra en 2 renglones como en inglés: con 3, la página en español medía 961 px y scrolleaba
+  'ev.tailor_pitch': 'Las palabras clave dependen del puesto: pegá un empleo y Aurea adapta tu CV y te escribe la carta.',
   'ev.cover_btn': 'Generar carta de presentación',
   'ev.tailor_btn': 'Adaptar mi CV',
   'ev.working': 'Trabajando: puede tardar hasta un minuto…',
