@@ -92,7 +92,7 @@ Si no, el fetch no trajo lo esperado — no seguir sin entender por qué.
   `ps` y en el historial): mandar la línea del `.env` local por el pipe del SSH. PowerShell le agrega
   un BOM (EF BB BF) aunque se cambie `$OutputEncoding`, y CRLF: el lado remoto los saca. Probado:
   ```powershell
-  (Select-String -Path .env -Pattern '^NOMBRE_DE_LA_CLAVE=').Line | & C:\Windows\System32\OpenSSH\ssh.exe linuxuser@64.176.23.59 "sed '1s/^ï»¿//' | tr -d '' | sudo -u deploy tee -a /home/deploy/bot_curriculum/.env > /dev/null"
+  (Select-String -Path .env -Pattern '^NOMBRE_DE_LA_CLAVE=').Line | & C:\Windows\System32\OpenSSH\ssh.exe linuxuser@64.176.23.59 "sed '1s/^\xEF\xBB\xBF//' | tr -d '\r' | sudo -u deploy tee -a /home/deploy/bot_curriculum/.env > /dev/null"
   ```
   Después, `sudo systemctl restart botcv`: el servicio lee el `.env` como `EnvironmentFile` al arrancar.
 
@@ -468,9 +468,9 @@ ruff check .
   - ✅ `patch("src.routes.adapt.ensure_user")`
   - ❌ `patch("backend.credits.ensure_user")`
 - **Patch de `OptionalUser`**: como `Depends(get_current_user)` guarda la referencia directa, parchear `backend.auth._supabase`, no `backend.auth.get_current_user`
-- **Finales de línea**: los archivos del repo están guardados con CRLF. Un script que los reescriba con
-  `
-` deja finales mezclados: conservar los del archivo.
+- **Finales de línea**: el repo guarda LF y en esta PC el working tree tiene CRLF (`core.autocrlf=true`).
+  Un CR suelto dentro de una línea hace que git trate el archivo como binario y lo guarde con CRLF:
+  todas las líneas aparecen cambiadas. Después de editar con un script, mirar `git diff --stat`.
 - **README**: en inglés, para quien llega al repo. Sin datos que envejecen solos (versiones de
   librerías, cantidad de tests): el anterior quedó medio año desactualizado por eso. La referencia
   completa de la API la sirve FastAPI en `/docs`; el README solo lista los endpoints. Si una
