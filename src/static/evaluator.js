@@ -184,6 +184,8 @@ function showAllRecs(all) {
   btn.classList.toggle('hidden', items.length <= recsShown);
   btn.textContent = all ? t('ev.recs_less', 'Show fewer') : `${t('ev.recs_all', 'Show all recommendations')} (${items.length})`;
   btn.setAttribute('aria-expanded', String(all));
+  // En escritorio se despliegan dentro de la pestaña, debajo de lo visible: sin bajar, no se notaba el cambio.
+  if (all && getComputedStyle($('ev-pane-fix')).overflowY === 'auto' && items[recsShown]) items[recsShown].scrollIntoView({ block: 'start' });
 }
 
 // En escritorio la pestaña tiene alto fijo (el de la columna del adapter): se muestran las recomendaciones
