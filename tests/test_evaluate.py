@@ -2,6 +2,7 @@ import io
 from datetime import date, datetime, timezone
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from fastapi.testclient import TestClient
 
 from backend.jobs import Job
@@ -225,3 +226,49 @@ def test_evaluate_passes_the_job_context_to_prioritize():
         eval_client.post("/evaluate", data={"job_id": "42"},
                          files={"file": ("cv.pdf", io.BytesIO(b"data"), "application/pdf")})
     assert "Python FastAPI developer" in prio.await_args.args[1]
+
+
+# ── Task 4.22: el análisis sale en el idioma de la página ─────────────────────
+from backend.evaluator import evaluate_cv
+
+
+def _fake_evaluation(**overrides) -> ResumeEvaluation:
+    fields = {
+        "candidate_name": "Jane", "target_role": "Data Analyst", "overall_score": 70, "approved": False,
+        "formatting_issues": [], "keywords_found": [], "keywords_missing": [], "recommendations": [],
+        "strengths": [], "weaknesses": [], "summary": "ok",
+    }
+    return ResumeEvaluation(**{**fields, **overrides})
+
+
+def test_evaluate_passes_the_page_language(client):
+    token = _session_token()
+    with _patch("src.routes.evaluate.evaluate_cv", return_value=_EVAL) as ev:
+        res = client.post("/evaluate", headers={"X-CV-Session-Token": token}, data={"output_language": "es"})
+    assert res.status_code == 200
+    assert ev.call_args.kwargs["output_language"] == "es"
+
+
+def test_evaluate_defaults_to_english(client):
+    token = _session_token()
+    with _patch("src.routes.evaluate.evaluate_cv", return_value=_EVAL) as ev:
+        client.post("/evaluate", headers={"X-CV-Session-Token": token}, data={})
+    assert ev.call_args.kwargs["output_language"] == "en"
+
+
+def test_evaluate_rejects_an_unknown_language(client):
+    token = _session_token()
+    res = client.post("/evaluate", headers={"X-CV-Session-Token": token}, data={"output_language": "fr"})
+    assert res.status_code == 422
+
+
+def test_evaluate_cv_asks_for_the_language_and_tags_the_result():
+    from backend import evaluator
+    assert "output_language" in evaluator.prompt_template.input_variables
+    with _patch("backend.evaluator.chain") as chain:
+        chain.invoke.return_value = _fake_evaluation()
+        out = evaluate_cv("My CV", output_language="es")
+    assert chain.invoke.call_args.args[0]["output_language"] == "es"
+    assert out["language"] == "es"
+    assert out["evaluated_at"]  # empareja una evaluación con su traducción
+
