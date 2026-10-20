@@ -377,6 +377,10 @@ body[data-page="evaluator"] .app-main { padding-top: 20px; padding-bottom: 20px;
   /* Cada sección es una página: los links bajan a una segunda fila en vez de esconderse */
   .landing-nav { flex-wrap: wrap; row-gap: 10px; }
   .landing-links { order: 3; width: 100%; }
+  /* La columna no puede ser más ancha que la pantalla: "Generar carta de presentación" sin cortar la
+     llevaba a 358 px en un celular de 360 y la página scrolleaba de costado */
+  .ev-grid { grid-template-columns: minmax(0, 1fr); }
+  .ev-adapter-actions button { white-space: normal; }
   /* Pestañas de 24 px no entran en un celular: más chicas, y si igual no entran, bajan a otra fila */
   .ev-tabs { column-gap: 20px; }
   .ev-tabs [role="tab"] { font-size: 1.2rem; }
