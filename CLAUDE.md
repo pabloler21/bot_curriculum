@@ -86,6 +86,15 @@ Si no, el fetch no trajo lo esperado — no seguir sin entender por qué.
   git también lo usa, vía `core.sshCommand = C:/Windows/System32/OpenSSH/ssh.exe`.
 - Git Bash: su `ssh` (`/usr/bin/ssh`) no ve ese agente y pide la passphrase en cada conexión.
   Por eso un `ssh` **no interactivo** desde Git Bash falla: para automatizar, usar PowerShell.
+- Ojo: en algunas sesiones de PowerShell `ssh` resuelve al de Git (`(Get-Command ssh).Source`) y
+  falla con `Permission denied (publickey)`. Llamar siempre `C:\Windows\System32\OpenSSH\ssh.exe`.
+- **Subir una clave al `.env` del VPS** sin que quede en ningún comando (los argumentos se ven en
+  `ps` y en el historial): mandar la línea del `.env` local por el pipe del SSH. PowerShell le agrega
+  un BOM (EF BB BF) aunque se cambie `$OutputEncoding`, y CRLF: el lado remoto los saca. Probado:
+  ```powershell
+  (Select-String -Path .env -Pattern '^NOMBRE_DE_LA_CLAVE=').Line | & C:\Windows\System32\OpenSSH\ssh.exe linuxuser@64.176.23.59 "sed '1s/^ï»¿//' | tr -d '' | sudo -u deploy tee -a /home/deploy/bot_curriculum/.env > /dev/null"
+  ```
+  Después, `sudo systemctl restart botcv`: el servicio lee el `.env` como `EnvironmentFile` al arrancar.
 
 ## Variables de entorno
 
@@ -556,6 +565,11 @@ No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya
    Auth → Rate limits, verificado el 2026-10-09). **Bloquea el producto**: no alcanza para
    onboardear usuarios reales ni para probar el magic link más de dos veces seguidas. Se levanta
    configurando SMTP propio o un Send Email hook; ahí el límite se ajusta en Auth → Rate Limits.
-9. **Confirmar el `.env` del VPS** (el 2026-10-20 no se pudo leer: la clave SSH no estaba en el
-   agente): que tenga `TYPESAFE_API_KEY` (sin ella el evaluator sale sin barras de prioridad) y que
-   no fije `AUREA_*_MODEL` (si fija Haiku 4.5, prod no usa la 5.5 de la 4.20).
+9. **Al `.env` del VPS le faltan dos claves** (revisado el 2026-10-20; tiene solo `ANTHROPIC_API_KEY`,
+   `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `FRONTEND_BASE_URL`, y no se tocaba desde el 2026-09-12):
+   - `TYPESAFE_API_KEY`: sin ella el evaluator sale sin barras de prioridad (la 4.21 no se ve en prod).
+   - `SUPABASE_SERVICE_ROLE_KEY`: sin ella `db.client` es None y, con sesión, el saldo da 0 créditos,
+     no se guardan CV base ni historial y `DELETE /account` da 503. No está en el `.env` local:
+     sale del panel de Supabase.
+   Ninguna se puede subir desde una sesión de Claude (el modo automático bloquea mandar secretos a
+   prod): las sube el usuario con el comando de "Acceso SSH". No fija `AUREA_*_MODEL` (usa Haiku 5.5).
