@@ -34,7 +34,7 @@ function setIntakeBusy(busy, translating = false) {
   $('ev-drop-idle').classList.toggle('hidden', busy);
   $('ev-drop-busy').classList.toggle('hidden', !busy);
   $('ev-busy-title').textContent = translating ? t('ev.translating', 'Translating your analysis…') : t('ev.analyzing', 'Analyzing your CV…');
-  $('ev-busy-hint').textContent = translating ? t('ev.translating_hint', 'This takes a few seconds.') : t('ev.analyzing_hint', 'This takes about 20 seconds.');
+  $('ev-busy-hint').textContent = translating ? t('ev.translating_hint', 'This takes about 15 seconds.') : t('ev.analyzing_hint', 'This takes about 20 seconds.');
 }
 
 function showIntake() {
