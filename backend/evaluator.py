@@ -42,6 +42,14 @@ class ResumeEvaluation(BaseModel):
     summary: str = Field(description="Brief summary of the overall analysis")
 
 
+# Cómo se le nombra el idioma al modelo. El español de la UI es rioplatense ("Subí tu CV", "Pegá un
+# empleo"): el análisis le habla al usuario con el mismo voseo.
+LANGUAGES = {
+    "en": "English",
+    "es": "Spanish as spoken in Argentina, with voseo for instructions ('agregá', 'sacá', 'verificá'), "
+    "in a professional tone",
+}
+
 # creamos el modelo de Claude con LangChain
 model = model_for("evaluate")
 
@@ -108,7 +116,11 @@ def evaluate_cv(cv_text: str, job_context: str | None = None, output_language: s
             "[evaluator] Invoking Claude with %d chars of CV text", len(cv_text)
         )
         result = chain.invoke(
-            {"ats_skill": ats_skill, "cv_text": cv_text + job_section, "output_language": output_language}
+            {
+                "ats_skill": ats_skill,
+                "cv_text": cv_text + job_section,
+                "output_language": LANGUAGES[output_language],
+            }
         )
         logger.info("[evaluator] Claude response received")
         # evaluated_at empareja la evaluación con su traducción (evaluator.js la guarda para volver sin otra llamada)
@@ -163,7 +175,7 @@ def translate_evaluation(evaluation: dict, output_language: str) -> dict:
     )
     logger.info("[evaluator] Translating evaluation to %s", output_language)
     out = translate_chain.invoke(
-        {"output_language": output_language, "evaluation": text.model_dump_json()}
+        {"output_language": LANGUAGES[output_language], "evaluation": text.model_dump_json()}
     ).model_dump()
     # Las prioridades son listas paralelas: si una lista cambió de largo, quedarían desalineadas.
     for field, items in out.items():
