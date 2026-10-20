@@ -27,7 +27,7 @@
 
 New accounts get 5 credits. Paid credit packs are not live yet.
 
-With an account, Aurea also keeps your base CV, so you don't upload it every time, and a history of your results with their PDFs. The interface is in English and Spanish.
+With an account, Aurea also keeps your base CV, so you don't upload it every time, and a history of your results with their PDFs. The interface is in English and Spanish, and so is everything the AI writes: switching languages translates your report instead of scoring the CV again.
 
 ---
 
@@ -104,7 +104,8 @@ With the server running, FastAPI serves the full interactive reference at `/docs
 
 | Endpoint | Sign-in | What it does |
 |---|---|---|
-| `POST /evaluate` | Optional | ATS report for a CV |
+| `POST /evaluate` | Optional | ATS report for a CV, written in the page's language (`output_language`: `en`, `es`) |
+| `POST /evaluate/translate` | Optional | The same report in the other language, with the same score and priorities |
 | `POST /adapt` | Required | Tailored CV, cover letter or both (`mode`: `cv`, `cover`, `both`) |
 | `GET /adapt/{run_id}/pdf` | — | Tailored CV as PDF |
 | `POST /improve` | Required | Rewrites the saved CV with the evaluator's fixes |
@@ -118,7 +119,7 @@ With the server running, FastAPI serves the full interactive reference at `/docs
 | `POST /waitlist` | Optional | Joins the Pro plan waitlist |
 | `GET /config`, `GET /health` | — | Public Supabase settings for the frontend; health check |
 
-Signed-in requests send the Supabase access token as `Authorization: Bearer <token>`. `/adapt`, `/evaluate`, `/improve`, `/interview`, `/session` and `/jobs/score` are limited to 3 requests per minute per IP.
+Signed-in requests send the Supabase access token as `Authorization: Bearer <token>`. `/adapt`, `/evaluate`, `/improve`, `/interview`, `/session` and `/jobs/score` are limited to 3 requests per minute per IP; `/evaluate/translate`, to 10.
 
 ---
 

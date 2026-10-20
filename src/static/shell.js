@@ -292,7 +292,7 @@
   async function signOut() {
     signingOut = true;
     // No dejar datos del usuario anterior en el navegador (aurea_lang se conserva).
-    [SESSION_TOKEN_KEY, CLAIMED_KEY, PENDING_KEY, 'aurea_last_evaluation', 'aurea_last_result', 'aurea_pending_jd'].forEach((k) => store(k, null));
+    [SESSION_TOKEN_KEY, CLAIMED_KEY, PENDING_KEY, 'aurea_last_evaluation', 'aurea_last_evaluation_alt', 'aurea_last_result', 'aurea_pending_jd'].forEach((k) => store(k, null));
     try { if (client) await client.auth.signOut(); } catch (_) {}
     aurea.session = null;
     window.location.href = '/';

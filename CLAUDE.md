@@ -10,7 +10,8 @@ El proyecto también incluye un **job board** (herramienta secundaria, pre-exist
 
 ### Backend
 - **Python 3.13**, `uv` como package manager
-- **FastAPI** + uvicorn, rate limiting con slowapi (3/min por IP en `/adapt`, `/evaluate`, `/improve` e `/interview`)
+- **FastAPI** + uvicorn, rate limiting con slowapi (3/min por IP en `/adapt`, `/evaluate`, `/improve` e `/interview`;
+  10/min en `/evaluate/translate`)
 - **AI**: `claude-haiku-5-5` vía LangChain, con structured outputs (`method="json_schema"`) validados con Pydantic
 - **Prioridad del evaluator**: Jev (TypeSafe, `typesafe-sdk`) — una pregunta `Score` por keyword
   faltante y por recomendación (`backend/prioritizer.py`)
@@ -142,7 +143,9 @@ backend/
                     # (on-demand desde POST /interview, fuera de run_pipeline)
     renderer.py     # Genera PDF del CV adaptado
     logger.py       # Logging compartido del pipeline
-  evaluator.py      # ATS evaluator (producto secundario); devuelve también target_role
+  evaluator.py      # ATS evaluator (producto secundario); devuelve también target_role.
+                    # Escribe en el idioma de la página (en español, con voseo) y traduce una
+                    # evaluación guardada (translate_evaluation: un campo obligatorio por texto)
   prioritizer.py    # prioritize(): Jev puntúa cada keyword/recomendación (0–2), ordena y agrega
                     # keywords_missing_priority / recommendations_priority (essential ≥1.3,
                     # important ≥0.95). El CV no va a Jev. Timeout 5 s; si falla, sin prioridades
@@ -175,7 +178,8 @@ src/
     auth.py         # (no existe como ruta — auth es dependency injection)
     config.py       # GET /config — devuelve SUPABASE_URL y SUPABASE_ANON_KEY al frontend
     credits.py      # GET /credits — devuelve balance del usuario autenticado
-    evaluate.py     # POST /evaluate — ATS evaluator (producto secundario)
+    evaluate.py     # POST /evaluate — ATS evaluator (producto secundario), output_language en|es;
+                    # POST /evaluate/translate — la misma evaluación en el otro idioma
     health.py       # GET /health
     interview.py    # POST /interview — preguntas de entrevista para una adaptación ya hecha
     jobs.py         # GET /jobs, GET /jobs/ranked, POST /jobs/score (job board)
@@ -189,10 +193,11 @@ src/
     about.html      # Landing: About
     features-evaluator.html / features-adapter.html / features-jobs.html  # Landing: una página por feature
     pricing.html    # Landing: Free/Pro + waitlist (landing.js)
-    evaluator.html  # ATS evaluator (anónimo) + evaluator.js. Resultados (4.9): a la izquierda
-                    # "What to fix" (keywords faltantes + top 5 recomendaciones); a la derecha el
-                    # adapter y 4 jobs en una columna sticky, porque el adapter es el gancho para
-                    # pagar; fortalezas y debilidades plegadas. Se aparta del Excalidraw a propósito.
+    evaluator.html  # ATS evaluator (anónimo) + evaluator.js. Resultados (4.22): a la izquierda un panel
+                    # con pestañas "What to fix" (keywords + las recomendaciones que entran, hasta 4),
+                    # "Strengths" y "Weaknesses"; a la derecha el adapter y 4 jobs, porque el adapter es
+                    # el gancho para pagar. En escritorio el panel toma el alto de esa columna y scrollea
+                    # por dentro: la página entra sin scroll. Se aparta del Excalidraw a propósito.
     tailor.html     # Adaptar CV a un JD (texto o URL) + tailor.js
     cover.html      # Cover letter + cover.js
     jobs.html       # Job board: My Jobs + Recommended + jobs.js
@@ -242,13 +247,14 @@ tests/
   test_credits.py          # backend/credits.py — todas las funciones
   test_credits_route.py    # GET /credits
   test_cover_letter.py     # backend/adapter/cover_letter.py — lee el texto aunque venga un bloque de thinking
-  test_evaluate.py         # POST /evaluate con session token
+  test_evaluate.py         # POST /evaluate (session token, idioma) y POST /evaluate/translate
   test_interview.py        # backend/adapter/interview.py
   test_interview_route.py  # POST /interview
   test_extractor.py        # backend/extractor.py — filtrado de texto oculto e invisible
   test_jobs.py             # Job board backend
   test_models.py           # backend/models.py — model_for(stage), defaults y max_tokens; evaluator y
                            # scorer usan su etapa; toda salida estructurada usa structured outputs
+                           # (también el traductor del evaluator)
   test_ranker.py
   test_scorer.py
   test_sessions.py
@@ -266,12 +272,14 @@ tests/
                            # body oculto hasta el shell y alto del nav reservado (sin temblor);
                            # features: tile de vidrio sin three.js, sin kicker, título alineado,
                            # "Try it" con gradiente; layout de resultados del evaluator (adapter
-                           # al costado, pliegues, keywords primero); entrada de la home (espera
-                           # al shell, sin reduced-motion); acento y CTA tornasolados, sin titilar,
-                           # y el CTA conserva el gradiente en hover; en la app el visitante ve el
-                           # nav del sitio, elegido antes de que responda Supabase; resultados del
-                           # evaluator plegados sin padding abajo (no scrollean a espacio vacío);
-                           # keywords sin rojo y barras de prioridad con leyenda traducida
+                           # al costado, keywords primero); entrada de la home (espera al shell,
+                           # sin reduced-motion); acento y CTA tornasolados, sin titilar, y el CTA
+                           # conserva el gradiente en hover; en la app el visitante ve el nav del
+                           # sitio, elegido antes de que responda Supabase; keywords sin rojo y
+                           # barras de prioridad con leyenda traducida; evaluator (4.22): pestañas
+                           # con teclado y de 24 px, panel con el alto de la columna del adapter,
+                           # 20 px parejos, 4 recomendaciones, keywords de 13 px sin mayúsculas,
+                           # análisis en el idioma de la página, jobs sin "% match"
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -323,7 +331,8 @@ Todas las funciones son **no-op seguros** cuando `_supabase is None` (dev sin cr
 ```
 index.html (landing) → CTA o "Try it" de una feature → evaluator.html (anónimo, con el mismo nav
   del sitio: sube CV, ve score, keywords faltantes y recomendaciones ordenadas por prioridad, con
-  barras de señal en gris (Jev); al costado, sin scroll, el adapter y los jobs)
+  barras de señal en gris (Jev), y fortalezas y debilidades en pestañas; al costado, sin scroll, el
+  adapter y los jobs. Todo en el idioma de la página: si cambia EN/ES, el análisis guardado se traduce)
 → acción paga (Tailor, Cover, Improve) → modal de signup (magic link o Google)
 → la acción pendiente se guarda (aurea_pending_action) y se ejecuta al volver logueado
 → bono de 5 créditos → resultado (CV adaptado + gaps + cover + PDF) → queda en /history
@@ -429,8 +438,14 @@ ruff check .
   sin verse. Si un elemento ya tiene `animation`, la de entrada la reemplaza: hay que listar las dos.
 - **Color en la app**: el coral (y el tornasol) es de los botones pagos ("Generate Cover Letter",
   "Tailor your CV"). Lo informativo va en grises y vidrio, para no competir con ellos: por eso la
-  prioridad del evaluator son barras grises (4.21) y no colores. Tampoco cambiar el alto de los
-  paneles del evaluator al agregar algo: medirlo (571 px el de "What to fix" en 1920×945).
+  prioridad del evaluator son barras grises (4.21) y no colores.
+- **Alto del evaluator**: la columna del adapter y los jobs fija el alto de la fila (657 px en
+  1920×945) y el panel de mejoras la iguala. Si algo la agranda, la página scrollea: pasó con el
+  "% match" de los jobs y con el texto del adapter en español (4.22). Medir en 1920×945 en inglés y
+  en español, con un CV subido (los jobs rankeados no son los mismos que sin CV).
+- **Idioma**: todo lo que ve el usuario sale en el idioma de la página, también lo que escribe la IA:
+  los endpoints que generan texto reciben `output_language` (`en`/`es`). En español, voseo como la UI
+  ("Subí", "Pegá"). Los títulos de los jobs quedan como vienen: son avisos reales.
 - **Navegación del visitante**: en la app ve el mismo nav que en el sitio, arriba. No cambiarla de
   lugar entre el sitio y la app: en la 4.16 se probó un sidebar con candados y se descartó porque
   "cambia todo el manejo de la página". Antes de decidir navegación, probarla andando.
@@ -444,6 +459,9 @@ ruff check .
   - ✅ `patch("src.routes.adapt.ensure_user")`
   - ❌ `patch("backend.credits.ensure_user")`
 - **Patch de `OptionalUser`**: como `Depends(get_current_user)` guarda la referencia directa, parchear `backend.auth._supabase`, no `backend.auth.get_current_user`
+- **Finales de línea**: los archivos del repo están guardados con CRLF. Un script que los reescriba con
+  `
+` deja finales mezclados: conservar los del archivo.
 - **README**: en inglés, para quien llega al repo. Sin datos que envejecen solos (versiones de
   librerías, cantidad de tests): el anterior quedó medio año desactualizado por eso. La referencia
   completa de la API la sirve FastAPI en `/docs`; el README solo lista los endpoints. Si una
@@ -506,14 +524,15 @@ ruff check .
 | 4.14 | La home entra fluida (calcada de heliasoils.com): fondo, título que emerge por tramos y resto escalonado; CSS puro en `app.css`. Además: "for every job." y "Improve my CV" tornasolados, "Sign up" con borde tornasolado, sin titilar | ✅ mergeada |
 | 4.15 | Actualizar CLAUDE.md (4.14) | ✅ mergeada |
 | 4.16 | En la app el visitante ve el mismo nav que en la landing (antes el evaluator no tenía menú: quien tocaba "Try it" quedaba encerrado). Con sesión, topbar y sidebar, elegidos antes de que responda Supabase: sin salto. Un primer intento con sidebar y candados para el visitante se descartó | ✅ mergeada |
-| 4.17 | Actualizar CLAUDE.md (4.15–4.16) + regla: CLAUDE.md se actualiza al cerrar cada tarea. Rescata los docs de SSH, sudoers y "repo público" que habían quedado fuera del PR #50 | ✅ commiteada en `develop`; sube a GitHub con el PR de la 4.18 |
-| 4.18 | Evaluator: con los resultados plegados no se puede scrollear a espacio vacío. Los 64px de padding de `.app-main` llevaban la página a 993px aunque el último panel termine en 929; en una ventana de 945px (1080p con las barras de Chrome) el scroll no mostraba nada. El padding vuelve al desplegar algo; en una columna no cambia | 🔄 PR abierto |
-| 4.19 | README reescrito: el anterior describía la app de abril (evaluator + job board en Render). Ahora cubre features y créditos, pipeline, seguridad, stack, API, setup local y deploy al VPS. Se borró `render.yaml`, que ya no se usaba. Sale de la rama de la 4.18: mergear el #68 primero | 🔄 PR abierto |
-| 4.20 | Haiku 4.5 → Haiku 5.5 en todas las etapas (evaluator y scorer pasan por `model_for`). Arreglos que pidió el cambio: `max_tokens` explícito, la carta se lee con `.text`, y toda salida estructurada usa structured outputs: el adapter fallaba siempre con Haiku 5.5 y con Haiku 4.5 devolvía `gaps` vacío. Verificado con una corrida real de las 7 etapas. Sale de la rama de la 4.19: mergear #68 y #69 primero | 🔄 PR abierto |
-| 4.21 | "What to fix" ordenado de imprescindible a opcional: Jev puntúa cada keyword y recomendación, y el evaluator lo muestra con barras de señal en gris (sin color, mismo alto de panel; el rojo se fue). El usuario descartó 8 variantes en el companion antes de elegir. Umbrales calibrados con 3 CVs reales. Spec y plan en `docs/superpowers/`. Sale de la rama de la 4.20: mergear #68 → #69 → #71 primero; al deployar, `TYPESAFE_API_KEY` en el `.env` del VPS | 🔄 PR abierto |
+| 4.17 | Actualizar CLAUDE.md (4.15–4.16) + regla: CLAUDE.md se actualiza al cerrar cada tarea. Rescata los docs de SSH, sudoers y "repo público" que habían quedado fuera del PR #50 | ✅ mergeada (subió con el #68) |
+| 4.18 | Evaluator: con los resultados plegados no se puede scrollear a espacio vacío. Los 64px de padding de `.app-main` llevaban la página a 993px aunque el último panel termine en 929; en una ventana de 945px (1080p con las barras de Chrome) el scroll no mostraba nada. El padding vuelve al desplegar algo; en una columna no cambia | ✅ mergeada |
+| 4.19 | README reescrito: el anterior describía la app de abril (evaluator + job board en Render). Ahora cubre features y créditos, pipeline, seguridad, stack, API, setup local y deploy al VPS. Se borró `render.yaml`, que ya no se usaba. Sale de la rama de la 4.18: mergear el #68 primero | ✅ mergeada |
+| 4.20 | Haiku 4.5 → Haiku 5.5 en todas las etapas (evaluator y scorer pasan por `model_for`). Arreglos que pidió el cambio: `max_tokens` explícito, la carta se lee con `.text`, y toda salida estructurada usa structured outputs: el adapter fallaba siempre con Haiku 5.5 y con Haiku 4.5 devolvía `gaps` vacío. Verificado con una corrida real de las 7 etapas. Sale de la rama de la 4.19: mergear #68 y #69 primero | ✅ mergeada |
+| 4.21 | "What to fix" ordenado de imprescindible a opcional: Jev puntúa cada keyword y recomendación, y el evaluator lo muestra con barras de señal en gris (sin color, mismo alto de panel; el rojo se fue). El usuario descartó 8 variantes en el companion antes de elegir. Umbrales calibrados con 3 CVs reales. Spec y plan en `docs/superpowers/`. Sale de la rama de la 4.20: mergear #68 → #69 → #71 primero; al deployar, `TYPESAFE_API_KEY` en el `.env` del VPS | ✅ mergeada |
+| 4.22 | Evaluator sin scroll y en un solo idioma. Fortalezas y debilidades pasan de pliegues a pestañas del panel de mejoras (de 24 px, como los títulos), y en escritorio ese panel toma el alto de la columna del adapter y scrollea por dentro: la página entra en 945 px, con 20 px parejos entre todo. Letra a la medida: texto a 16, keywords a 13 sin mayúsculas, las recomendaciones que entran (hasta 4). El análisis sale en el idioma de la página (`/evaluate` con `output_language`; en español, voseo) y al cambiar EN/ES se traduce el guardado en vez de re-evaluar, que cambiaba el puntaje (`POST /evaluate/translate`, un campo obligatorio por texto). En el evaluator los jobs no muestran "% match" y en el celular la página no scrollea de costado. El usuario eligió en el companion la B (pestañas) y la 1 (16 px, en filas) | 🔄 PR abierto |
 
-**Último release**: `main` al día con `develop` hasta la 4.16 (PR #67, deployado el 2026-10-15).
-Antes: PR #64 (4.14, 2026-10-14), PR #62 (4.13), PR #60 (4.12, 2026-10-13) y PR #58 (4.11).
+**Último release**: `main` al día con `develop` hasta la 4.21 (PR #72, deployado el 2026-10-18).
+Antes: PR #70 (4.17–4.19, 2026-10-16), PR #67 (4.16, 2026-10-15) y PR #64 (4.14, 2026-10-14).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
 No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya está en este archivo).
 
@@ -537,3 +556,6 @@ No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya
    Auth → Rate limits, verificado el 2026-10-09). **Bloquea el producto**: no alcanza para
    onboardear usuarios reales ni para probar el magic link más de dos veces seguidas. Se levanta
    configurando SMTP propio o un Send Email hook; ahí el límite se ajusta en Auth → Rate Limits.
+9. **Confirmar el `.env` del VPS** (el 2026-10-20 no se pudo leer: la clave SSH no estaba en el
+   agente): que tenga `TYPESAFE_API_KEY` (sin ella el evaluator sale sin barras de prioridad) y que
+   no fije `AUREA_*_MODEL` (si fija Haiku 4.5, prod no usa la 5.5 de la 4.20).
