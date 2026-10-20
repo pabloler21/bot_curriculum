@@ -325,6 +325,9 @@ body[data-page="evaluator"] .app-main { padding-top: 20px; padding-bottom: 20px;
 /* Remotive trae ubicaciones de diez países: en la columna angosta estiraban las cards. El detalle completo está en job-detail. */
 .ev-side .job-mini-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .ev-side .job-mini-company { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Con un CV subido los jobs traen "% match": una línea más por tarjeta llevaba la página a 961 px en 945.
+   Acá no se muestra (está en la página de jobs), y de paso no hay color en lo informativo. */
+.ev-side .job-mini-score { display: none; }
 .ev-working { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
 .job-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
 .job-mini { display: flex; flex-direction: column; gap: 4px; padding: 14px; border-radius: var(--radius-md); background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-primary); text-decoration: none; }
