@@ -185,7 +185,11 @@ function showAllRecs(all) {
   btn.textContent = all ? t('ev.recs_less', 'Show fewer') : `${t('ev.recs_all', 'Show all recommendations')} (${items.length})`;
   btn.setAttribute('aria-expanded', String(all));
   // En escritorio se despliegan dentro de la pestaña, debajo de lo visible: sin bajar, no se notaba el cambio.
-  if (all && getComputedStyle($('ev-pane-fix')).overflowY === 'auto' && items[recsShown]) items[recsShown].scrollIntoView({ block: 'start' });
+  // Se mueve solo la pestaña (scrollIntoView también movería la página si tiene scroll).
+  const pane = $('ev-pane-fix');
+  if (all && getComputedStyle(pane).overflowY === 'auto' && items[recsShown]) {
+    pane.scrollTop += items[recsShown].getBoundingClientRect().top - pane.getBoundingClientRect().top;
+  }
 }
 
 // En escritorio la pestaña tiene alto fijo (el de la columna del adapter): se muestran las recomendaciones
