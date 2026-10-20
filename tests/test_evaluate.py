@@ -229,7 +229,7 @@ def test_evaluate_passes_the_job_context_to_prioritize():
 
 
 # ── Task 4.22: el análisis sale en el idioma de la página ─────────────────────
-from backend.evaluator import evaluate_cv
+from backend.evaluator import EvaluationText, evaluate_cv, translate_evaluation
 
 
 def _fake_evaluation(**overrides) -> ResumeEvaluation:
@@ -272,3 +272,76 @@ def test_evaluate_cv_asks_for_the_language_and_tags_the_result():
     assert out["language"] == "es"
     assert out["evaluated_at"]  # empareja una evaluación con su traducción
 
+_SAVED = {
+    **_EVAL, "keywords_missing": ["Docker"], "keywords_missing_priority": ["essential"],
+    "recommendations_priority": ["important"], "formatting_issues": ["Odd date"],
+    "language": "en", "evaluated_at": "2026-10-20T10:00:00+00:00",
+}
+_SPANISH = EvaluationText(
+    summary="bien", keywords_found=[], keywords_missing=["Docker"], recommendations=["Agregá métricas"],
+    strengths=["Estructura clara"], weaknesses=["Sin métricas"], formatting_issues=["Fecha rara"],
+)
+
+
+def test_translate_evaluation_translates_the_text_and_keeps_the_rest():
+    with _patch("backend.evaluator.translate_chain") as chain:
+        chain.invoke.return_value = _SPANISH
+        out = translate_evaluation(_SAVED, "es")
+    assert chain.invoke.call_args.args[0]["output_language"] == "es"
+    assert out["recommendations"] == ["Agregá métricas"] and out["summary"] == "bien"
+    # Lo que no es texto no cambia: mismo puntaje, misma prioridad, misma evaluación.
+    assert out["overall_score"] == 72
+    assert out["recommendations_priority"] == ["important"]
+    assert out["evaluated_at"] == _SAVED["evaluated_at"]
+    assert out["language"] == "es"
+
+
+def test_translate_evaluation_rejects_a_list_that_changed_length():
+    # Las prioridades van en listas paralelas: una traducción con otro largo las desalinearía.
+    with _patch("backend.evaluator.translate_chain") as chain:
+        chain.invoke.return_value = _SPANISH.model_copy(update={"recommendations": ["Uno", "Dos"]})
+        with pytest.raises(ValueError):
+            translate_evaluation(_SAVED, "es")
+
+
+def test_translate_route_returns_the_translated_evaluation(client):
+    translated = {**_SAVED, "language": "es"}
+    with _patch("src.routes.evaluate.translate_evaluation", return_value=translated) as tr:
+        res = client.post("/evaluate/translate", json={"evaluation": _SAVED, "output_language": "es"})
+    assert res.status_code == 200
+    assert res.json()["language"] == "es"
+    sent, lang = tr.call_args.args
+    assert lang == "es" and sent["recommendations"] == _SAVED["recommendations"]
+
+
+def test_translate_route_saves_the_translation_when_logged_in(client, as_user):
+    translated = {**_SAVED, "language": "es"}
+    with _patch("src.routes.evaluate.translate_evaluation", return_value=translated), \
+         _patch("src.routes.evaluate.save_evaluation") as save:
+        client.post("/evaluate/translate", json={"evaluation": _SAVED, "output_language": "es"})
+    save.assert_called_once_with(as_user, translated)
+
+
+def test_translate_route_does_not_save_when_anonymous(client):
+    with _patch("src.routes.evaluate.translate_evaluation", return_value=_SAVED), \
+         _patch("src.routes.evaluate.save_evaluation") as save:
+        client.post("/evaluate/translate", json={"evaluation": _SAVED, "output_language": "es"})
+    save.assert_not_called()
+
+
+def test_translate_route_rejects_an_unknown_language(client):
+    res = client.post("/evaluate/translate", json={"evaluation": _SAVED, "output_language": "fr"})
+    assert res.status_code == 422
+
+
+def test_translate_route_rejects_an_oversized_evaluation(client):
+    # Es anónimo y llama al modelo: no puede ser un traductor gratis de textos arbitrarios.
+    huge = {**_SAVED, "recommendations": ["x" * 50] * 200}
+    res = client.post("/evaluate/translate", json={"evaluation": huge, "output_language": "es"})
+    assert res.status_code == 422
+
+
+def test_translate_route_is_502_when_the_translation_fails(client):
+    with _patch("src.routes.evaluate.translate_evaluation", side_effect=ValueError("length")):
+        res = client.post("/evaluate/translate", json={"evaluation": _SAVED, "output_language": "es"})
+    assert res.status_code == 502

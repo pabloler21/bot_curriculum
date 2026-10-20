@@ -49,6 +49,7 @@ def test_scorer_uses_its_stage():
     ("backend.adapter.improver", "_chain"),
     ("backend.adapter.interview", "_structured_model"),
     ("backend.evaluator", "structured_model"),
+    ("backend.evaluator", "translate_structured_model"),
     ("backend.scorer", "_structured_model"),
 ])
 def test_structured_stages_use_structured_outputs(module, attr):
