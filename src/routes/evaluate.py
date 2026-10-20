@@ -108,8 +108,8 @@ async def evaluate_resume(
 # Una evaluación como la devuelve /evaluate, con topes: el endpoint es anónimo y llama al modelo,
 # no puede servir para traducir textos arbitrarios.
 _Text = Annotated[str, Field(max_length=600)]
-_Items = Annotated[list[_Text], Field(max_length=40)]
-_Levels = Optional[Annotated[list[Literal["essential", "important", "optional"]], Field(max_length=40)]]
+_Items = Annotated[list[_Text], Field(max_length=60)]
+_Levels = Optional[Annotated[list[Literal["essential", "important", "optional"]], Field(max_length=60)]]
 
 
 class SavedEvaluation(BaseModel):
