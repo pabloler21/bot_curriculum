@@ -102,6 +102,8 @@ window.I18N_ES = {
   'ev.browse': 'Buscar CV',
   'ev.analyzing': 'Analizando tu CV…',
   'ev.analyzing_hint': 'Tarda unos 20 segundos.',
+  'ev.translating': 'Traduciendo tu análisis…',
+  'ev.translating_hint': 'Tarda unos segundos.',
   'ev.get_title': 'Vas a obtener',
   'ev.get_score': 'Puntaje de compatibilidad ATS',
   'ev.get_score_body': 'Una lectura precisa de 0 a 100 de cómo ven tu CV los parsers.',

@@ -5,6 +5,7 @@
 const SESSION_KEY = 'cv_session_token';
 const CLAIMED_KEY = 'aurea_claimed_token';
 const EVAL_KEY = 'aurea_last_evaluation';
+const ALT_KEY = 'aurea_last_evaluation_alt';  // la misma evaluación en el otro idioma: volver no pide otra traducción
 const RESULT_KEY = 'aurea_last_result';
 const PENDING_JD_KEY = 'aurea_pending_jd';
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -29,9 +30,11 @@ async function errorDetail(res) {
 }
 
 // ── Estados 1 y 2 ─────────────────────────────────────────────────────────
-function setIntakeBusy(busy) {
+function setIntakeBusy(busy, translating = false) {
   $('ev-drop-idle').classList.toggle('hidden', busy);
   $('ev-drop-busy').classList.toggle('hidden', !busy);
+  $('ev-busy-title').textContent = translating ? t('ev.translating', 'Translating your analysis…') : t('ev.analyzing', 'Analyzing your CV…');
+  $('ev-busy-hint').textContent = translating ? t('ev.translating_hint', 'This takes a few seconds.') : t('ev.analyzing_hint', 'This takes about 20 seconds.');
 }
 
 function showIntake() {
@@ -75,11 +78,46 @@ async function uploadAndEvaluate(file) {
 }
 
 async function evaluate(headers) {
-  const res = await aurea.authFetch('/evaluate', { method: 'POST', headers, body: new FormData() });
+  const fd = new FormData();
+  fd.append('output_language', aurea.lang);  // el análisis sale en el idioma de la página
+  const res = await aurea.authFetch('/evaluate', { method: 'POST', headers, body: fd });
   if (!res.ok) throw new Error(await errorDetail(res));
   evaluation = await res.json();
-  try { localStorage.setItem(EVAL_KEY, JSON.stringify(evaluation)); } catch (_) {}
+  try {
+    localStorage.setItem(EVAL_KEY, JSON.stringify(evaluation));
+    localStorage.removeItem(ALT_KEY);
+  } catch (_) {}
   renderResults(evaluation);
+}
+
+// La evaluación guardada puede estar en otro idioma (se cambió EN/ES, o es de antes de la 4.22): se traduce
+// en vez de re-evaluar, que podía cambiar el puntaje. La otra versión queda guardada para volver sin llamar.
+async function inPageLanguage(ev) {
+  if (ev.language === aurea.lang) return ev;
+  let alt = null;
+  try { alt = JSON.parse(localStorage.getItem(ALT_KEY)); } catch (_) {}
+  let out = alt && alt.language === aurea.lang && alt.evaluated_at && alt.evaluated_at === ev.evaluated_at ? alt : null;
+  if (!out) {
+    setIntakeBusy(true, true);
+    try {
+      const res = await aurea.authFetch('/evaluate/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ evaluation: ev, output_language: aurea.lang }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      out = await res.json();
+    } catch (_) {
+      return ev;  // sin traducción se ve en el otro idioma, pero se ve
+    } finally {
+      setIntakeBusy(false);
+    }
+  }
+  try {
+    localStorage.setItem(EVAL_KEY, JSON.stringify(out));
+    localStorage.setItem(ALT_KEY, JSON.stringify(ev));
+  } catch (_) {}
+  return out;
 }
 
 // ── Estado 3 ──────────────────────────────────────────────────────────────
@@ -291,7 +329,7 @@ async function improve(recommendations) {
     });
     const data = await paidJson(res);
     if (data) {
-      localStorage.removeItem(EVAL_KEY);  // /improve cambió el CV: la evaluación guardada ya es del CV viejo
+      [EVAL_KEY, ALT_KEY].forEach((k) => localStorage.removeItem(k));  // /improve cambió el CV: la evaluación ya es del viejo
       goToResult(data, 'improve', '');
       return;
     }  // navegando: dejar las acciones deshabilitadas
@@ -357,6 +395,7 @@ aurea.onReady(async () => {
   }
 
   evaluation = await initialEvaluation();
+  if (evaluation) evaluation = await inPageLanguage(evaluation);
   if (evaluation) renderResults(evaluation);
 
   const pending = evaluation ? aurea.takePendingAction() : null;
