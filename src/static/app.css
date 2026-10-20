@@ -252,34 +252,58 @@ a.btn-primary, a.btn-secondary { text-decoration: none; }
 .ev-results .panel { padding: 20px; }
 .ev-results .panel > * { padding: 0; }
 .ev-results .panel:not(.ev-profile) > * + * { margin-top: 14px; }
-.ev-results .panel > .ev-list { padding-left: 18px; }
-.ev-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 20px; margin-top: 20px; align-items: start; }
-.ev-main, .ev-side { display: flex; flex-direction: column; gap: 20px; }
-.ev-side { position: sticky; top: calc(var(--topbar-h) + 20px); }  /* el adapter no se va al abrir las recomendaciones */
-/* Todo plegado, la página termina en el último panel: el padding de abajo era scroll vacío. Vuelve al
-   desplegar algo, porque ahí sí hay contenido debajo. En una columna la página es larga igual. */
+/* 20 px parejos (4.22): de la oferta (o el topbar) al primer panel, entre paneles y hasta el borde de abajo. */
+body[data-page="evaluator"] .app-main { padding-top: 20px; padding-bottom: 20px; }
+.ev-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 20px; margin-top: 20px; align-items: stretch; }
+.ev-side { display: flex; flex-direction: column; gap: 20px; }
+.ev-fix { display: flex; flex-direction: column; }
+.ev-pane > * + * { margin-top: 14px; }
+/* Sin scroll en escritorio: el adapter y los jobs fijan el alto de la fila, el panel de mejoras lo iguala
+   (contain: size hace que su contenido no la estire) y lo que no entra scrollea dentro de la pestaña. */
 @media (min-width: 861px) {
-  .app-main:has(> .ev-results:not(.hidden)):not(:has([open], [aria-expanded="true"])) { padding-bottom: 0; }
+  .ev-grid > .ev-fix { contain: size; min-height: 480px; }
+  .ev-fix > .ev-pane { flex: 1; min-height: 0; overflow-y: auto; margin-right: -12px; padding-right: 12px; }
 }
+/* Las pestañas reemplazan al título "What to fix": miden como "Tailor it to a job". */
+.ev-tabs { display: flex; flex-wrap: wrap; column-gap: 28px; row-gap: 6px; border-bottom: 1px solid var(--separator); }
+.ev-tabs [role="tab"] {
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: -1px; padding: 0 0 8px;
+  border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-tertiary);
+  font: inherit; font-size: 1.5rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.ev-tabs [role="tab"]:hover { color: var(--text-secondary); }
+.ev-tabs [aria-selected="true"] { color: var(--text-primary); border-bottom-color: rgba(255,255,255,0.75); }
+.ev-tabs .ev-count { margin-left: 0; padding: 1px 8px; font-size: 0.8rem; font-weight: 500; }
+.ev-fix-foot { display: flex; align-items: center; gap: 12px; }
+.ev-fix-foot[hidden] { display: none; }
+#ev-apply { margin-left: auto; }
+/* Fortalezas y debilidades: filas como las recomendaciones, con el ícono en gris (el color es de los botones pagos). */
+.ev-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ev-rows li { display: flex; align-items: flex-start; gap: 14px; padding: 14px 0; font-size: 16px; line-height: 1.5; color: var(--text-secondary); }
+.ev-rows li:first-child { padding-top: 0; }
+.ev-rows li + li { border-top: 1px solid var(--separator); }
+.ev-ico {
+  width: 30px; height: 30px; flex-shrink: 0; display: grid; place-items: center; margin-top: -3px; border-radius: 10px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10); color: var(--text-secondary); font-size: 13px; font-weight: 700;
+}
+#ev-formatting-label { margin-top: 22px; }
 .ev-profile { display: flex; align-items: center; gap: 20px; }
 .ev-profile .btn-ghost { margin-left: auto; }
 .ev-who, .ev-profile button { flex-shrink: 0; }
-.ev-summary { flex: 1; min-width: 0; font-size: 0.9rem; line-height: 1.5; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.ev-summary { flex: 1; min-width: 0; font-size: 15.5px; line-height: 1.5; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .ev-summary.is-open { display: block; }
 .ev-avatar { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 1.3rem; background: linear-gradient(135deg, var(--accent), var(--aqua)); color: #0b0d1c; flex-shrink: 0; }
 .ev-name { margin: 0; font-size: 1.4rem; }
 .ev-score { margin: 4px 0 0; color: var(--text-secondary); }
 .ev-score strong { color: var(--accent-light); font-size: 1.2rem; }
-.ev-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
-.ev-list--good li::marker { color: var(--success); }
-.ev-list--bad li::marker { color: var(--danger); }
 .ev-recs { gap: 12px; }
-.ev-recs li { font-size: 14.5px; }
+.ev-recs li { font-size: 16px; line-height: 1.5; }
 .ev-recs li::before { width: 30px; height: 30px; font-size: 13px; border-radius: 10px; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.10); color: var(--text-secondary); }
 .ev-more { background: none; border: 0; color: var(--accent-light); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
 .ev-more:hover { text-decoration: underline; }
 /* Prioridad (4.21): todo en gris, el color es de los botones pagos. Las barras no cambian el alto del panel. */
-.ev-kw { gap: 7px; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.14); color: var(--text-secondary); }
+/* En mayúsculas de 11 px no se leían (4.22): 13 px y como las escribe el evaluator. */
+.ev-kw { gap: 7px; padding: 5px 12px; font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.14); color: var(--text-secondary); }
 .ev-kw.is-essential { color: var(--text-primary); }
 .bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 9px; flex-shrink: 0; }
 .bars b { width: 3px; border-radius: 1px; background: rgba(255,255,255,0.16); }
@@ -289,15 +313,12 @@ a.btn-primary, a.btn-secondary { text-decoration: none; }
 .bars.l3 b, .bars.l2 b:nth-child(-n+2), .bars.l1 b:nth-child(1) { background: rgba(255,255,255,0.80); }
 .ev-recs .rec-text { flex: 1; }
 .ev-recs li .bars { margin-top: 7px; }
-#ev-recs-more { color: var(--text-secondary); }
+#ev-recs-more { color: var(--text-secondary); font-size: 15px; }
 #ev-recs-more:hover { color: var(--text-primary); }
 .ev-legend { display: inline-flex; gap: 12px; margin-left: 10px; text-transform: none; letter-spacing: 0; font-weight: 500; }
 .ev-legend > span { display: inline-flex; align-items: center; gap: 5px; }
-.ev-label { margin-bottom: 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-tertiary); }
-.ev-folds { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-.ev-fold summary { cursor: pointer; font-weight: 600; }
+.ev-label { margin-bottom: 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-tertiary); }
 .ev-count { margin-left: 6px; padding: 1px 9px; border: 1px solid var(--glass-border); border-radius: var(--radius-pill); color: var(--text-secondary); font-size: 0.8rem; font-weight: 500; }
-.ev-recs-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .ev-adapter-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 .ev-adapter-actions button { flex: 1; justify-content: center; white-space: nowrap; }
 .ev-side .job-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -356,8 +377,9 @@ a.btn-primary, a.btn-secondary { text-decoration: none; }
   /* Cada sección es una página: los links bajan a una segunda fila en vez de esconderse */
   .landing-nav { flex-wrap: wrap; row-gap: 10px; }
   .landing-links { order: 3; width: 100%; }
-  .ev-side { position: static; }
-  .ev-folds { grid-template-columns: 1fr; }
+  /* Pestañas de 24 px no entran en un celular: más chicas, y si igual no entran, bajan a otra fila */
+  .ev-tabs { column-gap: 20px; }
+  .ev-tabs [role="tab"] { font-size: 1.2rem; }
   /* La tira del perfil: avatar, nombre y botón arriba; el resumen abajo, a lo ancho */
   .ev-profile { flex-wrap: wrap; }
   .ev-summary { order: 3; flex-basis: 100%; }

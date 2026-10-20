@@ -63,12 +63,14 @@
       </div>
 
       <div class="ev-grid">
-        <div class="ev-main">
-          <div class="panel">
-            <div class="ev-recs-head">
-              <h2 data-i18n="ev.what_to_fix">What to fix</h2>
-              <button type="button" id="ev-apply" class="btn-primary btn-sm"><span data-i18n="ev.apply">Apply to my CV</span> · 1🪙</button>
-            </div>
+        <!-- Fortalezas y debilidades son pestañas (4.22): desplegarlas estiraba la página hacia abajo -->
+        <div class="panel ev-fix">
+          <div class="ev-tabs" role="tablist">
+            <button type="button" role="tab" id="ev-tab-fix" aria-controls="ev-pane-fix" aria-selected="true"><span data-i18n="ev.what_to_fix">What to fix</span></button>
+            <button type="button" role="tab" id="ev-tab-strengths" aria-controls="ev-pane-strengths" aria-selected="false" tabindex="-1"><span data-i18n="ev.strengths">Strengths</span> <span id="ev-strengths-count" class="ev-count"></span></button>
+            <button type="button" role="tab" id="ev-tab-weak" aria-controls="ev-pane-weak" aria-selected="false" tabindex="-1"><span data-i18n="ev.weaknesses">Weaknesses</span> <span id="ev-weak-count" class="ev-count"></span></button>
+          </div>
+          <div id="ev-pane-fix" class="ev-pane" role="tabpanel" aria-labelledby="ev-tab-fix" tabindex="0">
             <div id="ev-kw-block">
               <p id="ev-kw-label" class="ev-label"><span data-i18n="ev.missing_kws">Missing keywords</span> · <span id="ev-kw-count"></span></p>
               <div id="ev-keywords" class="tag-cloud"></div>
@@ -81,17 +83,19 @@
               <span><span class="bars l1" aria-hidden="true"><b></b><b></b><b></b></span><span data-i18n="ev.prio_optional">Nice to have</span></span>
             </span>
             <ol id="ev-recs" class="recommendations-list ev-recs"></ol>
-            <button type="button" id="ev-recs-more" class="ev-more hidden" aria-controls="ev-recs" aria-expanded="false"></button>
           </div>
-          <div class="ev-folds">
-            <details class="panel ev-fold">
-              <summary><span data-i18n="ev.strengths">Strengths</span> <span id="ev-strengths-count" class="ev-count"></span></summary>
-              <ul id="ev-strengths" class="ev-list ev-list--good"></ul>
-            </details>
-            <details class="panel ev-fold">
-              <summary><span data-i18n="ev.weak_format">Weaknesses &amp; formatting</span> <span id="ev-weaknesses-count" class="ev-count"></span></summary>
-              <ul id="ev-weaknesses" class="ev-list ev-list--bad"></ul>
-            </details>
+          <div id="ev-pane-strengths" class="ev-pane" role="tabpanel" aria-labelledby="ev-tab-strengths" tabindex="0" hidden>
+            <ul id="ev-strengths" class="ev-rows"></ul>
+          </div>
+          <div id="ev-pane-weak" class="ev-pane" role="tabpanel" aria-labelledby="ev-tab-weak" tabindex="0" hidden>
+            <ul id="ev-weaknesses" class="ev-rows"></ul>
+            <p id="ev-formatting-label" class="ev-label" data-i18n="ev.formatting">Formatting</p>
+            <ul id="ev-formatting" class="ev-rows"></ul>
+          </div>
+          <!-- Al pie y solo en "What to fix": al lado de pestañas de 24 px no entraba, y aplica estas recomendaciones -->
+          <div id="ev-fix-foot" class="ev-fix-foot">
+            <button type="button" id="ev-recs-more" class="ev-more hidden" aria-controls="ev-recs" aria-expanded="false"></button>
+            <button type="button" id="ev-apply" class="btn-primary btn-sm"><span data-i18n="ev.apply">Apply to my CV</span> · 1🪙</button>
           </div>
         </div>
 

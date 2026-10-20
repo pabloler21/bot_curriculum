@@ -87,7 +87,10 @@ function initials(name) {
   return (name || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('');
 }
 
-function listHtml(items) { return items.map((i) => `<li>${esc(i)}</li>`).join(''); }
+// Fortalezas y debilidades: filas con un ícono gris, como las recomendaciones numeradas.
+function rowsHtml(items, icon) {
+  return items.map((i) => `<li><span class="ev-ico" aria-hidden="true">${icon}</span><span>${esc(i)}</span></li>`).join('');
+}
 
 // Prioridad de Jev: barras de señal en gris (sin color: el color es de los botones pagos).
 const PRIO = { essential: [3, 'Essential'], important: [2, 'Important'], optional: [1, 'Nice to have'] };
@@ -133,20 +136,56 @@ function openSummary(open) {
   btn.setAttribute('aria-expanded', String(open));
 }
 
-const RECS_SHOWN = 5;  // el resto queda detrás de "Show all"
+const RECS_SHOWN = 4;  // con texto de 16 px entran 4 sin scroll en 1920×945; el resto, detrás de "Show all"
+let recsShown = RECS_SHOWN;
 
 function showAllRecs(all) {
   const items = [...$('ev-recs').children];
-  items.forEach((li, i) => li.classList.toggle('hidden', !all && i >= RECS_SHOWN));
+  items.forEach((li, i) => li.classList.toggle('hidden', !all && i >= recsShown));
   const btn = $('ev-recs-more');
-  btn.classList.toggle('hidden', items.length <= RECS_SHOWN);
+  btn.classList.toggle('hidden', items.length <= recsShown);
   btn.textContent = all ? t('ev.recs_less', 'Show fewer') : `${t('ev.recs_all', 'Show all recommendations')} (${items.length})`;
   btn.setAttribute('aria-expanded', String(all));
 }
 
-function fillFold(id, items) {
-  $(id).innerHTML = listHtml(items);
-  $(`${id}-count`).textContent = items.length;
+// En escritorio la pestaña tiene alto fijo (el de la columna del adapter): se muestran las recomendaciones
+// que entran sin scroll, hasta RECS_SHOWN, porque su largo cambia con el CV y el idioma. Se recalcula
+// cuando cambia el alto (cargan los jobs, cambia la ventana); con "Show all" abierto no se toca.
+function fitRecs() {
+  const pane = $('ev-pane-fix');
+  if (pane.hidden || getComputedStyle(pane).overflowY !== 'auto' || $('ev-recs-more').getAttribute('aria-expanded') === 'true') return;
+  recsShown = RECS_SHOWN;
+  showAllRecs(false);
+  while (recsShown > 1 && pane.scrollHeight > pane.clientHeight) {
+    recsShown -= 1;
+    showAllRecs(false);
+  }
+}
+
+function renderStrengthsAndWeaknesses(ev) {
+  const strengths = ev.strengths || [];
+  const weaknesses = ev.weaknesses || [];
+  const formatting = ev.formatting_issues || [];
+  $('ev-strengths').innerHTML = rowsHtml(strengths, '✓');
+  $('ev-weaknesses').innerHTML = rowsHtml(weaknesses, '!');
+  $('ev-formatting').innerHTML = rowsHtml(formatting, '!');
+  $('ev-formatting-label').classList.toggle('hidden', !formatting.length);
+  $('ev-strengths-count').textContent = strengths.length;
+  $('ev-weak-count').textContent = weaknesses.length + formatting.length;
+}
+
+// ── Pestañas: What to fix / Strengths / Weaknesses ──
+const TABS = [...document.querySelectorAll('.ev-tabs [role="tab"]')];
+
+function selectTab(tab, focus) {
+  TABS.forEach((x) => {
+    const on = x === tab;
+    x.setAttribute('aria-selected', String(on));
+    x.tabIndex = on ? 0 : -1;
+    $(x.getAttribute('aria-controls')).hidden = !on;
+  });
+  $('ev-fix-foot').hidden = tab.id !== 'ev-tab-fix';  // "Show all" y "Apply" son de las recomendaciones
+  if (focus) tab.focus();
 }
 
 function renderResults(ev) {
@@ -154,8 +193,8 @@ function renderResults(ev) {
   $('ev-name').textContent = ev.candidate_name || '';
   $('ev-score').textContent = ev.overall_score ?? '–';
   $('ev-summary').textContent = ev.summary || '';
-  fillFold('ev-strengths', ev.strengths || []);
-  fillFold('ev-weaknesses', [...(ev.weaknesses || []), ...(ev.formatting_issues || [])]);
+  renderStrengthsAndWeaknesses(ev);
+  selectTab(TABS[0]);
   renderPriorities(ev);
   showAllRecs(false);
   $('ev-apply').disabled = !(ev.recommendations || []).length;
@@ -164,6 +203,7 @@ function renderResults(ev) {
   openSummary(false);
   const sum = $('ev-summary');  // se mide ya visible: si entra en 2 líneas, no hace falta "Read more"
   $('ev-summary-more').classList.toggle('hidden', sum.scrollHeight <= sum.clientHeight);
+  fitRecs();
   loadJobs();
 }
 
@@ -279,6 +319,15 @@ $('ev-file').addEventListener('change', () => { uploadAndEvaluate($('ev-file').f
 $('ev-new').addEventListener('click', showIntake);
 $('ev-summary-more').addEventListener('click', (e) => openSummary(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
 $('ev-recs-more').addEventListener('click', (e) => showAllRecs(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
+new ResizeObserver(() => fitRecs()).observe($('ev-pane-fix'));
+TABS.forEach((tab) => tab.addEventListener('click', () => selectTab(tab)));
+document.querySelector('.ev-tabs').addEventListener('keydown', (e) => {
+  const i = TABS.indexOf(document.activeElement);
+  const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: TABS.length - 1 }[e.key];
+  if (i < 0 || next === undefined) return;
+  e.preventDefault();
+  selectTab(TABS[(next + TABS.length) % TABS.length], true);
+});
 $('ev-apply').addEventListener('click', () => runAction('improve', { recommendations: ((evaluation && evaluation.recommendations) || []).slice(0, 20) }));
 $('ev-cover').addEventListener('click', () => runAction('cover', { job_input: $('ev-job').value.trim() }));
 $('ev-tailor').addEventListener('click', () => runAction('tailor', { job_input: $('ev-job').value.trim() }));
