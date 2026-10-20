@@ -232,6 +232,20 @@ def test_evaluator_keywords_are_written_as_they_come():
     assert "text-transform: none" in rule and "font-size: 13px" in rule
 
 
+def test_evaluator_asks_for_the_analysis_in_the_page_language():
+    js = (STATIC / "evaluator.js").read_text(encoding="utf-8")
+    evaluate = re.search(r"async function evaluate\(.*?\n\}", js, re.S).group(0)
+    assert "output_language" in evaluate and "aurea.lang" in evaluate
+
+
+def test_evaluator_translates_an_analysis_saved_in_another_language():
+    assert "/evaluate/translate" in (STATIC / "evaluator.js").read_text(encoding="utf-8")
+
+
+def test_sign_out_forgets_the_translated_analysis_too():
+    assert "'aurea_last_evaluation_alt'" in (STATIC / "shell.js").read_text(encoding="utf-8")
+
+
 def test_evaluator_missing_keywords_lead_the_improvements():
     html = _evaluator_html()
     assert 'id="ev-keywords"' in html, "faltan las keywords como chips"
