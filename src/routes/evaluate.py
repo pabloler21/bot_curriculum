@@ -27,6 +27,7 @@ async def evaluate_resume(
     user_id: OptionalUser,
     file: Optional[UploadFile] = File(None),
     job_id: Optional[str] = Form(None),
+    output_language: str = Form("en", pattern="^(es|en)$"),
 ):
     try:
         file_bytes = await file.read() if file is not None else b""
@@ -81,7 +82,7 @@ async def evaluate_resume(
                         job_id,
                     )
 
-        result = evaluate_cv(cv_text, job_context=job_context)
+        result = evaluate_cv(cv_text, job_context=job_context, output_language=output_language)
         result = await prioritize(result, job_context)
         logger.info("[evaluate] Evaluation complete")
 
