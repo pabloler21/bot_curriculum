@@ -268,7 +268,8 @@ def test_evaluate_cv_asks_for_the_language_and_tags_the_result():
     with _patch("backend.evaluator.chain") as chain:
         chain.invoke.return_value = _fake_evaluation()
         out = evaluate_cv("My CV", output_language="es")
-    assert chain.invoke.call_args.args[0]["output_language"] == "es"
+    # El español de la UI es rioplatense: el análisis le habla al usuario con el mismo voseo.
+    assert "voseo" in chain.invoke.call_args.args[0]["output_language"]
     assert out["language"] == "es"
     assert out["evaluated_at"]  # empareja una evaluación con su traducción
 
@@ -287,7 +288,7 @@ def test_translate_evaluation_translates_the_text_and_keeps_the_rest():
     with _patch("backend.evaluator.translate_chain") as chain:
         chain.invoke.return_value = _SPANISH
         out = translate_evaluation(_SAVED, "es")
-    assert chain.invoke.call_args.args[0]["output_language"] == "es"
+    assert "voseo" in chain.invoke.call_args.args[0]["output_language"]
     assert out["recommendations"] == ["Agregá métricas"] and out["summary"] == "bien"
     # Lo que no es texto no cambia: mismo puntaje, misma prioridad, misma evaluación.
     assert out["overall_score"] == 72
