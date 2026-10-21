@@ -357,3 +357,10 @@ def test_evaluator_job_cards_do_not_grow_with_the_match_score():
     """Con un CV subido los jobs vienen con "% match": una línea más por tarjeta llevaba la página a 961 px
     en 945. En el evaluator no se muestra (está en la página de jobs) y las tarjetas no cambian de alto."""
     assert "display: none" in _app_css_rule(".ev-side .job-mini-score")
+
+
+def test_evaluator_results_take_the_window_height():
+    """4.23: el alto era el de la columna del adapter (657 px): entraba en 945 px de ventana, pero en
+    911 la página scrolleaba 30 px. Ahora la página mide lo que la ventana y no scrollea."""
+    rule = _app_css_rule('body[data-page="evaluator"]:has(.ev-results:not(.hidden))')
+    assert "height: 100dvh" in rule and "overflow: hidden" in rule
