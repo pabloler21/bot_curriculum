@@ -372,3 +372,10 @@ def test_evaluator_adapter_keeps_its_height_and_jobs_take_the_rest():
     assert "flex-shrink: 0" in _app_css_rule(".ev-side > .ev-adapter")
     assert "flex: 1" in _app_css_rule(".ev-results .ev-jobs-panel")
     assert "overflow-y: auto" in _app_css_rule(".ev-jobs-panel .job-row")
+
+
+def test_evaluator_job_titles_take_one_line_in_short_windows():
+    """En 911 px de alto la segunda fila de jobs quedaba cortada: con el título en una línea entran las 4."""
+    css = (STATIC / "app.css").read_text(encoding="utf-8")
+    block = css[css.index("(max-height: 940px)"):]
+    assert "-webkit-line-clamp: 1" in block[: block.index("}\n}") + 3]
