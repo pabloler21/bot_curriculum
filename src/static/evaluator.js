@@ -266,6 +266,17 @@ async function loadJobs() {
   } catch (_) {
     box.innerHTML = `<p class="secondary-text">${esc(t('ev.jobs_error', 'Could not load job recommendations.'))}</p>`;
   }
+  fitJobs();
+}
+
+// En escritorio la lista de jobs tiene el alto que le queda a la columna: una tarjeta cortada a la mitad
+// quedaba mal, así que se muestran las que entran enteras (se recalcula cuando cambia la ventana).
+function fitJobs() {
+  const row = $('ev-jobs');
+  const cards = [...row.querySelectorAll('.job-mini')];
+  cards.forEach((c) => c.classList.remove('hidden'));
+  if (getComputedStyle(row).overflowY !== 'auto') return;
+  for (let i = cards.length - 1; i > 0 && row.scrollHeight > row.clientHeight; i -= 1) cards[i].classList.add('hidden');
 }
 
 // ── Acciones pagas ────────────────────────────────────────────────────────
@@ -364,6 +375,7 @@ $('ev-new').addEventListener('click', showIntake);
 $('ev-summary-more').addEventListener('click', (e) => openSummary(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
 $('ev-recs-more').addEventListener('click', (e) => showAllRecs(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
 new ResizeObserver(() => fitRecs()).observe($('ev-pane-fix'));
+new ResizeObserver(() => fitJobs()).observe(document.querySelector('.ev-jobs-panel .job-row'));
 TABS.forEach((tab) => tab.addEventListener('click', () => selectTab(tab)));
 document.querySelector('.ev-tabs').addEventListener('keydown', (e) => {
   const i = TABS.indexOf(document.activeElement);
