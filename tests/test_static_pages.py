@@ -364,3 +364,11 @@ def test_evaluator_results_take_the_window_height():
     911 la página scrolleaba 30 px. Ahora la página mide lo que la ventana y no scrollea."""
     rule = _app_css_rule('body[data-page="evaluator"]:has(.ev-results:not(.hidden))')
     assert "height: 100dvh" in rule and "overflow: hidden" in rule
+
+
+def test_evaluator_adapter_keeps_its_height_and_jobs_take_the_rest():
+    """Con la página atada a la ventana, el adapter no se achica y los jobs ocupan lo que queda,
+    con scroll propio si no entran: así las dos columnas terminan juntas en cualquier alto."""
+    assert "flex-shrink: 0" in _app_css_rule(".ev-side > .ev-adapter")
+    assert "flex: 1" in _app_css_rule(".ev-results .ev-jobs-panel")
+    assert "overflow-y: auto" in _app_css_rule(".ev-jobs-panel .job-row")
