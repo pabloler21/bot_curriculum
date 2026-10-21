@@ -205,8 +205,8 @@ src/
     evaluator.html  # ATS evaluator (anónimo) + evaluator.js. Resultados (4.22): a la izquierda un panel
                     # con pestañas "What to fix" (keywords + las recomendaciones que entran, hasta 4),
                     # "Strengths" y "Weaknesses"; a la derecha el adapter y 4 jobs, porque el adapter es
-                    # el gancho para pagar. En escritorio el panel toma el alto de esa columna y scrollea
-                    # por dentro: la página entra sin scroll. Se aparta del Excalidraw a propósito.
+                    # el gancho para pagar. En escritorio la página mide lo que la ventana (4.23) y cada
+                    # panel muestra lo que entra entero: no hay scroll. Se aparta del Excalidraw a propósito.
     tailor.html     # Adaptar CV a un JD (texto o URL) + tailor.js
     cover.html      # Cover letter + cover.js
     jobs.html       # Job board: My Jobs + Recommended + jobs.js
