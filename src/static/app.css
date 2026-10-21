@@ -270,6 +270,8 @@ body[data-page="evaluator"] .app-main { padding-top: 20px; padding-bottom: 20px;
 @media (min-width: 861px) and (min-height: 830px) {
   body[data-page="evaluator"]:has(.ev-results:not(.hidden)) { height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
   body[data-page="evaluator"]:has(.ev-results:not(.hidden)) .app-main { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; }
+  /* Con sesión el main ya tiene el margen del sidebar: con width 100% se pasaba 144 px en 1280 de ancho */
+  body.has-sidebar[data-page="evaluator"]:has(.ev-results:not(.hidden)) .app-main { width: calc(100% - var(--sidebar-w)); }
   .ev-results:not(.hidden) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .ev-results > .ev-profile { flex-shrink: 0; }
   .ev-results .ev-grid { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); }
