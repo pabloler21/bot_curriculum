@@ -391,3 +391,9 @@ def test_evaluator_short_windows_scroll_instead_of_cutting_jobs():
     """Con menos de 830 px de alto no entra ni una fila de jobs entera: ahí la página scrollea como antes."""
     css = (STATIC / "app.css").read_text(encoding="utf-8")
     assert "(min-height: 830px)" in css and "(min-height: 780px)" not in css
+
+
+def test_evaluator_fits_beside_the_sidebar():
+    """Con sesión el main tiene el margen del sidebar: con width 100% se pasaba 144 px en 1280 de ancho."""
+    rule = _app_css_rule('body.has-sidebar[data-page="evaluator"]:has(.ev-results:not(.hidden)) .app-main')
+    assert "calc(100% - var(--sidebar-w))" in rule
