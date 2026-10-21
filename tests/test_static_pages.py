@@ -385,3 +385,9 @@ def test_evaluator_shows_only_the_jobs_that_fit_whole():
     """Una tarjeta de job cortada a la mitad quedaba mal: se muestran las que entran enteras."""
     js = (STATIC / "evaluator.js").read_text(encoding="utf-8")
     assert "function fitJobs" in js and "observe(document.querySelector('.ev-jobs-panel .job-row'))" in js
+
+
+def test_evaluator_short_windows_scroll_instead_of_cutting_jobs():
+    """Con menos de 830 px de alto no entra ni una fila de jobs entera: ahí la página scrollea como antes."""
+    css = (STATIC / "app.css").read_text(encoding="utf-8")
+    assert "(min-height: 830px)" in css and "(min-height: 780px)" not in css
