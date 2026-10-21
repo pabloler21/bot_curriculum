@@ -448,10 +448,11 @@ ruff check .
 - **Color en la app**: el coral (y el tornasol) es de los botones pagos ("Generate Cover Letter",
   "Tailor your CV"). Lo informativo va en grises y vidrio, para no competir con ellos: por eso la
   prioridad del evaluator son barras grises (4.21) y no colores.
-- **Alto del evaluator**: la columna del adapter y los jobs fija el alto de la fila (657 px en
-  1920×945) y el panel de mejoras la iguala. Si algo la agranda, la página scrollea: pasó con el
-  "% match" de los jobs y con el texto del adapter en español (4.22). Medir en 1920×945 en inglés y
-  en español, con un CV subido (los jobs rankeados no son los mismos que sin CV).
+- **Alto del evaluator**: con resultados, en escritorio y desde 830 px de alto, la página mide lo
+  que la ventana (`100dvh`) y no scrollea (4.23). Atarla a la columna del adapter (4.22) solo
+  entraba en 945 px: en 911 scrolleaba. El panel de mejoras y la lista de jobs se reparten lo que
+  queda y muestran lo que entra entero (`fitRecs`, `fitJobs`); el adapter no se achica. Medir en
+  varios altos (830, 911, 945, 1080), en inglés y en español, con un CV subido.
 - **Idioma**: todo lo que ve el usuario sale en el idioma de la página, también lo que escribe la IA:
   los endpoints que generan texto reciben `output_language` (`en`/`es`). En español, voseo como la UI
   ("Subí", "Pegá"). Los títulos de los jobs quedan como vienen: son avisos reales.
