@@ -544,6 +544,8 @@ ruff check .
 **Último release**: `main` al día con `develop` hasta la 4.22 (PR #75, deployado el 2026-10-20).
 Antes: PR #72 (4.20–4.21, 2026-10-18), PR #70 (4.17–4.19, 2026-10-16) y PR #67 (4.16, 2026-10-15).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
+**Falta del lado del usuario**: subir `TYPESAFE_API_KEY` y `SUPABASE_SERVICE_ROLE_KEY` al `.env` del VPS
+(deuda 9). Hasta entonces, en prod no hay barras de prioridad y con sesión el saldo da 0 créditos.
 No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya está en este archivo).
 
 ## Deuda abierta
@@ -566,7 +568,7 @@ No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya
    Auth → Rate limits, verificado el 2026-10-09). **Bloquea el producto**: no alcanza para
    onboardear usuarios reales ni para probar el magic link más de dos veces seguidas. Se levanta
    configurando SMTP propio o un Send Email hook; ahí el límite se ajusta en Auth → Rate Limits.
-9. **Al `.env` del VPS le faltan dos claves** (revisado el 2026-10-20; tiene solo `ANTHROPIC_API_KEY`,
+9. **⏳ FALTA — al `.env` del VPS le faltan dos claves (las sube el usuario)** (revisado el 2026-10-20 y el 2026-10-21; tiene solo `ANTHROPIC_API_KEY`,
    `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `FRONTEND_BASE_URL`, y no se tocaba desde el 2026-09-12):
    - `TYPESAFE_API_KEY`: sin ella el evaluator sale sin barras de prioridad (la 4.21 no se ve en prod).
    - `SUPABASE_SERVICE_ROLE_KEY`: sin ella `db.client` es None y, con sesión, el saldo da 0 créditos,
