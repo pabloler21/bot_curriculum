@@ -379,3 +379,9 @@ def test_evaluator_job_titles_take_one_line_in_short_windows():
     css = (STATIC / "app.css").read_text(encoding="utf-8")
     block = css[css.index("(max-height: 940px)"):]
     assert "-webkit-line-clamp: 1" in block[: block.index("}\n}") + 3]
+
+
+def test_evaluator_shows_only_the_jobs_that_fit_whole():
+    """Una tarjeta de job cortada a la mitad quedaba mal: se muestran las que entran enteras."""
+    js = (STATIC / "evaluator.js").read_text(encoding="utf-8")
+    assert "function fitJobs" in js and "observe(document.querySelector('.ev-jobs-panel .job-row'))" in js
