@@ -273,6 +273,8 @@ body[data-page="evaluator"] .app-main { padding-top: 20px; padding-bottom: 20px;
   .ev-results:not(.hidden) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .ev-results > .ev-profile { flex-shrink: 0; }
   .ev-results .ev-grid { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); }
+  .ev-results .ev-side { min-height: 0; }
+  .ev-side > .ev-adapter { flex-shrink: 0; }  /* en 911 px se achicaba 17 px y apretaba el formulario */
 }
 /* Las pestañas reemplazan al título "What to fix": miden como "Tailor it to a job". */
 .ev-tabs { display: flex; flex-wrap: wrap; column-gap: 28px; row-gap: 6px; border-bottom: 1px solid var(--separator); }
