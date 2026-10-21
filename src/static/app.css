@@ -264,6 +264,27 @@ body[data-page="evaluator"] .app-main { padding-top: 20px; padding-bottom: 20px;
   .ev-grid > .ev-fix { contain: size; min-height: 480px; }
   .ev-fix > .ev-pane { flex: 1; min-height: 0; overflow-y: auto; margin-right: -12px; padding-right: 12px; }
 }
+/* 4.23: la página mide lo que la ventana. Atada a la columna del adapter (657 px) entraba en 945 px de
+   alto, pero en 911 scrolleaba y el contenido pasaba por debajo del nav. Con menos de 830 px de alto no
+   entra entera ni una fila de jobs: ahí la página vuelve a scrollear. */
+@media (min-width: 861px) and (min-height: 830px) {
+  body[data-page="evaluator"]:has(.ev-results:not(.hidden)) { height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+  body[data-page="evaluator"]:has(.ev-results:not(.hidden)) .app-main { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; }
+  /* Con sesión el main ya tiene el margen del sidebar: con width 100% se pasaba 144 px en 1280 de ancho */
+  body.has-sidebar[data-page="evaluator"]:has(.ev-results:not(.hidden)) .app-main { width: calc(100% - var(--sidebar-w)); }
+  .ev-results:not(.hidden) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .ev-results > .ev-profile { flex-shrink: 0; }
+  .ev-results .ev-grid { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); }
+  .ev-results .ev-side { min-height: 0; }
+  .ev-side > .ev-adapter { flex-shrink: 0; }  /* en 911 px se achicaba 17 px y apretaba el formulario */
+  /* Los jobs ocupan lo que queda (las dos columnas terminan juntas) y, si no entran, scrollean adentro */
+  .ev-results .ev-jobs-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .ev-jobs-panel .job-row { flex: 1; min-height: 0; overflow-y: auto; align-content: start; }
+}
+/* En 911 px de alto la segunda fila de jobs quedaba cortada: con el título en una línea entran las 4 */
+@media (min-width: 861px) and (min-height: 830px) and (max-height: 940px) {
+  .ev-side .job-row .job-mini-title { -webkit-line-clamp: 1; }  /* más específica: la de 2 líneas va después */
+}
 /* Las pestañas reemplazan al título "What to fix": miden como "Tailor it to a job". */
 .ev-tabs { display: flex; flex-wrap: wrap; column-gap: 28px; row-gap: 6px; border-bottom: 1px solid var(--separator); }
 .ev-tabs [role="tab"] {

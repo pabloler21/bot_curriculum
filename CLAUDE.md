@@ -86,6 +86,15 @@ Si no, el fetch no trajo lo esperado — no seguir sin entender por qué.
   git también lo usa, vía `core.sshCommand = C:/Windows/System32/OpenSSH/ssh.exe`.
 - Git Bash: su `ssh` (`/usr/bin/ssh`) no ve ese agente y pide la passphrase en cada conexión.
   Por eso un `ssh` **no interactivo** desde Git Bash falla: para automatizar, usar PowerShell.
+- Ojo: en algunas sesiones de PowerShell `ssh` resuelve al de Git (`(Get-Command ssh).Source`) y
+  falla con `Permission denied (publickey)`. Llamar siempre `C:\Windows\System32\OpenSSH\ssh.exe`.
+- **Subir una clave al `.env` del VPS** sin que quede en ningún comando (los argumentos se ven en
+  `ps` y en el historial): mandar la línea del `.env` local por el pipe del SSH. PowerShell le agrega
+  un BOM (EF BB BF) aunque se cambie `$OutputEncoding`, y CRLF: el lado remoto los saca. Probado:
+  ```powershell
+  (Select-String -Path .env -Pattern '^NOMBRE_DE_LA_CLAVE=').Line | & C:\Windows\System32\OpenSSH\ssh.exe linuxuser@64.176.23.59 "sed '1s/^\xEF\xBB\xBF//' | tr -d '\r' | sudo -u deploy tee -a /home/deploy/bot_curriculum/.env > /dev/null"
+  ```
+  Después, `sudo systemctl restart botcv`: el servicio lee el `.env` como `EnvironmentFile` al arrancar.
 
 ## Variables de entorno
 
@@ -196,8 +205,8 @@ src/
     evaluator.html  # ATS evaluator (anónimo) + evaluator.js. Resultados (4.22): a la izquierda un panel
                     # con pestañas "What to fix" (keywords + las recomendaciones que entran, hasta 4),
                     # "Strengths" y "Weaknesses"; a la derecha el adapter y 4 jobs, porque el adapter es
-                    # el gancho para pagar. En escritorio el panel toma el alto de esa columna y scrollea
-                    # por dentro: la página entra sin scroll. Se aparta del Excalidraw a propósito.
+                    # el gancho para pagar. En escritorio la página mide lo que la ventana (4.23) y cada
+                    # panel muestra lo que entra entero: no hay scroll. Se aparta del Excalidraw a propósito.
     tailor.html     # Adaptar CV a un JD (texto o URL) + tailor.js
     cover.html      # Cover letter + cover.js
     jobs.html       # Job board: My Jobs + Recommended + jobs.js
@@ -439,10 +448,11 @@ ruff check .
 - **Color en la app**: el coral (y el tornasol) es de los botones pagos ("Generate Cover Letter",
   "Tailor your CV"). Lo informativo va en grises y vidrio, para no competir con ellos: por eso la
   prioridad del evaluator son barras grises (4.21) y no colores.
-- **Alto del evaluator**: la columna del adapter y los jobs fija el alto de la fila (657 px en
-  1920×945) y el panel de mejoras la iguala. Si algo la agranda, la página scrollea: pasó con el
-  "% match" de los jobs y con el texto del adapter en español (4.22). Medir en 1920×945 en inglés y
-  en español, con un CV subido (los jobs rankeados no son los mismos que sin CV).
+- **Alto del evaluator**: con resultados, en escritorio y desde 830 px de alto, la página mide lo
+  que la ventana (`100dvh`) y no scrollea (4.23). Atarla a la columna del adapter (4.22) solo
+  entraba en 945 px: en 911 scrolleaba. El panel de mejoras y la lista de jobs se reparten lo que
+  queda y muestran lo que entra entero (`fitRecs`, `fitJobs`); el adapter no se achica. Medir en
+  varios altos (830, 911, 945, 1080), en inglés y en español, con un CV subido.
 - **Idioma**: todo lo que ve el usuario sale en el idioma de la página, también lo que escribe la IA:
   los endpoints que generan texto reciben `output_language` (`en`/`es`). En español, voseo como la UI
   ("Subí", "Pegá"). Los títulos de los jobs quedan como vienen: son avisos reales.
@@ -459,9 +469,9 @@ ruff check .
   - ✅ `patch("src.routes.adapt.ensure_user")`
   - ❌ `patch("backend.credits.ensure_user")`
 - **Patch de `OptionalUser`**: como `Depends(get_current_user)` guarda la referencia directa, parchear `backend.auth._supabase`, no `backend.auth.get_current_user`
-- **Finales de línea**: los archivos del repo están guardados con CRLF. Un script que los reescriba con
-  `
-` deja finales mezclados: conservar los del archivo.
+- **Finales de línea**: el repo guarda LF y en esta PC el working tree tiene CRLF (`core.autocrlf=true`).
+  Un CR suelto dentro de una línea hace que git trate el archivo como binario y lo guarde con CRLF:
+  todas las líneas aparecen cambiadas. Después de editar con un script, mirar `git diff --stat`.
 - **README**: en inglés, para quien llega al repo. Sin datos que envejecen solos (versiones de
   librerías, cantidad de tests): el anterior quedó medio año desactualizado por eso. La referencia
   completa de la API la sirve FastAPI en `/docs`; el README solo lista los endpoints. Si una
@@ -529,11 +539,14 @@ ruff check .
 | 4.19 | README reescrito: el anterior describía la app de abril (evaluator + job board en Render). Ahora cubre features y créditos, pipeline, seguridad, stack, API, setup local y deploy al VPS. Se borró `render.yaml`, que ya no se usaba. Sale de la rama de la 4.18: mergear el #68 primero | ✅ mergeada |
 | 4.20 | Haiku 4.5 → Haiku 5.5 en todas las etapas (evaluator y scorer pasan por `model_for`). Arreglos que pidió el cambio: `max_tokens` explícito, la carta se lee con `.text`, y toda salida estructurada usa structured outputs: el adapter fallaba siempre con Haiku 5.5 y con Haiku 4.5 devolvía `gaps` vacío. Verificado con una corrida real de las 7 etapas. Sale de la rama de la 4.19: mergear #68 y #69 primero | ✅ mergeada |
 | 4.21 | "What to fix" ordenado de imprescindible a opcional: Jev puntúa cada keyword y recomendación, y el evaluator lo muestra con barras de señal en gris (sin color, mismo alto de panel; el rojo se fue). El usuario descartó 8 variantes en el companion antes de elegir. Umbrales calibrados con 3 CVs reales. Spec y plan en `docs/superpowers/`. Sale de la rama de la 4.20: mergear #68 → #69 → #71 primero; al deployar, `TYPESAFE_API_KEY` en el `.env` del VPS | ✅ mergeada |
-| 4.22 | Evaluator sin scroll y en un solo idioma. Fortalezas y debilidades pasan de pliegues a pestañas del panel de mejoras (de 24 px, como los títulos), y en escritorio ese panel toma el alto de la columna del adapter y scrollea por dentro: la página entra en 945 px, con 20 px parejos entre todo. Letra a la medida: texto a 16, keywords a 13 sin mayúsculas, las recomendaciones que entran (hasta 4). El análisis sale en el idioma de la página (`/evaluate` con `output_language`; en español, voseo) y al cambiar EN/ES se traduce el guardado en vez de re-evaluar, que cambiaba el puntaje (`POST /evaluate/translate`, un campo obligatorio por texto). En el evaluator los jobs no muestran "% match" y en el celular la página no scrollea de costado. El usuario eligió en el companion la B (pestañas) y la 1 (16 px, en filas) | 🔄 PR abierto |
+| 4.22 | Evaluator sin scroll y en un solo idioma. Fortalezas y debilidades pasan de pliegues a pestañas del panel de mejoras (de 24 px, como los títulos), y en escritorio ese panel toma el alto de la columna del adapter y scrollea por dentro: la página entra en 945 px, con 20 px parejos entre todo. Letra a la medida: texto a 16, keywords a 13 sin mayúsculas, las recomendaciones que entran (hasta 4). El análisis sale en el idioma de la página (`/evaluate` con `output_language`; en español, voseo) y al cambiar EN/ES se traduce el guardado en vez de re-evaluar, que cambiaba el puntaje (`POST /evaluate/translate`, un campo obligatorio por texto). En el evaluator los jobs no muestran "% match" y en el celular la página no scrollea de costado. El usuario eligió en el companion la B (pestañas) y la 1 (16 px, en filas) | ✅ mergeada |
+| 4.23 | Evaluator sin scroll en cualquier alto de ventana: la 4.22 entraba en 945 px pero en 911 scrolleaba 30 px y el contenido pasaba por debajo del nav. Con resultados, en escritorio y desde 830 px de alto, la página mide `100dvh`; el panel de mejoras y la lista de jobs se reparten el alto (las columnas terminan juntas), el adapter no se achica, los títulos de jobs van en una línea hasta 940 px de alto y `fitJobs` muestra solo las tarjetas que entran enteras. Con sesión, el ancho descuenta el sidebar | 🔄 PR abierto |
 
-**Último release**: `main` al día con `develop` hasta la 4.21 (PR #72, deployado el 2026-10-18).
-Antes: PR #70 (4.17–4.19, 2026-10-16), PR #67 (4.16, 2026-10-15) y PR #64 (4.14, 2026-10-14).
+**Último release**: `main` al día con `develop` hasta la 4.22 (PR #75, deployado el 2026-10-20).
+Antes: PR #72 (4.20–4.21, 2026-10-18), PR #70 (4.17–4.19, 2026-10-16) y PR #67 (4.16, 2026-10-15).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
+**Falta del lado del usuario**: subir `TYPESAFE_API_KEY` y `SUPABASE_SERVICE_ROLE_KEY` al `.env` del VPS
+(deuda 9). Hasta entonces, en prod no hay barras de prioridad y con sesión el saldo da 0 créditos.
 No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya está en este archivo).
 
 ## Deuda abierta
@@ -556,6 +569,11 @@ No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya
    Auth → Rate limits, verificado el 2026-10-09). **Bloquea el producto**: no alcanza para
    onboardear usuarios reales ni para probar el magic link más de dos veces seguidas. Se levanta
    configurando SMTP propio o un Send Email hook; ahí el límite se ajusta en Auth → Rate Limits.
-9. **Confirmar el `.env` del VPS** (el 2026-10-20 no se pudo leer: la clave SSH no estaba en el
-   agente): que tenga `TYPESAFE_API_KEY` (sin ella el evaluator sale sin barras de prioridad) y que
-   no fije `AUREA_*_MODEL` (si fija Haiku 4.5, prod no usa la 5.5 de la 4.20).
+9. **⏳ FALTA — al `.env` del VPS le faltan dos claves (las sube el usuario)** (revisado el 2026-10-20 y el 2026-10-21; tiene solo `ANTHROPIC_API_KEY`,
+   `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `FRONTEND_BASE_URL`, y no se tocaba desde el 2026-09-12):
+   - `TYPESAFE_API_KEY`: sin ella el evaluator sale sin barras de prioridad (la 4.21 no se ve en prod).
+   - `SUPABASE_SERVICE_ROLE_KEY`: sin ella `db.client` es None y, con sesión, el saldo da 0 créditos,
+     no se guardan CV base ni historial y `DELETE /account` da 503. No está en el `.env` local:
+     sale del panel de Supabase.
+   Ninguna se puede subir desde una sesión de Claude (el modo automático bloquea mandar secretos a
+   prod): las sube el usuario con el comando de "Acceso SSH". No fija `AUREA_*_MODEL` (usa Haiku 5.5).

@@ -357,3 +357,43 @@ def test_evaluator_job_cards_do_not_grow_with_the_match_score():
     """Con un CV subido los jobs vienen con "% match": una línea más por tarjeta llevaba la página a 961 px
     en 945. En el evaluator no se muestra (está en la página de jobs) y las tarjetas no cambian de alto."""
     assert "display: none" in _app_css_rule(".ev-side .job-mini-score")
+
+
+def test_evaluator_results_take_the_window_height():
+    """4.23: el alto era el de la columna del adapter (657 px): entraba en 945 px de ventana, pero en
+    911 la página scrolleaba 30 px. Ahora la página mide lo que la ventana y no scrollea."""
+    rule = _app_css_rule('body[data-page="evaluator"]:has(.ev-results:not(.hidden))')
+    assert "height: 100dvh" in rule and "overflow: hidden" in rule
+
+
+def test_evaluator_adapter_keeps_its_height_and_jobs_take_the_rest():
+    """Con la página atada a la ventana, el adapter no se achica y los jobs ocupan lo que queda,
+    con scroll propio si no entran: así las dos columnas terminan juntas en cualquier alto."""
+    assert "flex-shrink: 0" in _app_css_rule(".ev-side > .ev-adapter")
+    assert "flex: 1" in _app_css_rule(".ev-results .ev-jobs-panel")
+    assert "overflow-y: auto" in _app_css_rule(".ev-jobs-panel .job-row")
+
+
+def test_evaluator_job_titles_take_one_line_in_short_windows():
+    """En 911 px de alto la segunda fila de jobs quedaba cortada: con el título en una línea entran las 4."""
+    css = (STATIC / "app.css").read_text(encoding="utf-8")
+    block = css[css.index("(max-height: 940px)"):]
+    assert "-webkit-line-clamp: 1" in block[: block.index("}\n}") + 3]
+
+
+def test_evaluator_shows_only_the_jobs_that_fit_whole():
+    """Una tarjeta de job cortada a la mitad quedaba mal: se muestran las que entran enteras."""
+    js = (STATIC / "evaluator.js").read_text(encoding="utf-8")
+    assert "function fitJobs" in js and "observe(document.querySelector('.ev-jobs-panel .job-row'))" in js
+
+
+def test_evaluator_short_windows_scroll_instead_of_cutting_jobs():
+    """Con menos de 830 px de alto no entra ni una fila de jobs entera: ahí la página scrollea como antes."""
+    css = (STATIC / "app.css").read_text(encoding="utf-8")
+    assert "(min-height: 830px)" in css and "(min-height: 780px)" not in css
+
+
+def test_evaluator_fits_beside_the_sidebar():
+    """Con sesión el main tiene el margen del sidebar: con width 100% se pasaba 144 px en 1280 de ancho."""
+    rule = _app_css_rule('body.has-sidebar[data-page="evaluator"]:has(.ev-results:not(.hidden)) .app-main')
+    assert "calc(100% - var(--sidebar-w))" in rule
