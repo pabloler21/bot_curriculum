@@ -197,9 +197,25 @@ def test_evaluator_tabs_work_with_the_keyboard():
     assert "ArrowRight" in js and "ArrowLeft" in js
 
 
-def test_evaluator_tabs_are_as_big_as_the_panel_titles():
-    """Las pestañas reemplazan al título "What to fix": miden como "Tailor it to a job" (24 px), no 14."""
-    assert "font-size: 1.5rem" in _app_css_rule('.ev-tabs [role="tab"]')
+def test_evaluator_tabs_are_a_step_above_the_labels():
+    """4.24: a 24 px se veían enormes; a 18 siguen por encima de "MISSING KEYWORDS" (12 px)."""
+    assert "font-size: 18px" in _app_css_rule('.ev-tabs [role="tab"]')
+    assert "font-size: 12px" in _app_css_rule(".ev-label")
+
+
+def test_evaluator_profile_buttons():
+    """4.24: "Read more" es un botón redondo con flecha y "Upload a new CV" una pastilla con ícono,
+    en gris (el coral es de los botones pagos) y con relleno: `.panel > *` se lo sacaba."""
+    html = _evaluator_html()
+    more = re.search(r'<button[^>]*id="ev-summary-more"[^>]*>', html).group(0)
+    assert 'class="ev-round hidden"' in more
+    new = re.search(r'<button[^>]*id="ev-new"[^>]*>(.*?)</button>', html, re.S)
+    assert 'class="ev-pill"' in new.group(0) and "<svg" in new.group(1)
+    assert '<span data-i18n="ev.new_cv">' in new.group(1)  # applyI18n pisa el texto: el ícono va afuera
+    pill = _app_css_rule(".ev-profile .ev-pill")
+    assert "padding: 8px 16px" in pill and "accent" not in pill
+    js = (STATIC / "evaluator.js").read_text(encoding="utf-8")
+    assert "btn.setAttribute('aria-label'" in js
 
 
 def test_evaluator_panel_takes_the_height_of_the_adapter_column():
