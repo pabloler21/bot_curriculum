@@ -170,7 +170,9 @@ function renderPriorities(ev) {
 function openSummary(open) {
   $('ev-summary').classList.toggle('is-open', open);
   const btn = $('ev-summary-more');
-  btn.textContent = open ? t('ev.read_less', 'Show less') : t('ev.read_more', 'Read more');
+  const label = open ? t('ev.read_less', 'Show less') : t('ev.read_more', 'Read more');
+  btn.setAttribute('aria-label', label);  // es una flecha: el texto va en aria-label y en el tooltip
+  btn.title = label;
   btn.setAttribute('aria-expanded', String(open));
 }
 
