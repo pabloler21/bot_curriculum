@@ -162,6 +162,20 @@ def test_hero_cta_keeps_its_gradient_on_hover():
     assert "var(--gradient-brand)" in _app_css_rule(".hero-cta:hover:not(:disabled)")
 
 
+def test_offer_cta_wears_the_brand_gradient():
+    """4.25: "Claim them" iba en naranja liso; ahora lleva el tornasol, como "Improve my CV"."""
+    rule = _app_css_rule(".offer-bar-btn")
+    assert "var(--gradient-brand)" in rule and "var(--accent)" not in rule
+
+
+def test_cover_letter_button_has_the_brand_border():
+    """4.25: "Generate Cover Letter" iba en naranja; ahora es vidrio con borde tornasolado, como "Sign up"."""
+    css = (STATIC / "app.css").read_text(encoding="utf-8")
+    assert re.search(r"#ev-cover::after[^{]*\{[^}]*var\(--gradient-brand\)", css)
+    rule = _app_css_rule("#ev-cover")
+    assert "var(--text-primary)" in rule and "accent" not in rule
+
+
 def test_ctas_do_not_blink():
     """"Improve my CV" y "Sign up" quedan con el tornasol fijo: se sacó el encendido cada 7 s (4.12)."""
     css = (STATIC / "app.css").read_text(encoding="utf-8")
