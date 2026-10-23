@@ -292,7 +292,8 @@ tests/
                            # con teclado y de 18 px (4.24), panel con el alto de la columna del adapter,
                            # 20 px parejos, 4 recomendaciones, keywords de 13 px sin mayúsculas,
                            # análisis en el idioma de la página, jobs sin "% match"; botones del
-                           # perfil (4.24): "Read more" redondo, "Upload a new CV" con relleno
+                           # perfil (4.24): "Read more" redondo, "Upload a new CV" con relleno;
+                           # "Claim them" y "Generate Cover Letter" con el tornasol, sin naranja (4.25)
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -449,9 +450,10 @@ ruff check .
 - **Animaciones de entrada**: van colgadas de `body:has(> .ambient-bg)`. Hasta que shell.js
   inserta el fondo el body está oculto (`style.css`), y una animación que arranque antes corre
   sin verse. Si un elemento ya tiene `animation`, la de entrada la reemplaza: hay que listar las dos.
-- **Color en la app**: el coral (y el tornasol) es de los botones pagos ("Generate Cover Letter",
-  "Tailor your CV"). Lo informativo va en grises y vidrio, para no competir con ellos: por eso la
-  prioridad del evaluator son barras grises (4.21) y no colores.
+- **Color en la app**: el color es de los botones pagos y de los CTA ("Generate Cover Letter",
+  "Tailor your CV", "Claim them"). Lo informativo va en grises y vidrio, para no competir con ellos: por
+  eso la prioridad del evaluator son barras grises (4.21) y no colores. En los botones, el tornasol de
+  la marca (`--gradient-brand`), relleno o de borde, no naranja liso: al usuario no le gusta (4.25).
 - **Alto del evaluator**: con resultados, en escritorio y desde 830 px de alto, la página mide lo
   que la ventana (`100dvh`) y no scrollea (4.23). Atarla a la columna del adapter (4.22) solo
   entraba en 945 px: en 911 scrolleaba. El panel de mejoras y la lista de jobs se reparten lo que
@@ -546,6 +548,7 @@ ruff check .
 | 4.22 | Evaluator sin scroll y en un solo idioma. Fortalezas y debilidades pasan de pliegues a pestañas del panel de mejoras (de 24 px, como los títulos), y en escritorio ese panel toma el alto de la columna del adapter y scrollea por dentro: la página entra en 945 px, con 20 px parejos entre todo. Letra a la medida: texto a 16, keywords a 13 sin mayúsculas, las recomendaciones que entran (hasta 4). El análisis sale en el idioma de la página (`/evaluate` con `output_language`; en español, voseo) y al cambiar EN/ES se traduce el guardado en vez de re-evaluar, que cambiaba el puntaje (`POST /evaluate/translate`, un campo obligatorio por texto). En el evaluator los jobs no muestran "% match" y en el celular la página no scrollea de costado. El usuario eligió en el companion la B (pestañas) y la 1 (16 px, en filas) | ✅ mergeada |
 | 4.23 | Evaluator sin scroll en cualquier alto de ventana: la 4.22 entraba en 945 px pero en 911 scrolleaba 30 px y el contenido pasaba por debajo del nav. Con resultados, en escritorio y desde 830 px de alto, la página mide `100dvh`; el panel de mejoras y la lista de jobs se reparten el alto (las columnas terminan juntas), el adapter no se achica, los títulos de jobs van en una línea hasta 940 px de alto y `fitJobs` muestra solo las tarjetas que entran enteras. Con sesión, el ancho descuenta el sidebar | ✅ mergeada |
 | 4.24 | Evaluator: pestañas de 24 a 18 px (seminegrita), siguen por encima de "MISSING KEYWORDS" (12 px). En el perfil, "Read more" pasa a botón redondo con flecha (el texto queda en `aria-label` y tooltip) y "Upload a new CV" a pastilla de vidrio con ícono; los dos en gris, sin coral. El botón de subir CV no tenía relleno: `.ev-results .panel > *` se lo sacaba y el borde quedaba pegado a las letras. El usuario eligió en el companion la B (18 px) y la 4 (botón redondo) | ✅ mergeada |
+| 4.25 | "Claim them" (barra de oferta) y "Generate Cover Letter" (evaluator) iban en naranja liso y no combinaban con la marca. "Claim them" pasa a relleno tornasol, como "Improve my CV"; "Generate Cover Letter", a vidrio con borde tornasolado como "Sign up" (comparte la regla `::after`), y hace par con "Tailor your CV". Los demás `.btn-secondary` (Pricing, Settings, CV) siguen en coral | 🔄 PR abierto |
 
 **Último release**: `main` al día con `develop` hasta la 4.24 (PR #79, deployado el 2026-10-22).
 Antes: PR #77 (4.23, 2026-10-21), PR #75 (4.22, 2026-10-20), PR #72 (4.20–4.21, 2026-10-18) y PR #70 (4.17–4.19, 2026-10-16).
