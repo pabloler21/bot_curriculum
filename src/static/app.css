@@ -147,8 +147,10 @@ body[data-section="home"] main { display: flex; }
 }
 /* El hover de .btn-primary pone fondo de vidrio: el CTA conserva el tornasol y solo se aclara. */
 .hero-cta:hover:not(:disabled) { background: var(--gradient-brand); filter: brightness(1.08); }
-/* Sign up (nav de la landing y barra de la app): vidrio con borde tornasolado, como el tile de features. */
+/* Sign up (nav de la landing y barra de la app) y "Generate Cover Letter" (4.25): vidrio con borde
+   tornasolado, como el tile de features. */
 [data-open-auth="signup"].btn-primary { position: relative; border-color: transparent; }
+#ev-cover::after,
 [data-open-auth="signup"].btn-primary::after {
   content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none;
   background: var(--gradient-brand); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -356,6 +358,9 @@ body[data-page="evaluator"] .app-main { padding-top: 20px; padding-bottom: 20px;
 .ev-count { margin-left: 6px; padding: 1px 9px; border: 1px solid var(--glass-border); border-radius: var(--radius-pill); color: var(--text-secondary); font-size: 0.8rem; font-weight: 500; }
 .ev-adapter-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 .ev-adapter-actions button { flex: 1; justify-content: center; white-space: nowrap; }
+/* En naranja desentonaba con la marca (4.25): vidrio como "Tailor your CV", con el borde tornasolado de "Sign up" */
+#ev-cover { position: relative; border-color: transparent; background: rgba(255,255,255,0.05); color: var(--text-primary); }
+#ev-cover:hover:not(:disabled) { background: rgba(255,255,255,0.10); }
 .ev-side .job-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 /* Remotive trae ubicaciones de diez países: en la columna angosta estiraban las cards. El detalle completo está en job-detail. */
 .ev-side .job-mini-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
