@@ -66,7 +66,9 @@ body[data-requires-auth="true"]:not(.shell-ready) .app-main { visibility: hidden
   padding: 10px 16px; background: linear-gradient(90deg, var(--accent-subtle), var(--aqua-subtle));
   border-bottom: 1px solid var(--accent-border); font-weight: 500;
 }
-.offer-bar-btn { background: var(--accent); color: #1a0d08; border: 0; border-radius: var(--radius-pill); padding: 5px 14px; font: inherit; font-weight: 700; cursor: pointer; }
+/* "Claim them" con el tornasol de la marca, como "Improve my CV" (4.25): en naranja liso desentonaba. */
+.offer-bar-btn { background: var(--gradient-brand); color: var(--bg-base); border: 0; border-radius: var(--radius-pill); padding: 5px 14px; font: inherit; font-weight: 700; cursor: pointer; transition: filter 0.15s; }
+.offer-bar-btn:hover { filter: brightness(1.08); }
 
 /* ── Sidebar ─────────────────────────────────────────────────────────── */
 .sidebar {
