@@ -563,6 +563,7 @@ ruff check .
 Antes: PR #83 (4.26, 2026-10-24), PR #81 (4.25, 2026-10-23), PR #79 (4.24, 2026-10-22), PR #77 (4.23, 2026-10-21), PR #75 (4.22, 2026-10-20), PR #72 (4.20–4.21, 2026-10-18) y PR #70 (4.17–4.19, 2026-10-16).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
 **Pendiente del usuario**: los textos y la foto del About (4.26); hasta entonces queda escondida (4.27).
+Pasos para habilitarla en la deuda 10.
 **Falta del lado del usuario**: subir `TYPESAFE_API_KEY` y `SUPABASE_SERVICE_ROLE_KEY` al `.env` del VPS
 (deuda 9). Hasta entonces, en prod no hay barras de prioridad y con sesión el saldo da 0 créditos.
 No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya está en este archivo).
@@ -595,3 +596,10 @@ No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya
      sale del panel de Supabase.
    Ninguna se puede subir desde una sesión de Claude (el modo automático bloquea mandar secretos a
    prod): las sube el usuario con el comando de "Acceso SSH". No fija `AUREA_*_MODEL` (usa Haiku 5.5).
+10. **⏳ A FUTURO — completar la sección About (los textos y la foto los pasa el usuario).** Está hecha
+    (4.26) pero escondida (4.27) porque todo es placeholder. Cuando llegue el material:
+    - Textos: reemplazar lo que está entre corchetes en `about.html` (inglés) y en `i18n.js` (`about.*`,
+      español con voseo): nombre, rol y ciudad, y los tres párrafos de "How Aurea started".
+    - Foto: guardarla en `src/static/` y cambiar el `<span>` de `.founder-photo` por un `<img>`.
+    - Habilitar: `ABOUT_READY = true` en `shell.js` (vuelve al menú, después de Pricing, y deja de
+      redirigir). Actualizar `test_about_is_hidden_until_it_is_filled_in`, que hoy exige `false`.
