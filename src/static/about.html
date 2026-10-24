@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aurea — About</title>
-  <meta name="description" content="Aurea scores your CV like an ATS, tailors it to each job without inventing anything, and writes your cover letter.">
+  <meta name="description" content="Who builds Aurea and how the project started.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,10 +14,19 @@
 </head>
 <body data-page="landing" data-section="about">
   <main>
-    <section class="landing-section">
-      <p class="section-kicker" data-i18n="landing.about_kicker">About</p>
-      <h1 class="section-title" data-i18n="landing.about_title">Most CVs are rejected before a human reads them.</h1>
-      <p class="secondary-text" data-i18n="landing.about_body">Applicant tracking systems filter candidates by structure and keywords. Aurea shows you how those systems see your CV, then adapts it to each job description while keeping every fact true to your real experience.</p>
+    <!-- Los textos entre corchetes son placeholders: cambiarlos acá (inglés) y en i18n.js (about.*, español) -->
+    <section class="landing-section founder">
+      <!-- Foto: reemplazar el <span> por <img src="founder.jpg" alt="Your name">; el recuadro la recorta -->
+      <div class="founder-photo"><span data-i18n="about.photo">[Your photo]</span></div>
+      <div class="founder-text">
+        <p class="section-kicker" data-i18n="about.kicker">About me</p>
+        <h1 class="section-title" data-i18n="about.name">Hi, I'm [Your name].</h1>
+        <p class="founder-role" data-i18n="about.role">[Your role] · [City, Country]</p>
+        <h2 class="founder-story-title" data-i18n="about.story_title">How Aurea started</h2>
+        <p class="founder-story" data-i18n="about.story_1">[The moment the idea came up: what was going on in your job search and what frustrated you about CVs being filtered before anyone read them.]</p>
+        <p class="founder-story" data-i18n="about.story_2">[What you built first, what you tried, and what you learned along the way.]</p>
+        <p class="founder-story" data-i18n="about.story_3">[Where Aurea is going and who you are building it for.]</p>
+      </div>
     </section>
   </main>
 
