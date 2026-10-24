@@ -182,6 +182,17 @@ body[data-section="home"] main { display: flex; }
 /* Texto arriba, a la altura del tile: centrado, el título bajaba en las páginas con menos texto. */
 .feature { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; padding-top: 8px; }
 .feature .section-title { margin-top: 0; }
+/* About (4.26): el fundador, con la foto en un recuadro de vidrio como el tile de features */
+.founder { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 48px; align-items: start; }
+.founder-photo {
+  aspect-ratio: 4 / 5; display: grid; place-items: center; overflow: hidden; border-radius: var(--radius-lg);
+  background: var(--glass-bg); border: 1px solid var(--glass-border-strong); color: var(--text-tertiary);
+}
+.founder-photo img { width: 100%; height: 100%; object-fit: cover; }
+.founder-text .section-title { margin-top: 0; }
+.founder-role { margin: 0 0 32px; color: var(--text-secondary); }
+.founder-story-title { margin: 0 0 12px; font-size: 1.25rem; }
+.founder-story { max-width: 640px; margin: 0 0 14px; color: var(--text-secondary); line-height: 1.7; }
 .feature ul { padding-left: 18px; margin: 12px 0 0; color: var(--text-secondary); }
 /* El aire sobre el botón es suyo: el Job board no tiene lista que lo aporte. */
 .feature .btn-gradient { margin-top: 22px; }
@@ -415,7 +426,9 @@ body[data-page="evaluator"] .app-main { padding-top: 20px; padding-bottom: 20px;
   .sidebar { transform: translateX(-100%); transition: transform 0.2s ease; background: rgba(5,7,20,0.88); }
   body.sidebar-open .sidebar { transform: none; }
   body.has-sidebar .app-main { margin-left: 0; }
-  .ev-intake, .ev-grid, .jobs-layout, .feature, .pricing-grid { grid-template-columns: 1fr; }
+  .ev-intake, .ev-grid, .jobs-layout, .feature, .pricing-grid, .founder { grid-template-columns: 1fr; }
+  .founder { gap: 28px; }
+  .founder-photo { max-width: 240px; }
   .packs { grid-template-columns: 1fr; }
   /* Cada sección es una página: los links bajan a una segunda fila en vez de esconderse */
   .landing-nav { flex-wrap: wrap; row-gap: 10px; }
