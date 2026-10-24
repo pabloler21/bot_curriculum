@@ -58,6 +58,15 @@ def test_about_comes_after_pricing_in_the_nav():
     assert shell.index('href="pricing.html"') < shell.index('href="about.html"')
 
 
+def test_about_is_hidden_until_it_is_filled_in():
+    """4.27: con placeholders no puede estar en producción. ABOUT_READY = false la saca del menú y
+    manda al inicio a quien entre directo; al completarla, pasa a true."""
+    shell = (STATIC / "shell.js").read_text(encoding="utf-8")
+    assert "const ABOUT_READY = false;" in shell
+    assert re.search(r"ABOUT_READY \? `<a href=\"about\.html\"", shell), "el link de About no depende de ABOUT_READY"
+    assert re.search(r"!ABOUT_READY && body\.dataset\.section === 'about'\) window\.location\.replace\('/'\)", shell)
+
+
 def test_about_is_the_founder_page():
     """4.26: About presenta al fundador, con foto y cómo empezó el proyecto."""
     html = (STATIC / "about.html").read_text(encoding="utf-8")
