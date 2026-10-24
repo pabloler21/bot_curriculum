@@ -58,6 +58,15 @@ def test_about_comes_after_pricing_in_the_nav():
     assert shell.index('href="pricing.html"') < shell.index('href="about.html"')
 
 
+def test_about_is_the_founder_page():
+    """4.26: About presenta al fundador, con foto y cómo empezó el proyecto."""
+    html = (STATIC / "about.html").read_text(encoding="utf-8")
+    assert 'class="founder-photo"' in html
+    for key in ("about.name", "about.role", "about.story_title", "about.story_1"):
+        assert f'data-i18n="{key}"' in html, f"about.html no tiene {key}"
+    assert "landing.about_title" not in html  # el texto viejo era del producto, no del fundador
+
+
 def test_pages_stay_hidden_until_the_shell_is_in():
     """El fondo y el nav los inserta shell.js, al final del body. Si el navegador pinta antes, el
     contenido sale 67px más arriba y salta al llegar el nav: el temblor al cambiar de página."""
