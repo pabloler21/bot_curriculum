@@ -199,7 +199,10 @@ src/
                     # con body data-page="landing" data-section="…"; el nav y el footer los pone shell.js.
                     # Entra animada (4.14, app.css); el nav queda quieto porque es igual en toda la landing.
                     # "for every job." y "Improve my CV" llevan el tornasol de la marca; "Sign up", el borde
-    about.html      # Landing: About
+    about.html      # Landing: About = el fundador (4.26): foto + quién soy + cómo empezó Aurea.
+                    # Todo es placeholder entre corchetes: textos acá (EN) y en i18n.js (about.*, ES);
+                    # la foto, cambiar el <span> de .founder-photo por un <img>. En el menú va último
+    # Orden del nav de la landing (shell.js): Home · Features · Pricing · About
     features-evaluator.html / features-adapter.html / features-jobs.html  # Landing: una página por feature
     pricing.html    # Landing: Free/Pro + waitlist (landing.js)
     evaluator.html  # ATS evaluator (anónimo) + evaluator.js. Resultados (4.22): a la izquierda un panel
@@ -293,7 +296,8 @@ tests/
                            # 20 px parejos, 4 recomendaciones, keywords de 13 px sin mayúsculas,
                            # análisis en el idioma de la página, jobs sin "% match"; botones del
                            # perfil (4.24): "Read more" redondo, "Upload a new CV" con relleno;
-                           # "Claim them" y "Generate Cover Letter" con el tornasol, sin naranja (4.25)
+                           # "Claim them" y "Generate Cover Letter" con el tornasol, sin naranja (4.25);
+                           # About es la página del fundador y va después de Pricing en el menú (4.26)
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -548,10 +552,11 @@ ruff check .
 | 4.22 | Evaluator sin scroll y en un solo idioma. Fortalezas y debilidades pasan de pliegues a pestañas del panel de mejoras (de 24 px, como los títulos), y en escritorio ese panel toma el alto de la columna del adapter y scrollea por dentro: la página entra en 945 px, con 20 px parejos entre todo. Letra a la medida: texto a 16, keywords a 13 sin mayúsculas, las recomendaciones que entran (hasta 4). El análisis sale en el idioma de la página (`/evaluate` con `output_language`; en español, voseo) y al cambiar EN/ES se traduce el guardado en vez de re-evaluar, que cambiaba el puntaje (`POST /evaluate/translate`, un campo obligatorio por texto). En el evaluator los jobs no muestran "% match" y en el celular la página no scrollea de costado. El usuario eligió en el companion la B (pestañas) y la 1 (16 px, en filas) | ✅ mergeada |
 | 4.23 | Evaluator sin scroll en cualquier alto de ventana: la 4.22 entraba en 945 px pero en 911 scrolleaba 30 px y el contenido pasaba por debajo del nav. Con resultados, en escritorio y desde 830 px de alto, la página mide `100dvh`; el panel de mejoras y la lista de jobs se reparten el alto (las columnas terminan juntas), el adapter no se achica, los títulos de jobs van en una línea hasta 940 px de alto y `fitJobs` muestra solo las tarjetas que entran enteras. Con sesión, el ancho descuenta el sidebar | ✅ mergeada |
 | 4.24 | Evaluator: pestañas de 24 a 18 px (seminegrita), siguen por encima de "MISSING KEYWORDS" (12 px). En el perfil, "Read more" pasa a botón redondo con flecha (el texto queda en `aria-label` y tooltip) y "Upload a new CV" a pastilla de vidrio con ícono; los dos en gris, sin coral. El botón de subir CV no tenía relleno: `.ev-results .panel > *` se lo sacaba y el borde quedaba pegado a las letras. El usuario eligió en el companion la B (18 px) y la 4 (botón redondo) | ✅ mergeada |
-| 4.25 | "Claim them" (barra de oferta) y "Generate Cover Letter" (evaluator) iban en naranja liso y no combinaban con la marca. "Claim them" pasa a relleno tornasol, como "Improve my CV"; "Generate Cover Letter", a vidrio con borde tornasolado como "Sign up" (comparte la regla `::after`), y hace par con "Tailor your CV". Los demás `.btn-secondary` (Pricing, Settings, CV) siguen en coral | 🔄 PR abierto |
+| 4.25 | "Claim them" (barra de oferta) y "Generate Cover Letter" (evaluator) iban en naranja liso y no combinaban con la marca. "Claim them" pasa a relleno tornasol, como "Improve my CV"; "Generate Cover Letter", a vidrio con borde tornasolado como "Sign up" (comparte la regla `::after`), y hace par con "Tailor your CV". Los demás `.btn-secondary` (Pricing, Settings, CV) siguen en coral | ✅ mergeada |
+| 4.26 | About deja de hablar del producto y presenta al fundador: foto en un recuadro de vidrio, nombre, rol y "How Aurea started" en tres párrafos. Todo con placeholders entre corchetes para completar después (EN en `about.html`, ES en `i18n.js`). En el menú pasa al final, a la derecha de Pricing (menor prioridad); en español, "Sobre mí" | 🔄 PR abierto |
 
-**Último release**: `main` al día con `develop` hasta la 4.24 (PR #79, deployado el 2026-10-22).
-Antes: PR #77 (4.23, 2026-10-21), PR #75 (4.22, 2026-10-20), PR #72 (4.20–4.21, 2026-10-18) y PR #70 (4.17–4.19, 2026-10-16).
+**Último release**: `main` al día con `develop` hasta la 4.25 (PR #81, deployado el 2026-10-23).
+Antes: PR #79 (4.24, 2026-10-22), PR #77 (4.23, 2026-10-21), PR #75 (4.22, 2026-10-20), PR #72 (4.20–4.21, 2026-10-18) y PR #70 (4.17–4.19, 2026-10-16).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
 **Falta del lado del usuario**: subir `TYPESAFE_API_KEY` y `SUPABASE_SERVICE_ROLE_KEY` al `.env` del VPS
 (deuda 9). Hasta entonces, en prod no hay barras de prioridad y con sesión el saldo da 0 créditos.

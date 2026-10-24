@@ -120,7 +120,6 @@
       <a href="/" class="brand"><div class="brand-mark">✦</div><span class="brand-name">Aurea</span></a>
       <div class="landing-links">
         <a href="/" data-i18n="landing.nav_home"${cur('home')}>Home</a>
-        <a href="about.html" data-i18n="landing.nav_about"${cur('about')}>About</a>
         <details class="nav-dropdown${section.startsWith('features-') ? ' active' : ''}">
           <summary><span data-i18n="landing.nav_features">Features</span> ▾</summary>
           <div class="nav-dropdown-menu">
@@ -130,6 +129,7 @@
           </div>
         </details>
         <a href="pricing.html" data-i18n="landing.nav_pricing"${cur('pricing')}>Pricing</a>
+        <a href="about.html" data-i18n="landing.nav_about"${cur('about')}>About</a>
       </div>
       <div class="landing-actions">
         <div class="ui-lang" role="group" aria-label="Language">
