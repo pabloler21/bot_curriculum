@@ -24,6 +24,11 @@
   const isLanding = page === 'landing';
   const requiresAuth = body.dataset.requiresAuth === 'true';
 
+  // About (4.26) tiene placeholders: escondida del menú y, si alguien entra directo, al inicio.
+  // Cuando esté completa (textos y foto), pasar a true.
+  const ABOUT_READY = false;
+  if (!ABOUT_READY && body.dataset.section === 'about') window.location.replace('/');
+
   let client = null;
   let ready = false;
   let signingOut = false;
@@ -129,7 +134,7 @@
           </div>
         </details>
         <a href="pricing.html" data-i18n="landing.nav_pricing"${cur('pricing')}>Pricing</a>
-        <a href="about.html" data-i18n="landing.nav_about"${cur('about')}>About</a>
+        ${ABOUT_READY ? `<a href="about.html" data-i18n="landing.nav_about"${cur('about')}>About</a>` : ''}
       </div>
       <div class="landing-actions">
         <div class="ui-lang" role="group" aria-label="Language">
