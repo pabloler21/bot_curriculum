@@ -52,6 +52,12 @@ def test_landing_nav_links_to_pages_not_anchors():
     assert not re.search(r'href="/?#', shell), "el nav todavía usa anclas"
 
 
+def test_about_comes_after_pricing_in_the_nav():
+    """4.26: About es la de menor prioridad del menú, a la derecha de Pricing."""
+    shell = (STATIC / "shell.js").read_text(encoding="utf-8")
+    assert shell.index('href="pricing.html"') < shell.index('href="about.html"')
+
+
 def test_pages_stay_hidden_until_the_shell_is_in():
     """El fondo y el nav los inserta shell.js, al final del body. Si el navegador pinta antes, el
     contenido sale 67px más arriba y salta al llegar el nav: el temblor al cambiar de página."""
