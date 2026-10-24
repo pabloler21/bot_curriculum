@@ -201,8 +201,10 @@ src/
                     # "for every job." y "Improve my CV" llevan el tornasol de la marca; "Sign up", el borde
     about.html      # Landing: About = el fundador (4.26): foto + quién soy + cómo empezó Aurea.
                     # Todo es placeholder entre corchetes: textos acá (EN) y en i18n.js (about.*, ES);
-                    # la foto, cambiar el <span> de .founder-photo por un <img>. En el menú va último
-    # Orden del nav de la landing (shell.js): Home · Features · Pricing · About
+                    # la foto, cambiar el <span> de .founder-photo por un <img>. En el menú va último.
+                    # ESCONDIDA (4.27) hasta completarla: `ABOUT_READY = false` en shell.js la saca del
+                    # menú y manda al inicio a quien entra directo. Para habilitarla, pasarlo a true
+    # Orden del nav de la landing (shell.js): Home · Features · Pricing · About (si ABOUT_READY)
     features-evaluator.html / features-adapter.html / features-jobs.html  # Landing: una página por feature
     pricing.html    # Landing: Free/Pro + waitlist (landing.js)
     evaluator.html  # ATS evaluator (anónimo) + evaluator.js. Resultados (4.22): a la izquierda un panel
@@ -297,7 +299,8 @@ tests/
                            # análisis en el idioma de la página, jobs sin "% match"; botones del
                            # perfil (4.24): "Read more" redondo, "Upload a new CV" con relleno;
                            # "Claim them" y "Generate Cover Letter" con el tornasol, sin naranja (4.25);
-                           # About es la página del fundador y va después de Pricing en el menú (4.26)
+                           # About es la página del fundador y va después de Pricing en el menú (4.26),
+                           # escondida mientras ABOUT_READY sea false (4.27)
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -554,10 +557,12 @@ ruff check .
 | 4.24 | Evaluator: pestañas de 24 a 18 px (seminegrita), siguen por encima de "MISSING KEYWORDS" (12 px). En el perfil, "Read more" pasa a botón redondo con flecha (el texto queda en `aria-label` y tooltip) y "Upload a new CV" a pastilla de vidrio con ícono; los dos en gris, sin coral. El botón de subir CV no tenía relleno: `.ev-results .panel > *` se lo sacaba y el borde quedaba pegado a las letras. El usuario eligió en el companion la B (18 px) y la 4 (botón redondo) | ✅ mergeada |
 | 4.25 | "Claim them" (barra de oferta) y "Generate Cover Letter" (evaluator) iban en naranja liso y no combinaban con la marca. "Claim them" pasa a relleno tornasol, como "Improve my CV"; "Generate Cover Letter", a vidrio con borde tornasolado como "Sign up" (comparte la regla `::after`), y hace par con "Tailor your CV". Los demás `.btn-secondary` (Pricing, Settings, CV) siguen en coral | ✅ mergeada |
 | 4.26 | About deja de hablar del producto y presenta al fundador: foto en un recuadro de vidrio, nombre, rol y "How Aurea started" en tres párrafos. Todo con placeholders entre corchetes para completar después (EN en `about.html`, ES en `i18n.js`). En el menú pasa al final, a la derecha de Pricing (menor prioridad); en español, "Sobre mí" | ✅ mergeada |
+| 4.27 | About escondida hasta completarla: con placeholders no quedaba bien en producción. `ABOUT_READY = false` en `shell.js` la saca del menú y manda al inicio a quien entre directo a `about.html`; el contenido queda en el archivo. **Para habilitarla**: completar textos y foto (ver `about.html`) y pasar `ABOUT_READY` a `true` | 🔄 PR abierto |
 
 **Último release**: `main` al día con `develop` hasta la 4.26 (PR #83, deployado el 2026-10-24).
 Antes: PR #81 (4.25, 2026-10-23), PR #79 (4.24, 2026-10-22), PR #77 (4.23, 2026-10-21), PR #75 (4.22, 2026-10-20), PR #72 (4.20–4.21, 2026-10-18) y PR #70 (4.17–4.19, 2026-10-16).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
+**Pendiente del usuario**: los textos y la foto del About (4.26); hasta entonces queda escondida (4.27).
 **Falta del lado del usuario**: subir `TYPESAFE_API_KEY` y `SUPABASE_SERVICE_ROLE_KEY` al `.env` del VPS
 (deuda 9). Hasta entonces, en prod no hay barras de prioridad y con sesión el saldo da 0 créditos.
 No quedan PRs abiertos: #39 y #40 se cerraron sin mergear (lo vigente del #39 ya está en este archivo).
