@@ -42,6 +42,7 @@
   background: linear-gradient(110deg, transparent 40%, rgba(255,255,255,0.75) 50%, transparent 60%) no-repeat, var(--gradient-brand);
   background-size: 300% 100%, 100% 100%; animation: coin-shine 5s ease-in-out infinite;
 }
+button > .coin { margin-left: -4px; }  /* los botones separan sus hijos 8 px: la moneda va pegada al número */
 .coin::before { content: '✦'; color: rgba(7,9,26,0.75); font-size: 0.62em; line-height: 1; }
 /* El destello entra por la izquierda y sale por la derecha; el resto del ciclo queda afuera */
 @keyframes coin-shine {
