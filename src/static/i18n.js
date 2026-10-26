@@ -151,6 +151,7 @@ window.I18N_ES = {
   'job.placeholder': 'https://… o pegá la descripción del puesto',
   'job.err_empty': 'Pegá el link o la descripción del puesto.',
   'job.err_short': 'Pegá la descripción completa del puesto (al menos 50 caracteres).',
+  'credits.unit': 'créditos',  // texto de la moneda para lectores de pantalla (4.28)
   'credits.none': 'Usaste todos tus créditos.',
   'credits.get_more': 'Conseguí más →',
   // ── Form de Tailor / Cover ──

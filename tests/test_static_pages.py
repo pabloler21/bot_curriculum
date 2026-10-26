@@ -186,6 +186,26 @@ def test_hero_cta_keeps_its_gradient_on_hover():
     assert "var(--gradient-brand)" in _app_css_rule(".hero-cta:hover:not(:disabled)")
 
 
+COIN = '<span class="coin"><span class="sr-only" data-i18n="credits.unit">credits</span></span>'
+
+
+def test_credits_use_the_aurea_coin_not_the_emoji():
+    """4.28: el 🪙 no combinaba con la marca; los créditos llevan la moneda de Aurea (con texto para lectores)."""
+    for path in [*STATIC.glob("*.html"), STATIC / "shell.js"]:
+        text = path.read_text(encoding="utf-8")
+        assert "\U0001fa99" not in text, f"{path.name} todavía usa el emoji de moneda"
+    assert COIN in (STATIC / "shell.js").read_text(encoding="utf-8")  # el chip de créditos
+    assert _evaluator_html().count(COIN) == 3
+
+
+def test_aurea_coin_has_the_brand_gradient_and_a_shine():
+    """4.28: disco tornasol con la ✦ del logo y un destello cada pocos segundos. Es luz, no movimiento:
+    no va dentro de prefers-reduced-motion (esta PC lo reporta y no se vería)."""
+    rule = _app_css_rule(".coin")
+    assert "var(--gradient-brand)" in rule and "animation: coin-shine" in rule
+    assert "@keyframes coin-shine" in (STATIC / "app.css").read_text(encoding="utf-8")
+
+
 def test_offer_cta_wears_the_brand_gradient():
     """4.25: "Claim them" iba en naranja liso; ahora lleva el tornasol, como "Improve my CV"."""
     rule = _app_css_rule(".offer-bar-btn")

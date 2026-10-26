@@ -156,7 +156,7 @@
         <div class="ui-lang" role="group" aria-label="Language">
           <button type="button" data-set-lang="en">EN</button><button type="button" data-set-lang="es">ES</button>
         </div>
-        <a href="settings.html#usage" class="credit-chip hidden" data-auth="user" title="Credits"><span id="shell-credits">–</span> 🪙</a>
+        <a href="settings.html#usage" class="credit-chip hidden" data-auth="user" title="Credits"><span id="shell-credits">–</span><span class="coin"><span class="sr-only" data-i18n="credits.unit">credits</span></span></a>
         <button type="button" class="btn-primary btn-sm hidden" data-auth="guest" data-open-auth="signup" data-i18n="shell.signup">Sign up</button>
       </div>
     </header>`;
