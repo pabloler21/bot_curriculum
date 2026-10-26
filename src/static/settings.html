@@ -27,7 +27,7 @@
         <h2 data-i18n="settings.usage">Usage</h2>
         <dl class="kv">
           <dt data-i18n="settings.account">Account</dt><dd id="st-email"></dd>
-          <dt data-i18n="settings.credits">Credits available</dt><dd><strong id="st-credits">–</strong> 🪙</dd>
+          <dt data-i18n="settings.credits">Credits available</dt><dd><strong id="st-credits">–</strong><span class="coin"><span class="sr-only" data-i18n="credits.unit">credits</span></span></dd>
           <dt data-i18n="settings.generations">Generations</dt><dd id="st-generations">–</dd>
         </dl>
       </section>
@@ -36,9 +36,9 @@
         <h2 data-i18n="settings.add_credits">Add credits</h2>
         <p class="secondary-text" data-i18n="settings.add_credits_sub">Payments are coming soon. Pick a pack and we'll email you as soon as you can buy it.</p>
         <div class="packs">
-          <div class="pack"><div class="pack-credits">10 🪙</div><div class="pack-price">$5</div><button type="button" class="btn-secondary" data-pack="10" data-i18n="settings.notify">Notify me</button></div>
-          <div class="pack"><div class="pack-credits">30 🪙</div><div class="pack-price">$12</div><button type="button" class="btn-secondary" data-pack="30" data-i18n="settings.notify">Notify me</button></div>
-          <div class="pack"><div class="pack-credits">100 🪙</div><div class="pack-price">$35</div><button type="button" class="btn-secondary" data-pack="100" data-i18n="settings.notify">Notify me</button></div>
+          <div class="pack"><div class="pack-credits">10<span class="coin"><span class="sr-only" data-i18n="credits.unit">credits</span></span></div><div class="pack-price">$5</div><button type="button" class="btn-secondary" data-pack="10" data-i18n="settings.notify">Notify me</button></div>
+          <div class="pack"><div class="pack-credits">30<span class="coin"><span class="sr-only" data-i18n="credits.unit">credits</span></span></div><div class="pack-price">$12</div><button type="button" class="btn-secondary" data-pack="30" data-i18n="settings.notify">Notify me</button></div>
+          <div class="pack"><div class="pack-credits">100<span class="coin"><span class="sr-only" data-i18n="credits.unit">credits</span></span></div><div class="pack-price">$35</div><button type="button" class="btn-secondary" data-pack="100" data-i18n="settings.notify">Notify me</button></div>
         </div>
         <p id="st-notify-ok" class="notice hidden" data-i18n="settings.notify_ok">You're on the list — we'll email you when credit packs are available.</p>
         <p id="st-notify-error" class="error-msg hidden" role="alert"></p>
