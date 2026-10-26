@@ -300,7 +300,8 @@ tests/
                            # perfil (4.24): "Read more" redondo, "Upload a new CV" con relleno;
                            # "Claim them" y "Generate Cover Letter" con el tornasol, sin naranja (4.25);
                            # About es la página del fundador y va después de Pricing en el menú (4.26),
-                           # escondida mientras ABOUT_READY sea false (4.27)
+                           # escondida mientras ABOUT_READY sea false (4.27); los créditos usan la moneda
+                           # de Aurea y no el emoji, con tornasol y destello (4.28)
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -461,6 +462,10 @@ ruff check .
   "Tailor your CV", "Claim them"). Lo informativo va en grises y vidrio, para no competir con ellos: por
   eso la prioridad del evaluator son barras grises (4.21) y no colores. En los botones, el tornasol de
   la marca (`--gradient-brand`), relleno o de borde, no naranja liso: al usuario no le gusta (4.25).
+- **Moneda de créditos** (4.28): nunca el emoji 🪙. Se escribe
+  `<span class="coin"><span class="sr-only" data-i18n="credits.unit">credits</span></span>` (disco
+  tornasol con la ✦ del logo y un destello cada 5 s, en `app.css`). El destello es de luz
+  (`background-position`), por eso corre también con reduced-motion.
 - **Alto del evaluator**: con resultados, en escritorio y desde 830 px de alto, la página mide lo
   que la ventana (`100dvh`) y no scrollea (4.23). Atarla a la columna del adapter (4.22) solo
   entraba en 945 px: en 911 scrolleaba. El panel de mejoras y la lista de jobs se reparten lo que
@@ -558,6 +563,7 @@ ruff check .
 | 4.25 | "Claim them" (barra de oferta) y "Generate Cover Letter" (evaluator) iban en naranja liso y no combinaban con la marca. "Claim them" pasa a relleno tornasol, como "Improve my CV"; "Generate Cover Letter", a vidrio con borde tornasolado como "Sign up" (comparte la regla `::after`), y hace par con "Tailor your CV". Los demás `.btn-secondary` (Pricing, Settings, CV) siguen en coral | ✅ mergeada |
 | 4.26 | About deja de hablar del producto y presenta al fundador: foto en un recuadro de vidrio, nombre, rol y "How Aurea started" en tres párrafos. Todo con placeholders entre corchetes para completar después (EN en `about.html`, ES en `i18n.js`). En el menú pasa al final, a la derecha de Pricing (menor prioridad); en español, "Sobre mí" | ✅ mergeada |
 | 4.27 | About escondida hasta completarla: con placeholders no quedaba bien en producción. `ABOUT_READY = false` en `shell.js` la saca del menú y manda al inicio a quien entre directo a `about.html`; el contenido queda en el archivo. **Para habilitarla**: completar textos y foto (ver `about.html`) y pasar `ABOUT_READY` a `true` | ✅ mergeada |
+| 4.28 | El emoji 🪙 de los créditos pasa a ser la moneda de Aurea: el logo en redondo, un disco con el tornasol y la ✦ calada, y un destello de luz que la cruza cada 5 s. Es luz y no un giro a propósito: la PC del usuario reporta reduced-motion y un giro no se vería; además sigue lo que aprobó antes ("se enciende cada tantos segundos") y no lo que rechazó (bordes giratorios, halos que laten). En botones, chip de créditos y Settings, con texto para lectores de pantalla. Decidido por Claude (el usuario pidió elegir lo más armonioso y mandarlo directo) | 🔄 PR abierto |
 
 **Último release**: `main` al día con `develop` hasta la 4.27 (PR #85, deployado el 2026-10-24).
 Antes: PR #83 (4.26, 2026-10-24), PR #81 (4.25, 2026-10-23), PR #79 (4.24, 2026-10-22), PR #77 (4.23, 2026-10-21), PR #75 (4.22, 2026-10-20), PR #72 (4.20–4.21, 2026-10-18) y PR #70 (4.17–4.19, 2026-10-16).
