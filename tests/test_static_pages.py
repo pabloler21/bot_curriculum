@@ -206,6 +206,36 @@ def test_aurea_coin_has_the_brand_gradient_and_a_shine():
     assert "@keyframes coin-shine" in (STATIC / "app.css").read_text(encoding="utf-8")
 
 
+def _job_detail_rule(selector: str) -> str:
+    html = (STATIC / "job-detail.html").read_text(encoding="utf-8")
+    rule = re.search(re.escape(selector) + r" \{([^}]*)\}", html)
+    return rule.group(1) if rule else ""
+
+
+def test_job_detail_cta_can_be_clicked():
+    """4.29: la barra fija tiene pointer-events: none y solo se los devolvía a los <a>; desde la 3.15 el
+    CTA es un <button> y no se podía tocar."""
+    assert "pointer-events: auto" in _job_detail_rule(".detail-cta-wrap > *")
+
+
+def test_job_detail_cta_wears_the_brand_gradient():
+    """4.29: iba en coral → ámbar; ahora con el tornasol de la marca, como "Improve my CV"."""
+    rule = _job_detail_rule(".btn-match.detail-cta")
+    assert "var(--gradient-brand)" in rule
+
+
+def test_job_detail_cta_prepares_then_asks_to_sign_up():
+    """4.29: al tocarlo, el botón muestra "Preparing your adaptation…" con un destello de luz y después,
+    sin sesión, abre el registro; al volver logueado sigue solo a tailor.html con la oferta cargada."""
+    js = (STATIC / "job-detail.js").read_text(encoding="utf-8")
+    assert "classList.add('is-loading')" in js
+    assert "aurea.requireAuth('adapt_job')" in js
+    assert re.search(r"takePendingAction\(\)[\s\S]{0,80}'adapt_job'", js), "al volver logueado no sigue a tailor"
+    rule = _job_detail_rule(".btn-match.detail-cta.is-loading")
+    assert "animation: cta-preparing" in rule
+    assert "@keyframes cta-preparing" in (STATIC / "job-detail.html").read_text(encoding="utf-8")
+
+
 def test_offer_cta_wears_the_brand_gradient():
     """4.25: "Claim them" iba en naranja liso; ahora lleva el tornasol, como "Improve my CV"."""
     rule = _app_css_rule(".offer-bar-btn")
