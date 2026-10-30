@@ -5,6 +5,7 @@ const BACKEND_URL = '';
 
 const PENDING_JD_KEY = 'aurea_pending_jd';
 const MAX_JD_CHARS   = 8000;
+const ADAPT_PREPARE_MS = 1400;  // lo que dura "Preparing your adaptation…" antes de seguir
 
 function sanitizeText(text) {
   return String(text)
@@ -98,7 +99,7 @@ async function loadJobDetail() {
       </div>
       <div class="detail-cta-wrap">
         <button id="adapt-from-job-btn" class="btn-match detail-cta">
-          <span aria-hidden="true">✦</span> Adapt my CV to this role
+          <span aria-hidden="true">✦</span> <span class="cta-label">Adapt my CV to this role</span>
         </button>
       </div>
     `;
@@ -107,13 +108,25 @@ async function loadJobDetail() {
     loadingEl.classList.add('hidden');
     detailEl.classList.remove('hidden');
 
-    // Wire adapt CTA — saves JD to localStorage and navigates to adapter
+    // Adapt CTA (4.29): guarda el JD, muestra que prepara la adaptación y sigue. Sin sesión abre el
+    // registro; al volver logueado, el onReady de abajo lleva a tailor.html con el JD ya cargado.
     const adaptBtn = detailEl.querySelector('#adapt-from-job-btn');
     if (adaptBtn) {
+      const label = adaptBtn.querySelector('.cta-label');
+      const idleText = label.textContent;
       adaptBtn.addEventListener('click', () => {
+        if (adaptBtn.classList.contains('is-loading')) return;
         const jd = sanitizeText(job.description).slice(0, MAX_JD_CHARS);
         localStorage.setItem(PENDING_JD_KEY, jd);
-        window.location.href = 'tailor.html';
+        adaptBtn.classList.add('is-loading');
+        adaptBtn.setAttribute('aria-busy', 'true');
+        label.textContent = aurea.t('jobs.preparing', 'Preparing your adaptation…');
+        setTimeout(() => {
+          if (aurea.requireAuth('adapt_job')) { window.location.href = 'tailor.html'; return; }
+          adaptBtn.classList.remove('is-loading');  // quedó abierto el registro: si lo cierra, el botón vuelve
+          adaptBtn.removeAttribute('aria-busy');
+          label.textContent = idleText;
+        }, ADAPT_PREPARE_MS);
       });
     }
 
@@ -165,3 +178,9 @@ async function loadJobDetail() {
 }
 
 loadJobDetail();
+
+// Volvió del magic link después de tocar "Adapt my CV to this role": el JD ya está guardado, seguir a tailor.
+aurea.onReady(() => {
+  const pending = aurea.takePendingAction();
+  if (pending && pending.action === 'adapt_job') window.location.href = 'tailor.html';
+});

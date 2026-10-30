@@ -55,6 +55,7 @@ window.I18N_ES = {
   'interview.drawn_from': 'Basado en',
   'interview.why': 'Por qué la preguntan',
   'jobs.match': 'de coincidencia',
+  'jobs.preparing': 'Preparando tu adaptación…',
   // ── Landing ──
   'landing.nav_home': 'Inicio',
   'landing.nav_about': 'Sobre mí',
