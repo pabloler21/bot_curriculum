@@ -110,7 +110,9 @@
       pointer-events: none;
     }
 
-    .detail-cta-wrap a {
+    /* La barra deja pasar los clics a la página; lo que va adentro los recupera. Era `a` y desde la 3.15
+       el CTA es un <button>: no se podía tocar (4.29) */
+    .detail-cta-wrap > * {
       pointer-events: auto;
     }
 
