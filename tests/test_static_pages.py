@@ -218,6 +218,12 @@ def test_job_detail_cta_can_be_clicked():
     assert "pointer-events: auto" in _job_detail_rule(".detail-cta-wrap > *")
 
 
+def test_job_detail_cta_wears_the_brand_gradient():
+    """4.29: iba en coral → ámbar; ahora con el tornasol de la marca, como "Improve my CV"."""
+    rule = _job_detail_rule(".btn-match.detail-cta")
+    assert "var(--gradient-brand)" in rule
+
+
 def test_offer_cta_wears_the_brand_gradient():
     """4.25: "Claim them" iba en naranja liso; ahora lleva el tornasol, como "Improve my CV"."""
     rule = _app_css_rule(".offer-bar-btn")
