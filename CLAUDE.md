@@ -301,7 +301,8 @@ tests/
                            # "Claim them" y "Generate Cover Letter" con el tornasol, sin naranja (4.25);
                            # About es la página del fundador y va después de Pricing en el menú (4.26),
                            # escondida mientras ABOUT_READY sea false (4.27); los créditos usan la moneda
-                           # de Aurea y no el emoji, con tornasol y destello (4.28)
+                           # de Aurea y no el emoji, con tornasol y destello (4.28); el CTA de job-detail
+                           # se puede tocar, va en tornasol, prepara y pide registrarse (4.29)
   test_user_cv.py          # backend/user_cv.py
 ```
 
@@ -367,6 +368,8 @@ index.html (landing) → CTA o "Try it" de una feature → evaluator.html (anón
 Desde el job board:
 jobs.html (My Jobs / Recommended, ranking con el CV base) → job-detail.html
 → "Adapt my CV to this role" → JD en localStorage (aurea_pending_jd) → tailor.html pre-cargado
+  (4.29: antes, 1,4 s de "Preparing your adaptation…"; sin sesión abre el registro con la acción
+  pendiente `adapt_job`, y al volver del magic link job-detail.js sigue solo a tailor.html)
 
 adapt.html quedó como redirect a tailor.html.
 ```
@@ -563,10 +566,11 @@ ruff check .
 | 4.25 | "Claim them" (barra de oferta) y "Generate Cover Letter" (evaluator) iban en naranja liso y no combinaban con la marca. "Claim them" pasa a relleno tornasol, como "Improve my CV"; "Generate Cover Letter", a vidrio con borde tornasolado como "Sign up" (comparte la regla `::after`), y hace par con "Tailor your CV". Los demás `.btn-secondary` (Pricing, Settings, CV) siguen en coral | ✅ mergeada |
 | 4.26 | About deja de hablar del producto y presenta al fundador: foto en un recuadro de vidrio, nombre, rol y "How Aurea started" en tres párrafos. Todo con placeholders entre corchetes para completar después (EN en `about.html`, ES en `i18n.js`). En el menú pasa al final, a la derecha de Pricing (menor prioridad); en español, "Sobre mí" | ✅ mergeada |
 | 4.27 | About escondida hasta completarla: con placeholders no quedaba bien en producción. `ABOUT_READY = false` en `shell.js` la saca del menú y manda al inicio a quien entre directo a `about.html`; el contenido queda en el archivo. **Para habilitarla**: completar textos y foto (ver `about.html`) y pasar `ABOUT_READY` a `true` | ✅ mergeada |
-| 4.28 | El emoji 🪙 de los créditos pasa a ser la moneda de Aurea: el logo en redondo, un disco con el tornasol y la ✦ calada, y un destello de luz que la cruza cada 5 s. Es luz y no un giro a propósito: la PC del usuario reporta reduced-motion y un giro no se vería; además sigue lo que aprobó antes ("se enciende cada tantos segundos") y no lo que rechazó (bordes giratorios, halos que laten). En botones, chip de créditos y Settings, con texto para lectores de pantalla. Decidido por Claude (el usuario pidió elegir lo más armonioso y mandarlo directo) | 🔄 PR abierto |
+| 4.28 | El emoji 🪙 de los créditos pasa a ser la moneda de Aurea: el logo en redondo, un disco con el tornasol y la ✦ calada, y un destello de luz que la cruza cada 5 s. Es luz y no un giro a propósito: la PC del usuario reporta reduced-motion y un giro no se vería; además sigue lo que aprobó antes ("se enciende cada tantos segundos") y no lo que rechazó (bordes giratorios, halos que laten). En botones, chip de créditos y Settings, con texto para lectores de pantalla. Decidido por Claude (el usuario pidió elegir lo más armonioso y mandarlo directo) | ✅ mergeada |
+| 4.29 | El botón "Adapt my CV to this role" de job-detail no se podía tocar: la barra fija tiene `pointer-events: none` y solo se los devolvía a los `<a>`, y desde la 3.15 el CTA es un `<button>`. Ahora `.detail-cta-wrap > *`. Además va en tornasol (era coral → ámbar), y al tocarlo muestra "Preparing your adaptation…" con un destello de luz 1,4 s; sin sesión abre el registro (`aurea.requireAuth('adapt_job')`) y al volver logueado sigue solo a tailor.html con la oferta cargada. Dice "preparando" y no "adaptando": la adaptación de verdad empieza en Tailor | 🔄 PR abierto |
 
-**Último release**: `main` al día con `develop` hasta la 4.27 (PR #85, deployado el 2026-10-24).
-Antes: PR #83 (4.26, 2026-10-24), PR #81 (4.25, 2026-10-23), PR #79 (4.24, 2026-10-22), PR #77 (4.23, 2026-10-21), PR #75 (4.22, 2026-10-20), PR #72 (4.20–4.21, 2026-10-18) y PR #70 (4.17–4.19, 2026-10-16).
+**Último release**: `main` al día con `develop` hasta la 4.28 (PR #88, deployado el 2026-10-25).
+Antes: PR #85 (4.27, 2026-10-24), PR #83 (4.26, 2026-10-24), PR #81 (4.25, 2026-10-23), PR #79 (4.24, 2026-10-22), PR #77 (4.23, 2026-10-21), PR #75 (4.22, 2026-10-20), PR #72 (4.20–4.21, 2026-10-18) y PR #70 (4.17–4.19, 2026-10-16).
 La única tarea abierta es **3.5 (Lemon Squeezy)**, bloqueada porque necesita cuenta de merchant.
 **Pendiente del usuario**: los textos y la foto del About (4.26); hasta entonces queda escondida (4.27).
 Pasos para habilitarla en la deuda 10.
