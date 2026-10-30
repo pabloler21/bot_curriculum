@@ -224,6 +224,18 @@ def test_job_detail_cta_wears_the_brand_gradient():
     assert "var(--gradient-brand)" in rule
 
 
+def test_job_detail_cta_prepares_then_asks_to_sign_up():
+    """4.29: al tocarlo, el botón muestra "Preparing your adaptation…" con un destello de luz y después,
+    sin sesión, abre el registro; al volver logueado sigue solo a tailor.html con la oferta cargada."""
+    js = (STATIC / "job-detail.js").read_text(encoding="utf-8")
+    assert "classList.add('is-loading')" in js
+    assert "aurea.requireAuth('adapt_job')" in js
+    assert re.search(r"takePendingAction\(\)[\s\S]{0,80}'adapt_job'", js), "al volver logueado no sigue a tailor"
+    rule = _job_detail_rule(".btn-match.detail-cta.is-loading")
+    assert "animation: cta-preparing" in rule
+    assert "@keyframes cta-preparing" in (STATIC / "job-detail.html").read_text(encoding="utf-8")
+
+
 def test_offer_cta_wears_the_brand_gradient():
     """4.25: "Claim them" iba en naranja liso; ahora lleva el tornasol, como "Improve my CV"."""
     rule = _app_css_rule(".offer-bar-btn")
